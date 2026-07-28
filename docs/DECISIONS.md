@@ -71,3 +71,16 @@ de uso ou demanda comprovada.
 Evitar promessa de acesso vitalício quando há custos permanentes de
 infraestrutura, armazenamento e suporte. A hipótese inicial é implantação mais
 assinatura mensal ou anual.
+
+## D-011 — Better Auth, D1 e R2 na primeira fatia real
+
+A primeira implementação de contas e persistência usará Better Auth no servidor,
+Cloudflare D1 para autenticação e dados estruturados e R2 para imagens.
+
+A decisão preserva a infraestrutura atual e atende a exigência de sessão
+revogável em cookie `HttpOnly`. A ausência de RLS no D1 exige autorização
+server-side centralizada, `tenant_id` em todas as tabelas de negócio e testes
+IDOR com duas lojas antes de dados reais.
+
+Contexto, alternativas, riscos e condições de implementação estão em
+[`ADR-001-AUTENTICACAO-E-PERSISTENCIA.md`](ADR-001-AUTENTICACAO-E-PERSISTENCIA.md).

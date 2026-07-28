@@ -37,6 +37,7 @@ pedido sem ajuda.
 
 Objetivo: deixar de ser demonstração e virar sistema utilizável.
 
+- [x] decisão de autenticação e persistência registrada;
 - [ ] autenticação;
 - [ ] empresas e usuários;
 - [ ] banco de dados;
@@ -107,7 +108,10 @@ aceitam pagar de forma recorrente.
 Avançar em duas trilhas curtas, sem misturá-las:
 
 1. observar o uso real da Fase 1 e registrar problemas de clareza;
-2. preparar a fundação segura da Fase 2 com dependências atualizadas, headers,
-   decisão explícita de autenticação/banco e testes de isolamento.
+2. preparar a fundação segura da Fase 2 com dependências atualizadas, headers e
+   decisão explícita de autenticação/banco — concluído;
+3. escolher provedor de e-mail, domínio e remetente para então implementar
+   conta e sessão com Better Auth + D1, sem persistir produtos antes dos testes
+   de isolamento.
 
 O estado operacional e a sequência detalhada ficam em `docs/HANDOFF.md`.

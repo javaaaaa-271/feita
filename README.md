@@ -56,6 +56,7 @@ ele.
 - [Roadmap](docs/ROADMAP.md)
 - [Requisitos mapeados](docs/REQUIREMENTS.md)
 - [Segurança](docs/SECURITY.md)
+- [ADR de autenticação e persistência](docs/ADR-001-AUTENTICACAO-E-PERSISTENCIA.md)
 
 ## Estrutura do código
 

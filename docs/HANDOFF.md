@@ -22,6 +22,11 @@ O `main` do GitHub foi reorganizado no commit
 `9c8b89e66de93e9a572662abb25c5d1568bebd0f`
 (`Restore project directory structure`).
 
+O marco de dependências, headers e testes foi consolidado no commit
+`13958d35656127cb0a7fb52470368803eb6b70fb`
+(`Harden production dependencies and HTTP responses`) e enviado para
+`origin/main`.
+
 ## Arquitetura atual
 
 - Next.js 16 + React 19;
@@ -115,27 +120,65 @@ Ordem proposta:
 
 1. ~~atualizar e reauditar dependências~~ — concluído;
 2. ~~adicionar headers de segurança e testes~~ — concluído;
-3. registrar a decisão de autenticação e banco — próxima ação;
+3. ~~registrar a decisão de autenticação e banco~~ — concluído;
 4. implementar cadastro, login e sessão persistente;
 5. implementar “esqueci minha senha” e redefinição por e-mail;
 6. ligar cada usuária à própria loja;
 7. provar isolamento com duas contas e duas lojas;
 8. só então persistir produtos e imagens.
 
-## Decisão ainda aberta
+## Decisão de autenticação e persistência
 
-O scaffold atual oferece Cloudflare D1, mas a hipótese discutida para o produto
-é autenticação gerenciada com PostgreSQL, provavelmente usando Supabase.
+O `ADR-001-AUTENTICACAO-E-PERSISTENCIA.md` recomenda Better Auth + Cloudflare
+D1 + R2 para o primeiro MVP real.
 
-Não misturar as duas arquiteturas por acidente. Antes de implementar login,
-registrar uma decisão explícita que compare:
+Motivos determinantes:
 
-- Supabase Auth + PostgreSQL;
-- autenticação gerenciada compatível com D1;
-- custos, recuperação por e-mail, isolamento multiempresa, operação local,
-  implantação no Sites e portabilidade.
+- a alternativa usa a preparação atual de Worker, Sites, D1 e Drizzle;
+- Better Auth mantém sessões revogáveis em cookies `HttpOnly` e processa
+  senhas com uma biblioteca dedicada;
+- recuperação pode usar OTP digitado, sem token em URL;
+- Supabase/PostgreSQL tem a vantagem forte de RLS, mas o caminho SSR
+  documentado pressupõe tokens acessíveis ao navegador e exigiria uma camada
+  BFF adicional para cumprir a regra `HttpOnly` da Feita;
+- manter Supabase Auth com D1 perderia RLS e criaria dois planos operacionais.
 
-Não criar autenticação de senha caseira.
+Risco principal: D1 não oferece RLS. Toda autorização precisa ocorrer no
+servidor, sempre combinando o recurso com o `tenant_id` derivado da sessão.
+Testes com duas usuárias e duas lojas continuam sendo critério de parada.
+
+D1 e R2 permanecem `null`; nenhuma dependência, rota, schema ou autenticação foi
+adicionada neste marco.
+
+## Bloqueio consciente antes da implementação
+
+A próxima ação exige escolhas ou recursos do usuário:
+
+1. escolher e criar a conta do provedor de e-mail transacional;
+2. definir domínio/subdomínio e remetente;
+3. disponibilizar as credenciais somente pelo runtime do Sites;
+4. autorizar a ativação do binding D1 no projeto existente.
+
+Depois disso, a próxima ação exata é implementar somente o Marco A do ADR:
+schema mínimo, cadastro com verificação por OTP, login, logout, cookie seguro,
+rate limit por IP/e-mail e testes de sessão. Recuperação, loja e produtos ficam
+em commits posteriores.
+
+## Validação do marco arquitetural
+
+Executado depois da documentação da decisão:
+
+- `npm run build`: passou e validou o artefato Sites;
+- `npm test`: passou com 5 de 5 testes, incluindo a regressão dos headers;
+- `npm run lint`: passou sem erros e manteve somente os dois avisos
+  preexistentes de `<img>`;
+- `npm audit --omit=dev`: zero vulnerabilidades;
+- `git diff --check`: passou;
+- revisão do diff e busca por segredos: somente documentação do marco, sem
+  credenciais ou valores sensíveis.
+
+Não houve novo deploy do Sites: este marco não altera o runtime e a
+autenticação incompleta não deve ser publicada.
 
 ## Critério do próximo marco
 
