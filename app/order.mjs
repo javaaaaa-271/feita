@@ -109,11 +109,12 @@ export function buildOrderMessage({
   return message.join("\n");
 }
 
-export function buildWhatsAppUrl(message) {
+export function buildWhatsAppUrl(message, phone = "") {
   const normalizedMessage = String(message ?? "").trim();
   if (!normalizedMessage) {
     throw new Error("A mensagem do pedido está vazia.");
   }
 
-  return `https://wa.me/?text=${encodeURIComponent(normalizedMessage)}`;
+  const normalizedPhone = String(phone ?? "").replace(/\D/g, "");
+  return `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(normalizedMessage)}`;
 }

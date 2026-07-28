@@ -1,0 +1,34 @@
+{
+  "slug": "atelie-aurora",
+  "name": "Ateliê Aurora",
+  "description": "Peças artesanais para deixar a rotina mais bonita.",
+  "location": "Palmas, TO",
+  "accentColor": "#8a3f2d",
+  "whatsApp": "(63) 99999-0000",
+  "instagram": "@atelieaurora_exemplo",
+  "purchaseInstructions": "Escolha os itens e confirme disponibilidade pelo WhatsApp.",
+  "paymentMethods": ["Pix", "Dinheiro"],
+  "published": true,
+  "products": [
+    {
+      "name": "Caderno Aurora",
+      "description": "Caderno artesanal com capa dura.",
+      "category": "Papelaria",
+      "priceCents": 5900,
+      "stock": 4,
+      "variations": ["Terracota", "Verde"],
+      "published": true,
+      "available": true
+    },
+    {
+      "name": "Bloco Semanal",
+      "description": "Planejamento destacável para sete dias.",
+      "category": "Papelaria",
+      "priceCents": 2800,
+      "stock": 0,
+      "variations": [],
+      "published": true,
+      "available": false
+    }
+  ]
+}
