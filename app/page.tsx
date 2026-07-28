@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 
 type View = "inicio" | "produtos" | "vitrine";
 
@@ -12,6 +12,7 @@ type Product = {
   stock: number;
   tone: string;
   initials: string;
+  image?: string;
 };
 
 const starterProducts: Product[] = [
@@ -83,6 +84,7 @@ export default function Home() {
     const category = String(data.get("category") ?? "").trim();
     const price = Number(data.get("price"));
     const stock = Number(data.get("stock"));
+    const image = data.get("image");
 
     if (!name || !category || !Number.isFinite(price)) return;
 
@@ -95,6 +97,10 @@ export default function Home() {
         price,
         stock: Number.isFinite(stock) ? stock : 0,
         tone: "sand",
+        image:
+          image instanceof File && image.size > 0
+            ? URL.createObjectURL(image)
+            : undefined,
         initials: name
           .split(" ")
           .slice(0, 2)
@@ -259,8 +265,8 @@ function Dashboard({
       <div className="page-heading">
         <div>
           <p className="kicker">Terça, 28 de julho</p>
-          <h1>Bom dia, Rafa.</h1>
-          <p className="subtitle">Seu negócio pede três pequenas ações hoje.</p>
+          <h1>Hoje na sua loja</h1>
+          <p className="subtitle">1 pedido para preparar e 3 pagamentos para acompanhar.</p>
         </div>
         <button className="primary-button" onClick={onCreate}>
           <span>＋</span> Novo produto
@@ -269,11 +275,11 @@ function Dashboard({
 
       <section className="focus-card">
         <div className="focus-copy">
-          <p className="section-label">O mais importante agora</p>
-          <span className="focus-number">01</span>
-          <h2>Um pedido está pronto para preparar.</h2>
+          <p className="section-label">Próximo pedido</p>
+          <span className="focus-number">#1042</span>
+          <h2>Ana Clara · R$ 96,00</h2>
           <p>
-            Pedido #1042 · Ana Clara · retirada amanhã
+            Retirada amanhã · pagamento confirmado
           </p>
         </div>
         <div className="focus-action">
@@ -384,9 +390,9 @@ function Products({
     <div className="page products-page">
       <div className="page-heading">
         <div>
-          <p className="kicker">Seu catálogo</p>
+          <p className="kicker">Catálogo</p>
           <h1>Produtos</h1>
-          <p className="subtitle">Tudo o que sua cliente pode encontrar na vitrine.</p>
+          <p className="subtitle">Cadastre, ajuste preços e acompanhe o estoque.</p>
         </div>
         <div className="heading-actions">
           <button className="secondary-button" onClick={onViewStore}>
@@ -423,7 +429,12 @@ function Products({
         {products.map((product) => (
           <div className="table-row" key={product.id}>
             <div className="product-cell">
-              <ProductArt tone={product.tone} initials={product.initials} compact />
+              <ProductArt
+                tone={product.tone}
+                initials={product.initials}
+                image={product.image}
+                compact
+              />
               <div>
                 <strong>{product.name}</strong>
                 <span>{product.category}</span>
@@ -475,7 +486,7 @@ function Storefront({
             <span>PR</span>
             <div>
               <strong>Papelaria da Rafa</strong>
-              <small>Feito com cuidado, do papel ao pacote.</small>
+              <small>Papelaria artesanal · Palmas, TO</small>
             </div>
           </div>
           <button className="cart-button" type="button">
@@ -484,9 +495,21 @@ function Storefront({
         </header>
 
         <section className="store-hero">
-          <p>Papelaria afetiva · Palmas, TO</p>
-          <h1>Pequenas coisas,<br />feitas para ficar.</h1>
-          <span>Encomendas abertas para agosto</span>
+          <div>
+            <p>Catálogo de agosto</p>
+            <h1>Papelaria feita para usar todos os dias.</h1>
+            <span>Escolha os produtos e envie seu pedido pelo WhatsApp.</span>
+          </div>
+          <dl>
+            <div>
+              <dt>Produção</dt>
+              <dd>3 a 5 dias úteis</dd>
+            </div>
+            <div>
+              <dt>Entrega</dt>
+              <dd>Palmas e região</dd>
+            </div>
+          </dl>
         </section>
 
         <div className="store-content">
@@ -500,7 +523,11 @@ function Storefront({
           <section className="store-grid">
             {products.map((product) => (
               <article className="store-product" key={product.id}>
-                <ProductArt tone={product.tone} initials={product.initials} />
+                <ProductArt
+                  tone={product.tone}
+                  initials={product.initials}
+                  image={product.image}
+                />
                 <p>{product.category}</p>
                 <h2>{product.name}</h2>
                 <div>
@@ -533,17 +560,25 @@ function Storefront({
 function ProductArt({
   tone,
   initials,
+  image,
   compact,
 }: {
   tone: string;
   initials: string;
+  image?: string;
   compact?: boolean;
 }) {
   return (
     <div className={`product-art ${tone} ${compact ? "compact" : ""}`} aria-hidden="true">
-      <span>{initials}</span>
-      <i />
-      <b />
+      {image ? (
+        <img src={image} alt="" />
+      ) : (
+        <>
+          <span>{initials}</span>
+          <i />
+          <b />
+        </>
+      )}
     </div>
   );
 }
@@ -555,6 +590,33 @@ function ProductDrawer({
   onClose: () => void;
   onSave: (event: FormEvent<HTMLFormElement>) => void;
 }) {
+  const [imagePreview, setImagePreview] = useState("");
+  const [imageName, setImageName] = useState("");
+  const [imageError, setImageError] = useState("");
+
+  function chooseImage(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      event.target.value = "";
+      setImagePreview("");
+      setImageName("");
+      setImageError("A imagem precisa ter no máximo 5 MB.");
+      return;
+    }
+
+    setImageError("");
+    setImageName(file.name);
+
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      setImagePreview(typeof reader.result === "string" ? reader.result : "");
+    });
+    reader.readAsDataURL(file);
+  }
+
   return (
     <div className="drawer-layer" role="presentation" onMouseDown={onClose}>
       <aside
@@ -566,9 +628,8 @@ function ProductDrawer({
       >
         <div className="drawer-heading">
           <div>
-            <p className="kicker">Catálogo</p>
-            <h2 id="new-product-title">Novo produto</h2>
-            <span>Comece pelo essencial. O resto pode esperar.</span>
+            <h2 id="new-product-title">Adicionar produto</h2>
+            <span>Os dados abaixo aparecem na sua vitrine.</span>
           </div>
           <button type="button" onClick={onClose} aria-label="Fechar">
             ×
@@ -576,11 +637,31 @@ function ProductDrawer({
         </div>
 
         <form onSubmit={onSave}>
-          <div className="image-drop">
-            <div>＋</div>
-            <strong>Adicionar foto</strong>
-            <span>JPG ou PNG · até 5 MB</span>
-          </div>
+          <label className={`image-picker ${imagePreview ? "has-image" : ""}`} htmlFor="product-image">
+            <input
+              id="product-image"
+              name="image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={chooseImage}
+            />
+            {imagePreview ? (
+              <>
+                <img src={imagePreview} alt="Prévia do produto" />
+                <span className="image-picker-action">Trocar imagem</span>
+              </>
+            ) : (
+              <>
+                <span className="image-picker-icon">＋</span>
+                <span>
+                  <strong>Escolher imagem</strong>
+                  <small>JPG, PNG ou WebP · até 5 MB</small>
+                </span>
+              </>
+            )}
+          </label>
+          {imageName && <p className="image-file-name">{imageName}</p>}
+          {imageError && <p className="field-error">{imageError}</p>}
 
           <label className="field">
             <span>Nome do produto</span>
