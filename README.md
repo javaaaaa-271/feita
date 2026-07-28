@@ -50,10 +50,12 @@ ele.
 
 ## Documentos do projeto
 
+- [Handoff atual](docs/HANDOFF.md)
 - [Visão e escopo](docs/VISION.md)
 - [Decisões de produto e design](docs/DECISIONS.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Requisitos mapeados](docs/REQUIREMENTS.md)
+- [Segurança](docs/SECURITY.md)
 
 ## Estrutura do código
 

@@ -104,6 +104,10 @@ aceitam pagar de forma recorrente.
 
 ## Próxima ação recomendada
 
-Não começar banco de dados imediatamente. Primeiro realizar o teste de
-usabilidade da Fase 1 e transformar as dificuldades observadas em uma lista
-curta de correções. Isso evita persistir um fluxo ainda errado.
+Avançar em duas trilhas curtas, sem misturá-las:
+
+1. observar o uso real da Fase 1 e registrar problemas de clareza;
+2. preparar a fundação segura da Fase 2 com dependências atualizadas, headers,
+   decisão explícita de autenticação/banco e testes de isolamento.
+
+O estado operacional e a sequência detalhada ficam em `docs/HANDOFF.md`.
