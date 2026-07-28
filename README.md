@@ -19,7 +19,9 @@ O primeiro corte navegável já entrega:
 - cadastro de produto em uma gaveta lateral;
 - upload e prévia de foto;
 - vitrine da loja;
-- carrinho com quantidade e total;
+- carrinho com variações, quantidade e total;
+- checkout local com entrega, retirada, pagamento e observações;
+- revisão e abertura da mensagem estruturada no WhatsApp;
 - experiência responsiva para celular e desktop;
 - direção visual própria.
 
@@ -33,7 +35,10 @@ https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site
 - recarregar a página restaura os produtos de demonstração;
 - ainda não há login, banco de dados ou múltiplas lojas;
 - pedidos ainda não são persistidos;
-- Pix e WhatsApp ainda não foram implementados;
+- o WhatsApp recebe uma mensagem pronta, mas o número da loja ainda não é
+  configurável e a mensagem não é enviada automaticamente;
+- Pix é somente uma forma de pagamento informada no pedido; ainda não há QR
+  Code ou código copia e cola;
 - "Feita" ainda é um nome de trabalho.
 
 ## Fluxo central do produto
@@ -57,6 +62,7 @@ ele.
 - [Requisitos mapeados](docs/REQUIREMENTS.md)
 - [Segurança](docs/SECURITY.md)
 - [ADR de autenticação e persistência](docs/ADR-001-AUTENTICACAO-E-PERSISTENCIA.md)
+- [Roteiro do Marco 3 para uso real](docs/MARCO_3_USO_REAL.md)
 
 ## Estrutura do código
 

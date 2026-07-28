@@ -6,17 +6,89 @@ Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
 ## Onde estamos
 
-A Fase 0 está concluída. Existe um protótipo navegável e responsivo com:
+O Marco 3 de preparação para o primeiro uso real foi concluído localmente na
+branch `codex/marco-3-uso-real`. Existe um protótipo navegável e responsivo com:
 
 - painel;
 - catálogo;
 - cadastro de produto em gaveta lateral;
 - upload e prévia local de foto;
 - vitrine pública simulada;
-- carrinho com quantidade e total.
+- carrinho com variação, quantidade e total;
+- checkout com nome da cliente, entrega ou retirada, endereço, pagamento e
+  observações;
+- mensagem estruturada e URL codificada para abrir o WhatsApp;
+- edição, busca, filtros, disponibilidade e estoque do catálogo;
+- roteiro não técnico para a rodada com a primeira comerciante.
 
-Os dados ainda vivem apenas no estado do navegador e voltam à demonstração
-quando a página recarrega.
+Os dados ainda vivem apenas no estado do navegador e desaparecem quando a
+página recarrega. A produção começa com catálogo vazio. Dados fictícios só
+podem ser carregados por uma ação explícita no ambiente de desenvolvimento.
+
+## Marco 3 — preparação para uso real
+
+Concluído em 28 de julho de 2026, sem deploy.
+
+### O que foi implementado
+
+- cadastro e edição preservam descrição, publicação, estoque e opções separadas
+  por vírgula;
+- produto não publicado não aparece na vitrine;
+- produto sem estoque aparece indisponível e não entra no carrinho;
+- carrinho consolida o mesmo produto e variação, permite ajustar quantidades e
+  respeita o estoque;
+- checkout diferencia entrega e retirada, exige endereço para entrega e coleta
+  forma de pagamento e observações;
+- a etapa de revisão mostra o texto completo antes de oferecer
+  **Abrir WhatsApp**;
+- a URL `wa.me` usa `encodeURIComponent`, sem enviar a mensagem
+  automaticamente;
+- busca, filtros por disponibilidade/estoque, categorias da vitrine e cópia do
+  link passaram a funcionar;
+- os números fictícios de venda e pedido foram removidos do painel;
+- metadados do starter foram substituídos pelos da Feita e o idioma do HTML
+  passou para `pt-BR`;
+- declarações mínimas do runtime Cloudflare foram adicionadas localmente para
+  que o TypeScript valide Worker e D1 sem ativar bindings;
+- `docs/MARCO_3_USO_REAL.md` contém preparação, cinco roteiros, observação,
+  severidade e tabela de ocorrências.
+
+### Testes executados
+
+- baseline antes das alterações: lint com dois avisos preexistentes de `<img>`,
+  build e 5 testes passando;
+- `npm test`: build Sites validado e 11 de 11 testes passando;
+- `npx tsc --noEmit`: passou; antes da declaração local, o comando expunha os
+  tipos ausentes de `cloudflare:workers`, `Fetcher` e `D1Database`;
+- testes unitários cobrem reais, pedido simples, vários itens, variação,
+  entrega, retirada, observação, obrigatórios, carrinho vazio,
+  indisponibilidade e codificação da URL;
+- teste manual no navegador local cobriu edição, busca, variação, múltiplos
+  itens, estoque zero, link copiado, entrega, pagamento, observação, mensagem
+  copiada e URL do WhatsApp;
+- viewport de 390 × 844 sem rolagem horizontal no checkout ou na vitrine;
+- nenhum erro ou aviso foi registrado no console do navegador durante o fluxo;
+- `git diff --check`: passou.
+
+### Riscos e bloqueios
+
+- **P0 para compartilhamento externo:** o catálogo é estado local; copiar o link
+  não transfere produtos para outro navegador ou aparelho;
+- recarregar a página apaga catálogo e carrinho;
+- a URL do WhatsApp não contém o número da loja, então a cliente ainda precisa
+  escolher o contato;
+- fotos usam URL local temporária e não sobrevivem ao recarregamento;
+- não existe pedido persistido ou histórico;
+- os dois avisos preexistentes de `<img>` permanecem; trocar por `next/image`
+  depende de decidir o pipeline definitivo de imagens.
+
+### Próxima ação concreta
+
+Lorenzo deve seguir `docs/MARCO_3_USO_REAL.md` com a primeira comerciante, sem
+recarregar a página, executar os cinco pedidos e registrar toda ocorrência P0,
+P1 ou P2. Só depois da rodada deve-se decidir se a próxima menor fatia é
+persistência do catálogo, configuração do número da loja ou correção de
+clareza observada.
 
 O `main` do GitHub foi reorganizado no commit
 `9c8b89e66de93e9a572662abb25c5d1568bebd0f`
@@ -111,10 +183,11 @@ Risco conhecido: o HTML gerado pelo Vinext usa scripts e estilos inline para
 hidratação, então a CSP ainda contém `unsafe-inline`. A política deve migrar
 para nonces antes de tratar conteúdo não confiável ou ampliar integrações.
 
-## Próximo objetivo
+## Objetivo arquitetural futuro
 
-Transformar a Fase 2 em uma primeira fatia segura, sem tentar construir todos os
-módulos de uma vez.
+Esta sequência permanece aprovada, mas não é a próxima ação. Ela só começa
+depois que o uso com a primeira comerciante validar o ciclo local e houver
+decisão explícita de avançar para a segunda e a terceira loja.
 
 Ordem proposta:
 
@@ -150,16 +223,18 @@ Testes com duas usuárias e duas lojas continuam sendo critério de parada.
 D1 e R2 permanecem `null`; nenhuma dependência, rota, schema ou autenticação foi
 adicionada neste marco.
 
-## Bloqueio consciente antes da implementação
+## Dependências para a implementação futura
 
-A próxima ação exige escolhas ou recursos do usuário:
+Quando a autenticação for autorizada, ela exigirá escolhas ou recursos do
+usuário:
 
 1. escolher e criar a conta do provedor de e-mail transacional;
 2. definir domínio/subdomínio e remetente;
 3. disponibilizar as credenciais somente pelo runtime do Sites;
 4. autorizar a ativação do binding D1 no projeto existente.
 
-Depois disso, a próxima ação exata é implementar somente o Marco A do ADR:
+Depois da autorização futura, a primeira ação exata será implementar somente o
+Marco A do ADR:
 schema mínimo, cadastro com verificação por OTP, login, logout, cookie seguro,
 rate limit por IP/e-mail e testes de sessão. Recuperação, loja e produtos ficam
 em commits posteriores.
@@ -180,7 +255,7 @@ Executado depois da documentação da decisão:
 Não houve novo deploy do Sites: este marco não altera o runtime e a
 autenticação incompleta não deve ser publicada.
 
-## Critério do próximo marco
+## Critério do futuro marco de contas
 
 Duas usuárias conseguem:
 
