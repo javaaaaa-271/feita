@@ -44,12 +44,67 @@ Constatações atuais:
 
 - CORS não refletiu uma origem arbitrária no teste inicial;
 - métodos mutáveis na rota principal retornaram `405`;
-- faltam headers de segurança contra clickjacking e endurecimento do navegador;
+- headers de segurança contra clickjacking e endurecimento do navegador foram
+  adicionados e cobertos por testes automatizados;
 - existem alertas de dependências que devem ser reavaliados e corrigidos antes
   da autenticação;
 - o upload atual tem apenas validação do navegador, insuficiente para produção.
 
 Detalhes e critérios obrigatórios estão em `docs/SECURITY.md`.
+
+## Dependências reauditas
+
+A primeira ação da fundação segura da Fase 2 foi concluída em 28 de julho de
+2026:
+
+- Next.js, React, React DOM, React Server Components, Vite, Wrangler e os
+  plugins de Vite/Cloudflare foram atualizados para versões corrigidas;
+- `postcss` e `sharp` receberam versões mínimas seguras por `overrides`, porque
+  o Next.js 16.2.12 ainda fixa versões transitivas afetadas;
+- `npm audit --omit=dev` passou com zero vulnerabilidades;
+- a auditoria completa ainda aponta alertas somente em ferramentas de
+  desenvolvimento: a cadeia de lint baseada em `brace-expansion` e o
+  `drizzle-kit` legado baseado em `esbuild`;
+- não foi usado `npm audit fix --force`: as correções propostas trocam versões
+  de forma incompatível e precisam aguardar atualização dos pacotes de origem.
+
+Validações executadas:
+
+- `npm run lint`: passou com dois avisos preexistentes de `<img>`;
+- `npm test`: passou, incluindo build Vinext, validação do artefato Sites e 1
+  teste de HTML;
+- `git diff --check`: passou em uma cópia temporária autenticada do repositório
+  de origem do Sites, usada porque a pasta de trabalho recebida não contém
+  metadados `.git`.
+
+O clone oficial foi restaurado nesta pasta antes do marco seguinte. O remoto
+`origin` aponta para `javaaaaa-271/feita`, a branch é `main` e as quatro
+alterações deste marco de dependências foram preservadas sem staging.
+
+## Headers de segurança
+
+A segunda ação da fundação segura da Fase 2 foi concluída em 28 de julho de
+2026, sem iniciar autenticação:
+
+- o Worker aplica headers de segurança a todas as respostas da aplicação,
+  inclusive erros `405` e a rota de otimização de imagens;
+- a CSP bloqueia framing, objetos, bases e formulários externos e restringe
+  scripts, estilos, imagens, fontes, conexões e workers;
+- `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`,
+  `Permissions-Policy`, COOP e CORP complementam o endurecimento;
+- HSTS é enviado somente quando a requisição usa HTTPS;
+- CORS usa uma origem de produção fixa, inclui `Vary: Origin` e não reflete
+  origens arbitrárias nem habilita credenciais.
+
+Validações executadas:
+
+- `npm run lint`: passou com os dois avisos preexistentes de `<img>`;
+- `npm test`: passou com build Vinext, validação do artefato Sites e 5 testes;
+- `git diff --check`: passou.
+
+Risco conhecido: o HTML gerado pelo Vinext usa scripts e estilos inline para
+hidratação, então a CSP ainda contém `unsafe-inline`. A política deve migrar
+para nonces antes de tratar conteúdo não confiável ou ampliar integrações.
 
 ## Próximo objetivo
 
@@ -58,9 +113,9 @@ módulos de uma vez.
 
 Ordem proposta:
 
-1. atualizar e reauditar dependências;
-2. adicionar headers de segurança e testes;
-3. registrar a decisão de autenticação e banco;
+1. ~~atualizar e reauditar dependências~~ — concluído;
+2. ~~adicionar headers de segurança e testes~~ — concluído;
+3. registrar a decisão de autenticação e banco — próxima ação;
 4. implementar cadastro, login e sessão persistente;
 5. implementar “esqueci minha senha” e redefinição por e-mail;
 6. ligar cada usuária à própria loja;
@@ -95,4 +150,3 @@ Duas usuárias conseguem:
 
 O marco só termina com testes automatizados de headers, autenticação e
 isolamento entre lojas.
-
