@@ -44,7 +44,8 @@ Constatações atuais:
 
 - CORS não refletiu uma origem arbitrária no teste inicial;
 - métodos mutáveis na rota principal retornaram `405`;
-- faltam headers de segurança contra clickjacking e endurecimento do navegador;
+- headers de segurança contra clickjacking e endurecimento do navegador foram
+  adicionados e cobertos por testes automatizados;
 - existem alertas de dependências que devem ser reavaliados e corrigidos antes
   da autenticação;
 - o upload atual tem apenas validação do navegador, insuficiente para produção.
@@ -76,10 +77,34 @@ Validações executadas:
   de origem do Sites, usada porque a pasta de trabalho recebida não contém
   metadados `.git`.
 
-Risco operacional: o código está em uma pasta sem repositório Git, apesar de o
-handoff referenciar o `main` oficial. O estado foi comparado com a origem do
-Sites para este marco, mas o clone oficial deve ser restaurado antes do próximo
-trabalho para evitar reconstruções temporárias do histórico.
+O clone oficial foi restaurado nesta pasta antes do marco seguinte. O remoto
+`origin` aponta para `javaaaaa-271/feita`, a branch é `main` e as quatro
+alterações deste marco de dependências foram preservadas sem staging.
+
+## Headers de segurança
+
+A segunda ação da fundação segura da Fase 2 foi concluída em 28 de julho de
+2026, sem iniciar autenticação:
+
+- o Worker aplica headers de segurança a todas as respostas da aplicação,
+  inclusive erros `405` e a rota de otimização de imagens;
+- a CSP bloqueia framing, objetos, bases e formulários externos e restringe
+  scripts, estilos, imagens, fontes, conexões e workers;
+- `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`,
+  `Permissions-Policy`, COOP e CORP complementam o endurecimento;
+- HSTS é enviado somente quando a requisição usa HTTPS;
+- CORS usa uma origem de produção fixa, inclui `Vary: Origin` e não reflete
+  origens arbitrárias nem habilita credenciais.
+
+Validações executadas:
+
+- `npm run lint`: passou com os dois avisos preexistentes de `<img>`;
+- `npm test`: passou com build Vinext, validação do artefato Sites e 5 testes;
+- `git diff --check`: passou.
+
+Risco conhecido: o HTML gerado pelo Vinext usa scripts e estilos inline para
+hidratação, então a CSP ainda contém `unsafe-inline`. A política deve migrar
+para nonces antes de tratar conteúdo não confiável ou ampliar integrações.
 
 ## Próximo objetivo
 
@@ -89,8 +114,8 @@ módulos de uma vez.
 Ordem proposta:
 
 1. ~~atualizar e reauditar dependências~~ — concluído;
-2. adicionar headers de segurança e testes — próxima ação;
-3. registrar a decisão de autenticação e banco;
+2. ~~adicionar headers de segurança e testes~~ — concluído;
+3. registrar a decisão de autenticação e banco — próxima ação;
 4. implementar cadastro, login e sessão persistente;
 5. implementar “esqueci minha senha” e redefinição por e-mail;
 6. ligar cada usuária à própria loja;

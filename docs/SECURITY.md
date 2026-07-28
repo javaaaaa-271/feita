@@ -17,7 +17,8 @@ Situação das correções anteriores à primeira autenticação:
 - a auditoria completa ainda aponta alertas em dependências transitivas de
   ferramentas locais (`eslint-config-next` e `drizzle-kit`), sem correção
   compatível oferecida pelos pacotes de origem;
-- ausência de headers de endurecimento do navegador;
+- headers de endurecimento do navegador foram adicionados na camada final do
+  Worker e possuem testes automatizados;
 - validação de upload limitada ao cliente.
 
 ## Controles obrigatórios para autenticação
@@ -62,6 +63,29 @@ resposta não devem revelar de maneira óbvia se o e-mail existe.
 - HSTS apenas no ambiente HTTPS correto;
 - métodos não suportados devem falhar.
 
+### Estado implementado
+
+O Worker aplica os controles a todas as respostas da aplicação, inclusive
+erros de método e a rota de otimização de imagens:
+
+- CSP com `frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'` e
+  restrições explícitas para os demais tipos de recurso;
+- `X-Frame-Options: DENY`;
+- `X-Content-Type-Options: nosniff`;
+- `Referrer-Policy: strict-origin-when-cross-origin`;
+- `Permissions-Policy` negando câmera, geolocalização, microfone, pagamentos e
+  USB;
+- COOP e CORP em `same-origin`;
+- HSTS somente em requisições HTTPS;
+- CORS restrito à origem de produção fixa, sem credenciais e com
+  `Vary: Origin`.
+
+Limitação conhecida: o Vinext injeta scripts e estilos inline durante a
+renderização e hidratação. Por compatibilidade, a CSP ainda permite
+`unsafe-inline` em `script-src` e `style-src`. A próxima revisão de CSP deve
+adotar nonces antes que a aplicação aceite conteúdo não confiável ou novas
+integrações externas.
+
 ## Banco e multiempresa
 
 - usar queries parametrizadas;
@@ -97,13 +121,13 @@ Qualquer falha nesse conjunto bloqueia publicação.
 
 ## Testes mínimos antes de dados reais
 
-- headers de segurança;
-- CORS com origem permitida e origem rejeitada;
-- rate limit;
-- mensagem genérica de login e recuperação;
-- expiração e uso único do token de redefinição;
-- logout invalidando sessão;
-- query malformada não alterando a consulta;
-- IDOR com duas lojas;
-- upload inválido, grande e com MIME falso;
-- respostas sem PII ou credenciais desnecessárias.
+- [x] headers de segurança;
+- [x] CORS com origem permitida e origem rejeitada;
+- [ ] rate limit;
+- [ ] mensagem genérica de login e recuperação;
+- [ ] expiração e uso único do token de redefinição;
+- [ ] logout invalidando sessão;
+- [ ] query malformada não alterando a consulta;
+- [ ] IDOR com duas lojas;
+- [ ] upload inválido, grande e com MIME falso;
+- [ ] respostas sem PII ou credenciais desnecessárias.
