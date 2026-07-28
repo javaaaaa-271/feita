@@ -25,11 +25,20 @@ O primeiro corte navegável já entrega:
 - experiência responsiva para celular e desktop;
 - direção visual própria.
 
+O Marco 4 também está preparado **somente em ambiente local**:
+
+- vitrine pública em `/loja/[slug]`;
+- loja e catálogo persistidos em D1 local;
+- imagens persistidas em R2 local e servidas após filtro por loja;
+- identidade, formas de pagamento e WhatsApp configuráveis por importação
+  controlada;
+- carrinho da cliente persistido no navegador e separado por loja.
+
 O protótipo está disponível em:
 
 https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site
 
-### Limites deste corte
+### Limites do site publicado
 
 - os dados ficam apenas na sessão atual;
 - recarregar a página restaura os produtos de demonstração;
@@ -40,6 +49,10 @@ https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site
 - Pix é somente uma forma de pagamento informada no pedido; ainda não há QR
   Code ou código copia e cola;
 - "Feita" ainda é um nome de trabalho.
+
+O site publicado ainda representa o Marco 3. O Marco 4 não foi enviado,
+publicado nem conectado a D1/R2 reais. Consulte o runbook antes de usar a nova
+vitrine local.
 
 ## Fluxo central do produto
 
@@ -63,12 +76,16 @@ ele.
 - [Segurança](docs/SECURITY.md)
 - [ADR de autenticação e persistência](docs/ADR-001-AUTENTICACAO-E-PERSISTENCIA.md)
 - [Roteiro do Marco 3 para uso real](docs/MARCO_3_USO_REAL.md)
+- [Marco 4 — primeira loja compartilhável](docs/MARCO_4_LOJA_COMPARTILHAVEL.md)
 
 ## Estrutura do código
 
 - `app/page.tsx`: produto navegável e estado do protótipo;
 - `app/globals.css`: identidade visual e comportamento responsivo;
-- `db/`: base preparada para a futura persistência;
+- `app/loja/[slug]/`: vitrine pública persistida;
+- `db/`: schema, bindings e consultas isoladas por loja;
+- `drizzle/`: migrations versionadas;
+- `scripts/import-store.mjs`: importação administrativa local e validada;
 - `tests/`: validações da aplicação renderizada;
 - `.openai/hosting.json`: vínculo desta fonte com o site publicado.
 
@@ -83,6 +100,8 @@ Comandos principais:
 
 ```bash
 npm install
+npm run db:migrate:local
+npm run store:import -- data/first-store.example.json
 npm run dev
 ```
 

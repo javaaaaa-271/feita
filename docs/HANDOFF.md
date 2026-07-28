@@ -6,24 +6,84 @@ Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
 ## Onde estamos
 
-O Marco 3 de preparação para o primeiro uso real foi concluído localmente na
-branch `codex/marco-3-uso-real`. Existe um protótipo navegável e responsivo com:
+O Marco 3 foi revisado, integrado por fast-forward à `main` e enviado para
+`origin/main` no commit `d97df7a`. Não houve deploy e a branch
+`codex/marco-3-uso-real` foi preservada.
+
+O Marco 4 está concluído somente localmente na branch
+`codex/marco-4-loja-compartilhavel`. Além do protótipo navegável, agora existe:
 
 - painel;
 - catálogo;
 - cadastro de produto em gaveta lateral;
 - upload e prévia local de foto;
-- vitrine pública simulada;
+- vitrine pública persistida em `/loja/[slug]`;
 - carrinho com variação, quantidade e total;
 - checkout com nome da cliente, entrega ou retirada, endereço, pagamento e
   observações;
-- mensagem estruturada e URL codificada para abrir o WhatsApp;
+- mensagem estruturada e URL codificada para o WhatsApp configurado;
 - edição, busca, filtros, disponibilidade e estoque do catálogo;
-- roteiro não técnico para a rodada com a primeira comerciante.
+- D1 e R2 locais com migration versionada;
+- identidade, catálogo, estoque, variações e imagens duráveis;
+- carrinho persistido por navegador e separado por slug;
+- importador local validado, com dry-run e sem sobrescrita;
+- leitura pública isolada por loja e nenhuma API pública de escrita.
 
-Os dados ainda vivem apenas no estado do navegador e desaparecem quando a
-página recarrega. A produção começa com catálogo vazio. Dados fictícios só
-podem ser carregados por uma ação explícita no ambiente de desenvolvimento.
+O painel em `/` continua sendo o sandbox de sessão do Marco 3 e não administra
+o novo catálogo persistido. A produção continua no Marco 3. Recursos reais,
+autenticação, dados da comerciante, push do Marco 4, PR, merge e deploy não
+foram executados.
+
+## Marco 4 — primeira loja compartilhável
+
+### Decisões
+
+- D1 é a fonte autoritativa de loja/produtos e R2 guarda imagens.
+- Preço é inteiro em centavos e todo registro de negócio possui `tenant_id`.
+- A rota pública deriva o tenant do slug publicado; IDs enviados pelo cliente
+  nunca escolhem outra loja.
+- Imagens são validadas, decodificadas, redimensionadas, convertidas para WebP
+  e recebem chave aleatória.
+- O carrinho pode ficar em `localStorage` porque pertence à cliente; catálogo e
+  configuração nunca ficam ali.
+- Sem autenticação, a única mutação é o importador local operado por Lorenzo.
+- Better Auth permanece a recomendação para autonomia futura da comerciante.
+
+### Testes executados
+
+- migration D1 em estado temporário limpo;
+- reabertura de D1/R2 confirmou persistência;
+- duas lojas confirmaram ausência de vazamento em catálogo e mídia;
+- slug inexistente/loja oculta/produto oculto retornaram estados seguros;
+- carrinho descartou produto oculto/sem estoque e limitou quantidade;
+- telefone brasileiro, destino direto e texto acentuado foram validados;
+- imagem falsa e maior que 10 MB foram recusadas;
+- imagem válida virou WebP de até 1800 px sem EXIF/ICC;
+- inspeção confirmou que as rotas públicas exportam somente `GET`;
+- `npm run lint`: sem erros, com os mesmos dois avisos de `<img>` do Marco 3;
+- `npx tsc --noEmit`: passou;
+- `npm test`: passou, incluindo build e testes antigos/novos;
+- `git diff --check`: passou.
+
+O servidor local respondeu `200` e renderizou a loja fictícia persistida. O
+navegador integrado e o Chrome conectado bloquearam URLs locais antes do
+carregamento; portanto não foi repetida a alegação de inspeção visual/mobile do
+Marco 4. A responsividade está coberta por CSS e revisão de fonte, mas a
+verificação manual em 390 × 844 permanece obrigatória antes de qualquer
+preview.
+
+### Riscos e próxima ação concreta
+
+- falta escolher e autorizar a proteção administrativa;
+- D1/R2 existem apenas na emulação;
+- não houve teste em aparelho real;
+- o painel de sessão e a vitrine persistida ainda são superfícies separadas;
+- pedidos continuam sem persistência, deliberadamente.
+
+Próxima ação: Lorenzo deve revisar
+`docs/MARCO_4_LOJA_COMPARTILHAVEL.md`, escolher entre importador assistido
+temporário e autorização de Better Auth/Cloudflare Access, e só depois
+autorizar recursos de preview. Até lá, não enviar a branch nem criar bindings.
 
 ## Marco 3 — preparação para uso real
 
@@ -82,13 +142,14 @@ Concluído em 28 de julho de 2026, sem deploy.
 - os dois avisos preexistentes de `<img>` permanecem; trocar por `next/image`
   depende de decidir o pipeline definitivo de imagens.
 
-### Próxima ação concreta
+### Próxima ação registrada no Marco 3 (superada)
 
 Lorenzo deve seguir `docs/MARCO_3_USO_REAL.md` com a primeira comerciante, sem
 recarregar a página, executar os cinco pedidos e registrar toda ocorrência P0,
 P1 ou P2. Só depois da rodada deve-se decidir se a próxima menor fatia é
 persistência do catálogo, configuração do número da loja ou correção de
-clareza observada.
+clareza observada. O Marco 4 local executou a fatia de persistência; a rodada
+com a comerciante e qualquer publicação continuam pendentes.
 
 O `main` do GitHub foi reorganizado no commit
 `9c8b89e66de93e9a572662abb25c5d1568bebd0f`
@@ -104,18 +165,22 @@ O marco de dependências, headers e testes foi consolidado no commit
 - Next.js 16 + React 19;
 - Vinext/Vite;
 - hospedagem Sites sobre Cloudflare;
-- `app/page.tsx` concentra a fatia navegável;
-- `app/globals.css` concentra o sistema visual atual;
-- `db/schema.ts` está vazio;
+- `app/page.tsx` mantém o sandbox operacional do Marco 3;
+- `app/loja/[slug]` implementa a vitrine pública persistida;
+- `app/globals.css` e o CSS module da vitrine contêm os sistemas visuais;
+- `db/schema.ts` define lojas, produtos e mídia;
+- D1/R2 estão ativos apenas na emulação local;
 - `.openai/hosting.json` mantém o vínculo com o site já existente;
 - `app/chatgpt-auth.ts` pertence à proteção do protótipo no ambiente hospedado,
   não à autenticação das clientes da Feita.
 
 ## Auditoria de segurança inicial
 
-O protótipo ainda não possui API própria, autenticação de clientes, JWT, queries
-SQL ou respostas com dados pessoais. Portanto, rate limit, enumeração de e-mail,
-SQL injection e IDOR ainda não têm uma superfície de negócio implementada.
+O produto ainda não possui autenticação de clientes, JWT ou dados pessoais.
+Existe uma API própria somente de leitura para imagens e existem queries D1
+parametrizadas. Rate limit e enumeração de e-mail seguem sem superfície porque
+não há login; IDOR de leitura foi coberto localmente com duas lojas, enquanto
+qualquer mutação autenticada permanece bloqueada.
 
 Constatações atuais:
 
@@ -125,7 +190,8 @@ Constatações atuais:
   adicionados e cobertos por testes automatizados;
 - existem alertas de dependências que devem ser reavaliados e corrigidos antes
   da autenticação;
-- o upload atual tem apenas validação do navegador, insuficiente para produção.
+- o importador local valida e reprocessa imagens no servidor; um futuro upload
+  remoto ainda exigirá autenticação e rate limit.
 
 Detalhes e critérios obrigatórios estão em `docs/SECURITY.md`.
 
@@ -198,7 +264,8 @@ Ordem proposta:
 5. implementar “esqueci minha senha” e redefinição por e-mail;
 6. ligar cada usuária à própria loja;
 7. provar isolamento com duas contas e duas lojas;
-8. só então persistir produtos e imagens.
+8. ligar os adaptadores locais de produtos e imagens aos recursos reais somente
+   depois dessas barreiras.
 
 ## Decisão de autenticação e persistência
 
@@ -220,8 +287,9 @@ Risco principal: D1 não oferece RLS. Toda autorização precisa ocorrer no
 servidor, sempre combinando o recurso com o `tenant_id` derivado da sessão.
 Testes com duas usuárias e duas lojas continuam sendo critério de parada.
 
-D1 e R2 permanecem `null`; nenhuma dependência, rota, schema ou autenticação foi
-adicionada neste marco.
+Os nomes lógicos `DB` e `STORE_IMAGES`, o schema, a migration e a rota pública
+foram adicionados no Marco 4 apenas para execução local. Os recursos e bindings
+remotos continuam inexistentes; autenticação não foi adicionada.
 
 ## Dependências para a implementação futura
 

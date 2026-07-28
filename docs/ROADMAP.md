@@ -40,11 +40,11 @@ Objetivo: deixar de ser demonstração e virar sistema utilizável.
 - [x] decisão de autenticação e persistência registrada;
 - [ ] autenticação;
 - [ ] empresas e usuários;
-- [ ] banco de dados;
-- [ ] armazenamento de imagens;
-- [ ] produtos e categorias persistentes;
-- [ ] slug público da loja;
-- [ ] isolamento entre lojas;
+- [ ] banco de dados — adaptador e migration locais concluídos; recurso real pendente;
+- [ ] armazenamento de imagens — R2 local concluído; bucket real pendente;
+- [ ] produtos e categorias persistentes — concluído localmente;
+- [ ] slug público da loja — concluído localmente;
+- [ ] isolamento entre lojas — leitura local coberta; autenticação e mutações pendentes;
 - [ ] permissões básicas;
 - [ ] estados vazios, erros e carregamento.
 

@@ -157,3 +157,12 @@ Qualquer falha nesse conjunto bloqueia publicação.
 - [ ] IDOR com duas lojas;
 - [ ] upload inválido, grande e com MIME falso;
 - [ ] respostas sem PII ou credenciais desnecessárias.
+
+### Evidência local do Marco 4
+
+O Marco 4 adiciona testes locais para query parametrizada e leitura cruzada com
+duas lojas, mídia vinculada ao tenant, upload inválido/acima de 10 MB,
+reprocessamento WebP sem metadados e ausência de métodos mutáveis nas rotas
+públicas. Esses testes reduzem risco, mas não marcam os controles acima como
+concluídos para produção: ainda faltam autenticação, mutações autorizadas,
+bindings reais e o teste IDOR completo com duas sessões autenticadas.
