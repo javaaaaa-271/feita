@@ -51,6 +51,36 @@ Constatações atuais:
 
 Detalhes e critérios obrigatórios estão em `docs/SECURITY.md`.
 
+## Dependências reauditas
+
+A primeira ação da fundação segura da Fase 2 foi concluída em 28 de julho de
+2026:
+
+- Next.js, React, React DOM, React Server Components, Vite, Wrangler e os
+  plugins de Vite/Cloudflare foram atualizados para versões corrigidas;
+- `postcss` e `sharp` receberam versões mínimas seguras por `overrides`, porque
+  o Next.js 16.2.12 ainda fixa versões transitivas afetadas;
+- `npm audit --omit=dev` passou com zero vulnerabilidades;
+- a auditoria completa ainda aponta alertas somente em ferramentas de
+  desenvolvimento: a cadeia de lint baseada em `brace-expansion` e o
+  `drizzle-kit` legado baseado em `esbuild`;
+- não foi usado `npm audit fix --force`: as correções propostas trocam versões
+  de forma incompatível e precisam aguardar atualização dos pacotes de origem.
+
+Validações executadas:
+
+- `npm run lint`: passou com dois avisos preexistentes de `<img>`;
+- `npm test`: passou, incluindo build Vinext, validação do artefato Sites e 1
+  teste de HTML;
+- `git diff --check`: passou em uma cópia temporária autenticada do repositório
+  de origem do Sites, usada porque a pasta de trabalho recebida não contém
+  metadados `.git`.
+
+Risco operacional: o código está em uma pasta sem repositório Git, apesar de o
+handoff referenciar o `main` oficial. O estado foi comparado com a origem do
+Sites para este marco, mas o clone oficial deve ser restaurado antes do próximo
+trabalho para evitar reconstruções temporárias do histórico.
+
 ## Próximo objetivo
 
 Transformar a Fase 2 em uma primeira fatia segura, sem tentar construir todos os
@@ -58,8 +88,8 @@ módulos de uma vez.
 
 Ordem proposta:
 
-1. atualizar e reauditar dependências;
-2. adicionar headers de segurança e testes;
+1. ~~atualizar e reauditar dependências~~ — concluído;
+2. adicionar headers de segurança e testes — próxima ação;
 3. registrar a decisão de autenticação e banco;
 4. implementar cadastro, login e sessão persistente;
 5. implementar “esqueci minha senha” e redefinição por e-mail;
@@ -95,4 +125,3 @@ Duas usuárias conseguem:
 
 O marco só termina com testes automatizados de headers, autenticação e
 isolamento entre lojas.
-

@@ -10,9 +10,13 @@ O protótipo é essencialmente uma interface com estado local. Ainda não existe
 endpoints próprios de login, dados persistentes de clientes, queries SQL ou
 autorização multiempresa.
 
-Já devem ser corrigidos antes da primeira autenticação:
+Situação das correções anteriores à primeira autenticação:
 
-- dependências com alertas de segurança;
+- as dependências de produção foram atualizadas e
+  `npm audit --omit=dev` não aponta vulnerabilidades;
+- a auditoria completa ainda aponta alertas em dependências transitivas de
+  ferramentas locais (`eslint-config-next` e `drizzle-kit`), sem correção
+  compatível oferecida pelos pacotes de origem;
 - ausência de headers de endurecimento do navegador;
 - validação de upload limitada ao cliente.
 
@@ -103,4 +107,3 @@ Qualquer falha nesse conjunto bloqueia publicação.
 - IDOR com duas lojas;
 - upload inválido, grande e com MIME falso;
 - respostas sem PII ou credenciais desnecessárias.
-
