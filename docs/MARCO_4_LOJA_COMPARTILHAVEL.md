@@ -69,7 +69,8 @@ runtime, tipos, testes e documentação.
 ### Ambientes
 
 - **Local:** Wrangler/Vite + Miniflare, estado ignorado em
-  `.wrangler/state/v3`. É o único ambiente habilitado neste marco.
+  `.wrangler/state/v3`. É o único ambiente em que o importador administrativo
+  pode escrever.
 - **Preview/produção:** o projeto Sites existente provisionou e conectou
   `DB`/`STORE_IMAGES`, recebeu a migration versionada e publicou a versão 7.
   Nenhuma fixture ou loja real foi importada. A política `custom` permaneceu

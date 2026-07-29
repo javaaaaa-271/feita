@@ -80,6 +80,7 @@ ele.
 - [ADR de autenticação e persistência](docs/ADR-001-AUTENTICACAO-E-PERSISTENCIA.md)
 - [Roteiro do Marco 3 para uso real](docs/MARCO_3_USO_REAL.md)
 - [Marco 4 — primeira loja compartilhável](docs/MARCO_4_LOJA_COMPARTILHAVEL.md)
+- [Guia técnico e de diagnóstico](docs/GUIA_TECNICO_FEITA.md)
 
 ## Estrutura do código
 

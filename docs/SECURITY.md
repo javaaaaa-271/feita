@@ -6,9 +6,16 @@ comprove.
 
 ## Estado atual
 
-O protótipo é essencialmente uma interface com estado local. Ainda não existem
-endpoints próprios de login, dados persistentes de clientes, queries SQL ou
-autorização multiempresa.
+O painel em `/` continua sendo uma interface com estado local. A vitrine em
+`/loja/[slug]` lê loja e produtos do D1 por queries parametrizadas, e a rota
+pública de mídia autoriza no D1 antes de ler os bytes do R2. Ainda não existem
+endpoints próprios de login, dados persistentes de clientes ou pedidos,
+administração autenticada ou mutações públicas.
+
+O checkpoint hospedado está atrás da política `custom` do Sites, restrita a
+Lorenzo. `app/chatgpt-auth.ts` oferece helpers para headers da identidade do
+Sites, mas não é importado pelas rotas atuais; não deve ser confundido com
+autenticação ou autorização próprias da Feita.
 
 Situação das correções anteriores à primeira autenticação:
 
@@ -21,13 +28,15 @@ Situação das correções anteriores à primeira autenticação:
   Worker e possuem testes automatizados;
 - a arquitetura de autenticação e persistência foi registrada no
   `ADR-001-AUTENTICACAO-E-PERSISTENCIA.md`;
-- validação de upload limitada ao cliente.
+- o importador local valida e reprocessa imagens no servidor; não existe upload
+  público.
 
 ## Arquitetura aprovada, ainda não implementada
 
-A primeira fatia real usará Better Auth no servidor, D1 para contas, sessões e
-dados estruturados e R2 para imagens. D1 e R2 continuam desligados e nenhuma
-rota de autenticação foi criada neste checkpoint.
+A infraestrutura do Marco 4 já usa D1 para a leitura pública de loja/produtos e
+R2 para imagens, com recursos hospedados ainda sem dados comerciais. A futura
+fatia de contas usará Better Auth no servidor e ampliará o D1 para contas e
+sessões. Nenhuma rota de autenticação foi criada neste checkpoint.
 
 Controles adicionais definidos pela decisão:
 
@@ -164,5 +173,5 @@ O Marco 4 adiciona testes locais para query parametrizada e leitura cruzada com
 duas lojas, mídia vinculada ao tenant, upload inválido/acima de 10 MB,
 reprocessamento WebP sem metadados e ausência de métodos mutáveis nas rotas
 públicas. Esses testes reduzem risco, mas não marcam os controles acima como
-concluídos para produção: ainda faltam autenticação, mutações autorizadas,
-bindings reais e o teste IDOR completo com duas sessões autenticadas.
+concluídos para uma operação com dados reais: ainda faltam autenticação,
+mutações autorizadas e o teste IDOR completo com duas sessões autenticadas.

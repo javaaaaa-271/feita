@@ -1,8 +1,28 @@
 # Handoff atual
 
-Atualizado em: **28 de julho de 2026**
+Atualizado em: **29 de julho de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
+
+## Auditoria técnica e transferência de conhecimento
+
+Em 29 de julho de 2026, o estado foi confirmado novamente a partir do Git,
+código integrado, configuração Sites em modo somente leitura e validações
+locais. `main` e `origin/main` estavam sincronizadas em `bc61719`, sem mudanças
+iniciais. O projeto Sites continuava ativo na versão 7, na mesma URL e com
+acesso `custom` somente para Lorenzo.
+
+Foi criado `docs/GUIA_TECNICO_FEITA.md` com mapa do sistema, fluxo
+slug → D1 → R2, comandos locais, diagnóstico, recuperação sem perda de dados e
+três exercícios operacionais. `data/local/` passou a ser ignorado pelo Git para
+receber somente fixtures de trabalho locais.
+
+Esta auditoria corrigiu textos antigos que ainda descreviam D1/R2 hospedados
+como inexistentes ou desligados. Não houve defeito de runtime no Marco 4:
+lint passou sem erros e manteve dois avisos conhecidos de `<img>` no sandbox,
+TypeScript passou, 22/22 testes passaram, build/artefato Sites passaram e
+`git diff --check` passou. Nenhum dado real foi importado, nenhum recurso,
+acesso ou versão Sites foi alterado e não houve deploy ou push.
 
 ## Onde estamos
 
@@ -183,10 +203,12 @@ O marco de dependências, headers e testes foi consolidado no commit
 - `app/loja/[slug]` implementa a vitrine pública persistida;
 - `app/globals.css` e o CSS module da vitrine contêm os sistemas visuais;
 - `db/schema.ts` define lojas, produtos e mídia;
-- D1/R2 estão ativos apenas na emulação local;
+- D1/R2 estão ativos na emulação local e conectados ao checkpoint hospedado;
+  o ambiente hospedado continua sem dados comerciais;
 - `.openai/hosting.json` mantém o vínculo com o site já existente;
-- `app/chatgpt-auth.ts` pertence à proteção do protótipo no ambiente hospedado,
-  não à autenticação das clientes da Feita.
+- a política `custom` do Sites é a proteção efetiva do checkpoint hospedado;
+  `app/chatgpt-auth.ts` contém helpers de identidade, mas não é importado pelas
+  rotas atuais e não é autenticação das clientes da Feita.
 
 ## Auditoria de segurança inicial
 
@@ -302,8 +324,9 @@ servidor, sempre combinando o recurso com o `tenant_id` derivado da sessão.
 Testes com duas usuárias e duas lojas continuam sendo critério de parada.
 
 Os nomes lógicos `DB` e `STORE_IMAGES`, o schema, a migration e a rota pública
-foram adicionados no Marco 4 apenas para execução local. Os recursos e bindings
-remotos continuam inexistentes; autenticação não foi adicionada.
+foram adicionados no Marco 4. O projeto Sites conectou os recursos hospedados
+no checkpoint controlado, enquanto o importador continua exclusivamente local
+e nenhuma loja real foi carregada. Autenticação não foi adicionada.
 
 ## Dependências para a implementação futura
 
