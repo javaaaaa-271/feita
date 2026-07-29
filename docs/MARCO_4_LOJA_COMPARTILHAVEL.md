@@ -1,7 +1,7 @@
 # Marco 4 — primeira loja compartilhável
 
-Status: **implementação concluída e preparada para o checkpoint controlado do
-projeto Sites existente**.
+Status: **checkpoint controlado publicado na versão Sites 7; recursos
+hospedados vazios e acesso restrito a Lorenzo**.
 
 Este marco cria a menor fatia em que uma vitrine é identificada por slug e seu
 catálogo deixa de depender da sessão do painel. Nada neste documento autoriza
@@ -70,10 +70,10 @@ runtime, tipos, testes e documentação.
 
 - **Local:** Wrangler/Vite + Miniflare, estado ignorado em
   `.wrangler/state/v3`. É o único ambiente habilitado neste marco.
-- **Preview:** ainda sem recursos e bindings reais. Não executar antes de
-  autorizar D1, R2 e proteção administrativa.
-- **Produção:** site existente permanece inalterado. Não aplicar a migration
-  nem importar catálogo até o portão de segurança ser aprovado.
+- **Preview/produção:** o projeto Sites existente provisionou e conectou
+  `DB`/`STORE_IMAGES`, recebeu a migration versionada e publicou a versão 7.
+  Nenhuma fixture ou loja real foi importada. A política `custom` permaneceu
+  restrita a Lorenzo.
 
 Quando um binding obrigatório falta, a vitrine mostra um estado local
 compreensível ou a rota de imagem responde `503`, sem expor stack ou segredo.
@@ -196,21 +196,22 @@ somente se Lorenzo aceitar a dependência externa e a experiência de acesso.
 
 ## Passos externos futuros
 
-Somente após autorização explícita:
+Concluídos neste checkpoint: D1/R2 do projeto Sites, bindings
+`DB`/`STORE_IMAGES`, migration, validação local em dois navegadores, push,
+PR, integração e deployment restrito.
 
-1. escolher a proteção administrativa;
-2. criar D1 real no projeto Sites existente;
-3. criar bucket R2 real;
-4. substituir o ID placeholder pela configuração entregue pelo controle de
-   hospedagem, sem inventar IDs;
-5. configurar bindings `DB` e `STORE_IMAGES` em preview;
-6. aplicar a migration em preview;
-7. configurar autenticação/Access e secrets pelo runtime;
-8. testar duas identidades e duas lojas, incluindo IDOR e mutações;
-9. importar uma fixture consentida em preview;
-10. validar celular, desktop, imagens e WhatsApp sem envio;
-11. criar commit de release, enviar a branch e abrir PR;
-12. revisar e só então criar versão/deploy pelo projeto Sites já vinculado.
+Próximos passos, somente após nova autorização:
+
+1. Lorenzo revisar a URL publicada no navegador dele;
+2. preencher uma cópia ignorada de `data/first-store.template.json`;
+3. executar o dry-run local e corrigir todos os erros;
+4. definir e autorizar um procedimento administrativo hospedado sem API
+   anônima;
+5. importar somente os dados consentidos da primeira loja;
+6. validar a mesma loja em dois celulares, incluindo carrinhos separados,
+   imagens e URL do WhatsApp sem envio;
+7. antes de dar autonomia à comerciante, escolher e implementar autenticação
+   conforme o ADR, com testes de duas identidades e duas lojas.
 
 ## Rollback futuro
 

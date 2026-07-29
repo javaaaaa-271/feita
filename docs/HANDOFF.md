@@ -6,12 +6,20 @@ Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
 ## Onde estamos
 
-O Marco 3 foi revisado, integrado por fast-forward à `main` e enviado para
-`origin/main` no commit `d97df7a`. Não houve deploy e a branch
-`codex/marco-3-uso-real` foi preservada.
+O Marco 4 foi validado, enviado na branch
+`codex/marco-4-loja-compartilhavel`, registrado no PR
+`https://github.com/javaaaaa-271/feita/pull/1` e integrado por fast-forward à
+`main` no commit `6b26557`. As branches dos Marcos 3 e 4 foram preservadas.
 
-O Marco 4 está concluído somente localmente na branch
-`codex/marco-4-loja-compartilhavel`. Além do protótipo navegável, agora existe:
+O projeto Sites existente publicou a versão 7 com status final `succeeded` em:
+
+https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site
+
+A política `custom` continua permitindo somente Lorenzo, sem grupos. O fluxo
+oficial do Sites conectou D1 e R2 pelos bindings `DB` e `STORE_IMAGES` e recebeu
+a migration em `dist/.openai/drizzle`. Nenhuma fixture, dado real ou catálogo
+foi importado no ambiente hospedado; o checkpoint contém somente código,
+schema e recursos vazios. Além do protótipo navegável, agora existe:
 
 - painel;
 - catálogo;
@@ -23,16 +31,16 @@ O Marco 4 está concluído somente localmente na branch
   observações;
 - mensagem estruturada e URL codificada para o WhatsApp configurado;
 - edição, busca, filtros, disponibilidade e estoque do catálogo;
-- D1 e R2 locais com migration versionada;
+- D1 e R2 locais e hospedados com migration versionada;
 - identidade, catálogo, estoque, variações e imagens duráveis;
 - carrinho persistido por navegador e separado por slug;
 - importador local validado, com dry-run e sem sobrescrita;
 - leitura pública isolada por loja e nenhuma API pública de escrita.
 
 O painel em `/` continua sendo o sandbox de sessão do Marco 3 e não administra
-o novo catálogo persistido. A produção continua no Marco 3. Recursos reais,
-autenticação, dados da comerciante, push do Marco 4, PR, merge e deploy não
-foram executados.
+o novo catálogo persistido. Autenticação, dados da comerciante, painel
+administrativo, persistência de pedidos e importação hospedada não foram
+implementados.
 
 ## Marco 4 — primeira loja compartilhável
 
@@ -62,28 +70,34 @@ foram executados.
 - inspeção confirmou que as rotas públicas exportam somente `GET`;
 - `npm run lint`: sem erros, com os mesmos dois avisos de `<img>` do Marco 3;
 - `npx tsc --noEmit`: passou;
-- `npm test`: passou, incluindo build e testes antigos/novos;
+- `npm test`: 22/22 passaram, incluindo build e testes antigos/novos;
 - `git diff --check`: passou.
 
-O servidor local respondeu `200` e renderizou a loja fictícia persistida. O
-navegador integrado e o Chrome conectado bloquearam URLs locais antes do
-carregamento; portanto não foi repetida a alegação de inspeção visual/mobile do
-Marco 4. A responsividade está coberta por CSS e revisão de fonte, mas a
-verificação manual em 390 × 844 permanece obrigatória antes de qualquer
-preview.
+O servidor local respondeu `200` e renderizou a loja fictícia persistida.
+Desktop e 390 × 844 foram inspecionados visualmente sem rolagem horizontal.
+Catálogo, variação, estoque, carrinho, recarga, checkout, revisão e URL do
+WhatsApp passaram sem abrir o WhatsApp. In-app Browser e Chrome viram o mesmo
+slug e a imagem R2 persistida, mantendo carrinhos independentes. Não houve erro
+da aplicação no console.
 
 ### Riscos e próxima ação concreta
 
-- falta escolher e autorizar a proteção administrativa;
-- D1/R2 existem apenas na emulação;
 - não houve teste em aparelho real;
 - o painel de sessão e a vitrine persistida ainda são superfícies separadas;
-- pedidos continuam sem persistência, deliberadamente.
+- pedidos continuam sem persistência, deliberadamente;
+- o importador é local e não escreve no D1 hospedado;
+- a ferramenta Sites não expôs uma consulta SQL remota para contagem
+  independente; a ausência de dados hospedados foi preservada porque o
+  checkpoint provisionou recursos novos e executou somente migrations;
+- a verificação automatizada do Sites registrou `404` apenas para fontes sob o
+  caminho interno `/workspace/sites/...`; não houve exceção do Worker, mas
+  Lorenzo deve confirmar tipografia no navegador dele.
 
-Próxima ação: Lorenzo deve revisar
-`docs/MARCO_4_LOJA_COMPARTILHAVEL.md`, escolher entre importador assistido
-temporário e autorização de Better Auth/Cloudflare Access, e só depois
-autorizar recursos de preview. Até lá, não enviar a branch nem criar bindings.
+Próxima ação: Lorenzo deve abrir a URL publicada no navegador dele, confirmar
+acesso, tipografia e navegação e então reunir conscientemente os dados listados
+em `data/first-store.template.json`. Uma execução separada deverá preparar o
+arquivo ignorado, fazer dry-run, implementar/autorizar o procedimento
+administrativo hospedado e só então importar e testar em dois celulares.
 
 ## Marco 3 — preparação para uso real
 

@@ -25,11 +25,12 @@ O primeiro corte navegável já entrega:
 - experiência responsiva para celular e desktop;
 - direção visual própria.
 
-O Marco 4 também está preparado **somente em ambiente local**:
+O Marco 4 está integrado e publicado como checkpoint controlado:
 
 - vitrine pública em `/loja/[slug]`;
-- loja e catálogo persistidos em D1 local;
-- imagens persistidas em R2 local e servidas após filtro por loja;
+- D1 e R2 reais provisionados pelo projeto Sites existente;
+- migration versionada aplicada, com o banco hospedado ainda vazio;
+- imagens servidas do R2 somente após filtro por loja;
 - identidade, formas de pagamento e WhatsApp configuráveis por importação
   controlada;
 - carrinho da cliente persistido no navegador e separado por loja.
@@ -40,19 +41,21 @@ https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site
 
 ### Limites do site publicado
 
-- os dados ficam apenas na sessão atual;
-- recarregar a página restaura os produtos de demonstração;
-- ainda não há login, banco de dados ou múltiplas lojas;
+- o painel em `/` ainda guarda seus dados apenas na sessão atual e recarregar a
+  página restaura os produtos de demonstração;
+- D1/R2 estão ativos para `/loja/[slug]`, mas nenhuma loja real foi carregada;
+- ainda não há login ou administração hospedada;
 - pedidos ainda não são persistidos;
-- o WhatsApp recebe uma mensagem pronta, mas o número da loja ainda não é
-  configurável e a mensagem não é enviada automaticamente;
+- a vitrine persistida usa o WhatsApp configurado para a loja, mas a mensagem
+  nunca é enviada automaticamente;
 - Pix é somente uma forma de pagamento informada no pedido; ainda não há QR
   Code ou código copia e cola;
 - "Feita" ainda é um nome de trabalho.
 
-O site publicado ainda representa o Marco 3. O Marco 4 não foi enviado,
-publicado nem conectado a D1/R2 reais. Consulte o runbook antes de usar a nova
-vitrine local.
+O site publicado inclui a infraestrutura do Marco 4, mas nenhuma loja foi
+importada no D1 hospedado. O painel em `/` continua sendo o sandbox de sessão
+do Marco 3 e ainda não administra o catálogo persistido. Consulte o runbook
+antes de preparar a primeira loja.
 
 ## Fluxo central do produto
 
