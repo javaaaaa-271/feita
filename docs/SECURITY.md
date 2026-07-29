@@ -19,7 +19,32 @@ Situação das correções anteriores à primeira autenticação:
   compatível oferecida pelos pacotes de origem;
 - headers de endurecimento do navegador foram adicionados na camada final do
   Worker e possuem testes automatizados;
+- a arquitetura de autenticação e persistência foi registrada no
+  `ADR-001-AUTENTICACAO-E-PERSISTENCIA.md`;
 - validação de upload limitada ao cliente.
+
+## Arquitetura aprovada, ainda não implementada
+
+A primeira fatia real usará Better Auth no servidor, D1 para contas, sessões e
+dados estruturados e R2 para imagens. D1 e R2 continuam desligados e nenhuma
+rota de autenticação foi criada neste checkpoint.
+
+Controles adicionais definidos pela decisão:
+
+- cadastro sem sessão automática e com verificação de e-mail;
+- recuperação por OTP digitado, nunca por token em URL;
+- OTP armazenado somente com hash, com expiração, rotação e tentativas
+  limitadas;
+- sessão persistida e revogável em cookie `HttpOnly`, `Secure` em HTTPS,
+  `SameSite=Lax`, `Path=/` e sem `Domain`;
+- rate limit durável por `cf-connecting-ip` e por HMAC do e-mail normalizado;
+- respostas de login, cadastro e recuperação sem enumeração de e-mail;
+- `tenant_id` obrigatório e indexado em todas as tabelas de negócio;
+- autorização server-side em toda operação e teste IDOR com duas lojas;
+- D1 e R2 inacessíveis diretamente ao navegador.
+
+Como D1 não oferece a RLS do PostgreSQL, o teste cruzado entre lojas é uma
+barreira de publicação, não uma verificação opcional.
 
 ## Controles obrigatórios para autenticação
 
@@ -35,6 +60,7 @@ Situação das correções anteriores à primeira autenticação:
 - usar cookies `HttpOnly`, `Secure` e `SameSite`;
 - não armazenar tokens de sessão em `localStorage`;
 - não transportar JWT ou token de sessão em URL;
+- não transportar token de recuperação em URL;
 - usar tokens de recuperação curtos, de uso único e com expiração;
 - revogar sessão e refresh token no logout;
 - não registrar tokens completos em logs.
@@ -131,3 +157,12 @@ Qualquer falha nesse conjunto bloqueia publicação.
 - [ ] IDOR com duas lojas;
 - [ ] upload inválido, grande e com MIME falso;
 - [ ] respostas sem PII ou credenciais desnecessárias.
+
+### Evidência local do Marco 4
+
+O Marco 4 adiciona testes locais para query parametrizada e leitura cruzada com
+duas lojas, mídia vinculada ao tenant, upload inválido/acima de 10 MB,
+reprocessamento WebP sem metadados e ausência de métodos mutáveis nas rotas
+públicas. Esses testes reduzem risco, mas não marcam os controles acima como
+concluídos para produção: ainda faltam autenticação, mutações autorizadas,
+bindings reais e o teste IDOR completo com duas sessões autenticadas.

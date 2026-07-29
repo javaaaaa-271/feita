@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-const developmentPreviewMeta =
-  /<meta(?=[^>]*\bname=["']codex-preview["'])(?=[^>]*\bcontent=["']development["'])[^>]*>/i;
-
 const productionOrigin =
   "https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site";
 
@@ -29,7 +26,7 @@ function executionContext() {
   };
 }
 
-test("renders development preview metadata", async () => {
+test("renders product metadata in Brazilian Portuguese", async () => {
   const worker = await loadWorker();
 
   const response = await worker.fetch(
@@ -45,7 +42,11 @@ test("renders development preview metadata", async () => {
     response.headers.get("content-type") ?? "",
     /^text\/html\b/i,
   );
-  assert.match(await response.text(), developmentPreviewMeta);
+  const html = await response.text();
+  assert.match(html, /<html[^>]*\blang=["']pt-BR["']/i);
+  assert.match(html, /<title>Feita — seu negócio, em ordem<\/title>/i);
+  assert.doesNotMatch(html, /\bcodex-preview\b/i);
+  assert.doesNotMatch(html, /Caderno Jardim|Planner Semanal|Cartão Presente/i);
 });
 
 test("adds browser hardening headers to application responses", async () => {

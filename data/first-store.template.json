@@ -1,0 +1,27 @@
+{
+  "slug": "",
+  "name": "",
+  "description": "",
+  "location": "",
+  "accentColor": "",
+  "whatsApp": "",
+  "instagram": "",
+  "paymentMethods": [],
+  "purchaseInstructions": "",
+  "logo": "",
+  "cover": "",
+  "published": false,
+  "products": [
+    {
+      "name": "",
+      "description": "",
+      "category": "",
+      "priceCents": null,
+      "stock": null,
+      "variations": [],
+      "image": "",
+      "published": false,
+      "available": false
+    }
+  ]
+}

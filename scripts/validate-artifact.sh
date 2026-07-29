@@ -9,6 +9,7 @@ fi
 
 worker="${SITES_PROJECT_ROOT}/dist/server/index.js"
 hosting="${SITES_PROJECT_ROOT}/dist/.openai/hosting.json"
+migrations="${SITES_PROJECT_ROOT}/dist/.openai/drizzle"
 
 [[ -f "${worker}" ]] || {
   echo "Missing Sites Worker entry: dist/server/index.js" >&2
@@ -18,13 +19,31 @@ hosting="${SITES_PROJECT_ROOT}/dist/.openai/hosting.json"
   echo "Missing packaged Sites manifest: dist/.openai/hosting.json" >&2
   exit 66
 }
+[[ -d "${migrations}" ]] || {
+  echo "Missing packaged D1 migrations: dist/.openai/drizzle" >&2
+  exit 66
+}
+compgen -G "${migrations}/*.sql" >/dev/null || {
+  echo "No packaged D1 SQL migration found in dist/.openai/drizzle" >&2
+  exit 66
+}
 
 node --input-type=module - "${worker}" "${hosting}" <<'NODE'
 import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
 const [workerPath, hostingPath] = process.argv.slice(2);
-JSON.parse(await readFile(hostingPath, "utf8"));
+const hosting = JSON.parse(await readFile(hostingPath, "utf8"));
+if (
+  typeof hosting.project_id !== "string" ||
+  hosting.project_id.length === 0 ||
+  hosting.d1 !== "DB" ||
+  hosting.r2 !== "STORE_IMAGES"
+) {
+  throw new Error(
+    "Sites manifest must preserve project_id and request DB/STORE_IMAGES bindings.",
+  );
+}
 
 const workerUrl = pathToFileURL(workerPath);
 workerUrl.searchParams.set("sites-validation", `${process.pid}-${Date.now()}`);
