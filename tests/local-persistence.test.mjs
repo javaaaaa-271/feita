@@ -146,7 +146,27 @@ test("superfície pública expõe somente leitura e fixture não entra na aplica
     resolve("app/loja/[slug]/storefront-client.tsx"),
   ];
   assert.ok(existsSync(resolve("data/first-store.example.json")));
+  const emptyTemplate = JSON.parse(
+    readFileSync(resolve("data/first-store.template.json"), "utf8"),
+  );
+  assert.equal(emptyTemplate.slug, "");
+  assert.equal(emptyTemplate.name, "");
+  assert.equal(emptyTemplate.whatsApp, "");
+  assert.equal(emptyTemplate.published, false);
+  assert.equal(emptyTemplate.products[0].published, false);
+  assert.equal(emptyTemplate.products[0].available, false);
   for (const source of applicationSources.map((path) => readFileSync(path, "utf8"))) {
     assert.doesNotMatch(source, /Ateliê Aurora|atelie-aurora/);
+  }
+});
+
+test("configuração local não contém ID remoto fictício", () => {
+  const sources = [
+    readFileSync(resolve("wrangler.jsonc"), "utf8"),
+    readFileSync(resolve("vite.config.ts"), "utf8"),
+    readFileSync(resolve("scripts/local-bindings.mjs"), "utf8"),
+  ];
+  for (const source of sources) {
+    assert.doesNotMatch(source, /00000000-0000-4000-8000-000000000000/);
   }
 });

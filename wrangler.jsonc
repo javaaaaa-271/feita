@@ -8,7 +8,7 @@
     {
       "binding": "DB",
       "database_name": "feita-local",
-      "database_id": "00000000-0000-4000-8000-000000000000",
+      "database_id": "feita-local",
       "migrations_dir": "drizzle"
     }
   ],

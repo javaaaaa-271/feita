@@ -9,7 +9,7 @@ export async function openLocalBindings(
     modules: true,
     script: "export default { fetch() { return new Response('local only'); } }",
     compatibilityDate: "2026-07-28",
-    d1Databases: { DB: "00000000-0000-4000-8000-000000000000" },
+    d1Databases: { DB: "feita-local" },
     r2Buckets: ["STORE_IMAGES"],
     d1Persist: resolve(root, "d1"),
     r2Persist: resolve(root, "r2"),

@@ -1,7 +1,7 @@
 # Marco 4 — primeira loja compartilhável
 
-Status: **implementação local concluída; publicação bloqueada por decisão
-administrativa e recursos externos**.
+Status: **implementação concluída e preparada para o checkpoint controlado do
+projeto Sites existente**.
 
 Este marco cria a menor fatia em que uma vitrine é identificada por slug e seu
 catálogo deixa de depender da sessão do painel. Nada neste documento autoriza
@@ -58,8 +58,13 @@ bindings lógicos são:
 - `STORE_IMAGES`: R2.
 
 `.openai/hosting.json` declara somente os nomes lógicos e preserva o
-`project_id` existente. `wrangler.jsonc` usa nomes e identificador placeholder
-exclusivamente locais. Nenhum ID real, secret ou credencial foi incluído.
+`project_id` existente. `wrangler.jsonc` usa `feita-local` como nome e
+identificador exclusivamente local para que Wrangler e Miniflare compartilhem
+o mesmo arquivo D1; nenhum UUID remoto fictício, secret ou credencial foi
+incluído. O schema atual das
+ferramentas Sites aceita nomes lógicos para R2 e não exige que o binding se
+chame `BUCKET`, portanto `STORE_IMAGES` permanece coerente em manifest,
+runtime, tipos, testes e documentação.
 
 ### Ambientes
 
@@ -96,8 +101,9 @@ A migration usa `--local`; nunca acrescente `--remote` sem nova autorização.
 
 ## Preparar e importar a primeira loja
 
-1. Copie `data/first-store.example.json` para um arquivo ignorado por Git.
-2. Substitua conscientemente os campos pelos dados fornecidos pela
+1. Copie `data/first-store.template.json`, que é vazio, não publicado e não
+   contém dados fictícios, para um arquivo ignorado por Git.
+2. Preencha conscientemente os campos com os dados fornecidos pela
    comerciante.
 3. Use preços em centavos (`5900` representa R$ 59,00).
 4. Referencie imagens JPEG, PNG, WebP ou AVIF por caminho relativo ao JSON.
@@ -122,6 +128,15 @@ R2 aleatória sob o ID da loja.
 O comando não sobrescreve slug existente. Se a gravação D1 falhar, objetos R2
 enviados naquela tentativa são removidos. O exemplo é fictício e não é
 importado por build, aplicação ou deploy.
+
+O pacote vazio exige: slug, nome, descrição, localização, cor principal da
+identidade visual, WhatsApp, Instagram, formas de pagamento, instruções de
+compra, caminhos de logo e capa e, para cada produto, nome, descrição,
+categoria, preço em centavos, estoque, variações, fotografia e decisões
+explícitas de publicação/disponibilidade. Enquanto esses campos não forem
+preenchidos, o dry-run falha de forma segura; mesmo preenchido, nada é gravado
+sem `--apply`. O importador atual continua deliberadamente local e não contém
+credenciais ou um atalho de escrita para o D1 hospedado.
 
 ## WhatsApp
 
