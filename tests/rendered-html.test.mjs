@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import test from "node:test";
 
 const productionOrigin =
@@ -148,4 +150,67 @@ test("keeps hardening headers on rejected mutable methods", async () => {
     response.headers.get("content-security-policy") ?? "",
     /frame-ancestors 'none'(?:;|$)/,
   );
+});
+
+test("renders accessible invitation-only authentication interfaces", async () => {
+  const worker = await loadWorker();
+  const pages = {};
+
+  for (const path of [
+    "/entrar",
+    "/esqueci-minha-senha",
+    "/redefinir-senha",
+    "/aceitar-convite",
+  ]) {
+    const response = await worker.fetch(
+      new Request(`http://localhost${path}`, {
+        headers: { accept: "text/html" },
+      }),
+      workerEnvironment(),
+      executionContext(),
+    );
+    assert.equal(response.status, 200, path);
+    pages[path] = await response.text();
+  }
+
+  assert.match(pages["/entrar"], /<label[^>]*for="email"[^>]*>E-mail<\/label>/i);
+  assert.match(pages["/entrar"], /autocomplete="email"/i);
+  assert.match(pages["/entrar"], /autocomplete="current-password"/i);
+  assert.match(pages["/entrar"], />Entrar<\/button>/i);
+  assert.match(pages["/entrar"], /Esqueci minha senha/i);
+  assert.match(pages["/entrar"], /somente por convite/i);
+  assert.match(pages["/redefinir-senha"], /autocomplete="one-time-code"/i);
+  assert.match(pages["/redefinir-senha"], /autocomplete="new-password"/i);
+  assert.match(pages["/aceitar-convite"], /Código do convite/i);
+  assert.doesNotMatch(
+    Object.values(pages).join("\n"),
+    /Entrar com (Google|Apple|telefone)|magic link/i,
+  );
+});
+
+test("blocks public sign-up and protects /painel with the server session helper", async () => {
+  const worker = await loadWorker();
+  const response = await worker.fetch(
+    new Request("http://localhost/api/auth/sign-up/email", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: "http://localhost",
+      },
+      body: JSON.stringify({
+        email: "publico@example.test",
+        name: "Cadastro Público",
+        password: "senha pública que deve ser recusada",
+      }),
+    }),
+    workerEnvironment(),
+    executionContext(),
+  );
+  assert.equal(response.status, 404);
+  assert.equal(response.headers.get("cache-control"), "private, no-store");
+
+  const panelSource = await readFile(resolve("app/painel/page.tsx"), "utf8");
+  assert.match(panelSource, /requireSession\(auth,\s*requestHeaders\)/);
+  assert.match(panelSource, /redirect\("\/entrar"\)/);
+  assert.doesNotMatch(panelSource, /searchParams.*(store|tenant)/s);
 });

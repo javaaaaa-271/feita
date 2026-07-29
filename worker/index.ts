@@ -104,6 +104,15 @@ function withSecurityHeaders(request: Request, response: Response): Response {
     headers.delete("Strict-Transport-Security");
   }
 
+  const pathname = new URL(request.url).pathname;
+  if (
+    pathname === "/painel" ||
+    pathname.startsWith("/api/auth/") ||
+    pathname.startsWith("/api/invitations/")
+  ) {
+    headers.set("Cache-Control", "private, no-store");
+  }
+
   return new Response(response.body, {
     headers,
     status: response.status,

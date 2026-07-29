@@ -20,5 +20,17 @@ interface D1Database {
 declare module "cloudflare:workers" {
   export const env: {
     DB?: D1Database;
+    STORE_IMAGES?: {
+      get(key: string): Promise<{ body: ReadableStream } | null>;
+    };
+    BETTER_AUTH_SECRET?: string;
+    BETTER_AUTH_URL?: string;
+    AUTH_TRUSTED_ORIGINS?: string;
+    RATE_LIMIT_HMAC_SECRET?: string;
+    RESEND_API_KEY?: string;
+    RESEND_FROM?: string;
+  };
+  export const ctx: {
+    waitUntil(promise: Promise<unknown>): void;
   };
 }

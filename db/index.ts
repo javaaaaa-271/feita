@@ -20,6 +20,10 @@ async function getWorkerEnv() {
   };
 }
 
+export async function getWorkerEnvironment() {
+  return getWorkerEnv();
+}
+
 export async function getD1Database(): Promise<D1Database> {
   const env = await getWorkerEnv();
   return requireBinding(env, "DB") as D1Database;

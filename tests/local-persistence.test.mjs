@@ -124,7 +124,7 @@ test("migração limpa persiste e consultas públicas não vazam entre duas loja
 });
 
 test("superfície pública expõe somente leitura e fixture não entra na aplicação", () => {
-  const apiRoot = resolve("app/api");
+  const apiRoot = resolve("app/api/public");
   const routeFiles = [];
   const walk = (directory) => {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {

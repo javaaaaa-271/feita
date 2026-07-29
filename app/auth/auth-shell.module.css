@@ -1,0 +1,236 @@
+.page {
+  min-height: 100svh;
+  display: grid;
+  align-items: center;
+  padding: 24px 18px;
+  background:
+    radial-gradient(circle at 8% 8%, rgba(138, 63, 45, 0.1), transparent 31rem),
+    var(--paper);
+}
+.layout {
+  width: min(100%, 1040px);
+  margin: 0 auto;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 22px;
+  font-weight: 820;
+  letter-spacing: -0.04em;
+}
+
+.mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--wine);
+  color: #fffaf4;
+  font-size: 16px;
+}
+
+.content {
+  display: grid;
+  gap: 26px;
+  margin-top: 38px;
+}
+
+.intro {
+  max-width: 32rem;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: var(--wine);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.intro h1 {
+  max-width: 13ch;
+  margin: 0;
+  font-size: clamp(2rem, 10vw, 3.6rem);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+
+.intro > p:last-child {
+  max-width: 30rem;
+  margin: 20px 0 0;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.card {
+  width: 100%;
+  padding: 25px 21px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(251, 251, 248, 0.96);
+  box-shadow: 0 18px 50px rgba(47, 37, 31, 0.08);
+}
+
+.cardHeader h2 {
+  margin: 0;
+  font-size: 1.45rem;
+  letter-spacing: -0.035em;
+}
+
+.cardHeader p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.form {
+  display: grid;
+  gap: 17px;
+  margin-top: 25px;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+.field label {
+  color: #554f4a;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.field input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 13px;
+  border: 1px solid #cec9c1;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.field input::placeholder {
+  color: #96918b;
+}
+
+.fieldHint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.passwordField {
+  position: relative;
+}
+
+.passwordField input {
+  padding-right: 88px;
+}
+
+.passwordToggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  min-height: 36px;
+  transform: translateY(-50%);
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--wine);
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primary {
+  min-height: 49px;
+  margin-top: 3px;
+  padding: 0 18px;
+  border: 1px solid var(--wine);
+  border-radius: 9px;
+  background: var(--wine);
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primary:hover {
+  background: var(--wine-dark);
+}
+
+.primary:disabled {
+  cursor: wait;
+  opacity: 0.78;
+}
+
+.link {
+  width: fit-content;
+  color: var(--wine);
+  font-size: 0.84rem;
+  font-weight: 750;
+  text-underline-offset: 3px;
+}
+
+.message {
+  margin: 0;
+  padding: 11px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.error {
+  border: 1px solid #e3b8ae;
+  background: #faeae6;
+  color: #7b2e21;
+}
+
+.success {
+  border: 1px solid #b8c9b3;
+  background: #edf4eb;
+  color: #3c5337;
+}
+
+.inviteNotice {
+  margin: 20px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+@media (min-width: 780px) {
+  .page {
+    padding: 48px;
+  }
+
+  .content {
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 410px);
+    align-items: center;
+    gap: 70px;
+    margin-top: 70px;
+  }
+
+  .card {
+    padding: 34px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary {
+    scroll-behavior: auto;
+  }
+}
