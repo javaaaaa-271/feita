@@ -6,11 +6,17 @@ comprove.
 
 ## Estado atual
 
-O painel em `/` continua sendo uma interface com estado local. A vitrine em
-`/loja/[slug]` lê loja e produtos do D1 por queries parametrizadas, e a rota
+O painel demonstrativo em `/` continua sendo uma interface com estado local. A
+vitrine em `/loja/[slug]` lê loja e produtos do D1 por queries parametrizadas,
+e a rota
 pública de mídia autoriza no D1 antes de ler os bytes do R2. Ainda não existem
-endpoints próprios de login, dados persistentes de clientes ou pedidos,
-administração autenticada ou mutações públicas.
+dados persistentes de clientes ou pedidos, administração de catálogo ou
+mutações públicas.
+
+Na branch local do Marco 5, Better Auth foi integrado ao D1/Drizzle. Existem
+login, logout, recuperação por OTP, convite com digest, sessão revogável,
+`store_memberships`, rate limit persistente e `/painel` mínimo. Esse código e a
+migration ainda não foram publicados.
 
 O checkpoint hospedado está atrás da política `custom` do Sites, restrita a
 Lorenzo. `app/chatgpt-auth.ts` oferece helpers para headers da identidade do
@@ -19,11 +25,13 @@ autenticação ou autorização próprias da Feita.
 
 Situação das correções anteriores à primeira autenticação:
 
-- as dependências de produção foram atualizadas e
-  `npm audit --omit=dev` não aponta vulnerabilidades;
-- a auditoria completa ainda aponta alertas em dependências transitivas de
-  ferramentas locais (`eslint-config-next` e `drizzle-kit`), sem correção
-  compatível oferecida pelos pacotes de origem;
+- a auditoria após Better Auth aponta quatro alertas moderados no `esbuild`
+  antigo puxado pelo `drizzle-kit`; o npm o associa ao grafo de produção por um
+  peer opcional do Better Auth, mas esse kit não entra no bundle do Worker;
+- a auditoria completa também aponta alertas altos em dependências transitivas
+  do lint. As correções automáticas propostas fazem downgrades ou upgrades
+  incompatíveis de `drizzle-kit`, ESLint e `eslint-config-next`, por isso não
+  foram aplicadas sem uma atualização coordenada das ferramentas;
 - headers de endurecimento do navegador foram adicionados na camada final do
   Worker e possuem testes automatizados;
 - a arquitetura de autenticação e persistência foi registrada no
@@ -31,12 +39,12 @@ Situação das correções anteriores à primeira autenticação:
 - o importador local valida e reprocessa imagens no servidor; não existe upload
   público.
 
-## Arquitetura aprovada, ainda não implementada
+## Arquitetura aprovada e implementada localmente
 
 A infraestrutura do Marco 4 já usa D1 para a leitura pública de loja/produtos e
-R2 para imagens, com recursos hospedados ainda sem dados comerciais. A futura
-fatia de contas usará Better Auth no servidor e ampliará o D1 para contas e
-sessões. Nenhuma rota de autenticação foi criada neste checkpoint.
+R2 para imagens, com recursos hospedados ainda sem dados comerciais. O Marco 5
+amplia o D1 local para contas e sessões e monta `/api/auth/*`, mas a produção
+continua no checkpoint anterior.
 
 Controles adicionais definidos pela decisão:
 
@@ -158,14 +166,14 @@ Qualquer falha nesse conjunto bloqueia publicação.
 
 - [x] headers de segurança;
 - [x] CORS com origem permitida e origem rejeitada;
-- [ ] rate limit;
-- [ ] mensagem genérica de login e recuperação;
-- [ ] expiração e uso único do token de redefinição;
-- [ ] logout invalidando sessão;
+- [x] rate limit;
+- [x] mensagem genérica de login e recuperação;
+- [x] expiração e uso único do token de redefinição;
+- [x] logout invalidando sessão;
 - [ ] query malformada não alterando a consulta;
-- [ ] IDOR com duas lojas;
+- [x] IDOR de leitura/autorização com duas sessões e duas lojas;
 - [ ] upload inválido, grande e com MIME falso;
-- [ ] respostas sem PII ou credenciais desnecessárias.
+- [x] respostas sem PII ou credenciais desnecessárias nos fluxos de autenticação.
 
 ### Evidência local do Marco 4
 

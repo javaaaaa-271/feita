@@ -38,8 +38,8 @@ pedido sem ajuda.
 Objetivo: deixar de ser demonstração e virar sistema utilizável.
 
 - [x] decisão de autenticação e persistência registrada;
-- [ ] autenticação;
-- [ ] empresas e usuários;
+- [x] autenticação — implementada e validada localmente; publicação pendente;
+- [x] empresas e usuários — membership por convite implementado localmente;
 - [ ] banco de dados — D1 local e hospedado provisionados e migrados; operação
   real e administração autenticada pendentes;
 - [ ] armazenamento de imagens — R2 local e hospedado conectados; carga de
@@ -48,9 +48,9 @@ Objetivo: deixar de ser demonstração e virar sistema utilizável.
   concluídos; edição segura e validação com dados reais pendentes;
 - [ ] slug público da loja — rota publicada; primeira loja real ainda não
   importada;
-- [ ] isolamento entre lojas — leitura local coberta; autenticação e mutações pendentes;
-- [ ] permissões básicas;
-- [ ] estados vazios, erros e carregamento.
+- [ ] isolamento entre lojas — leitura e sessão cobertas; mutações futuras pendentes;
+- [x] permissões básicas — `store_owner` e `platform_admin` no vínculo;
+- [x] estados vazios, erros e carregamento — fluxos de autenticação;
 
 Critério de saída: duas lojas diferentes conseguem usar o sistema sem acessar
 os dados uma da outra, e nada desaparece ao recarregar.
@@ -114,8 +114,8 @@ Avançar em duas trilhas curtas, sem misturá-las:
 1. observar o uso real da Fase 1 e registrar problemas de clareza;
 2. preparar a fundação segura da Fase 2 com dependências atualizadas, headers e
    decisão explícita de autenticação/banco — concluído;
-3. escolher provedor de e-mail, domínio e remetente para então implementar
-   conta e sessão com Better Auth + D1, sem persistir produtos antes dos testes
-   de isolamento.
+3. configurar provedor de e-mail, domínio, remetente e secrets; autorizar a
+   migration hospedada e uma emissão administrativa de convites antes de
+   publicar a fundação Better Auth + D1.
 
 O estado operacional e a sequência detalhada ficam em `docs/HANDOFF.md`.

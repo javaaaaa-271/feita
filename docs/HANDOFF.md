@@ -24,6 +24,43 @@ TypeScript passou, 22/22 testes passaram, build/artefato Sites passaram e
 `git diff --check` passou. Nenhum dado real foi importado, nenhum recurso,
 acesso ou versão Sites foi alterado e não houve deploy ou push.
 
+## Marco 5 — autenticação e isolamento (somente local)
+
+Em 29 de julho de 2026 foi criada a branch
+`codex/marco-5-autenticacao` a partir do `main` limpo, que estava um commit
+documental à frente de `origin/main`. O fetch foi somente leitura.
+
+O marco implementa Better Auth `1.6.25` sobre D1/Drizzle, login, logout,
+recuperação por OTP, convites de uso único, `store_memberships`, auditoria,
+rate limit persistente, entrega local sem rede, adaptador Resend e `/painel`
+protegido. As interfaces `/entrar`, `/esqueci-minha-senha`,
+`/redefinir-senha` e `/aceitar-convite` são mobile-first, acessíveis e não
+exibem provedores ainda inexistentes.
+
+O signup público do Better Auth é recusado. Uma loja e um papel só entram pela
+abstração server-side de convite. Toda autorização administrativa segue
+sessão → usuário → membership → loja; nenhum identificador vindo do navegador
+concede acesso.
+
+A migration `drizzle/0001_shallow_robbie_robertson.sql` foi gerada e aplicada
+somente em bancos Miniflare temporários. A suíte automatizada cobre login,
+logout, sessão expirada/revogada, duas contas/lojas, 403 sem vínculo,
+recuperação genérica, OTP expirado/reutilizado, revogação após redefinição,
+rate limit 429, CSRF/origem, cookie seguro, segredo ausente do bundle, signup
+fechado, D1 limpo e regressão do Marco 4.
+
+Validação final: lint passou com zero erros e os dois avisos antigos de `<img>`;
+TypeScript passou; `npm test` passou com 24 testes gerais mais 14 provas do
+Marco 5; o build Sites passou separadamente; `git diff --check` passou. O audit
+registrou quatro alertas moderados ligados ao `drizzle-kit` e alertas altos na
+cadeia local de lint, sem correção automática compatível; nenhum desses pacotes
+de ferramenta foi encontrado no bundle do Worker.
+
+Portões restantes: secrets de produção, domínio/remetente Resend, autorização
+para migration hospedada, operação autenticada de emissão de convites e
+decisão do fluxo de convite para conta já existente. Nenhum desses itens foi
+configurado ou executado.
+
 ## Onde estamos
 
 O Marco 4 foi validado, enviado na branch
@@ -55,12 +92,14 @@ schema e recursos vazios. Além do protótipo navegável, agora existe:
 - identidade, catálogo, estoque, variações e imagens duráveis;
 - carrinho persistido por navegador e separado por slug;
 - importador local validado, com dry-run e sem sobrescrita;
-- leitura pública isolada por loja e nenhuma API pública de escrita.
+- leitura pública isolada por loja e nenhuma API pública de escrita;
+- fundação local de contas por convite, ainda não publicada;
+- painel mínimo protegido que mostra somente os vínculos permitidos.
 
 O painel em `/` continua sendo o sandbox de sessão do Marco 3 e não administra
-o novo catálogo persistido. Autenticação, dados da comerciante, painel
-administrativo, persistência de pedidos e importação hospedada não foram
-implementados.
+o novo catálogo persistido. A autenticação e o painel mínimo existem somente
+na branch local do Marco 5; CRUD administrativo, persistência de pedidos e
+importação hospedada continuam não implementados.
 
 ## Marco 4 — primeira loja compartilhável
 

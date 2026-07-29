@@ -14,10 +14,14 @@ empreendedoras organizarem produtos, pedidos, clientes e recebimentos.
 ## Estado técnico resumido
 
 - O protótipo atual está concentrado em `app/page.tsx` e usa estado local.
-- Ainda não existe autenticação própria, API de negócio ou persistência real.
-- `app/chatgpt-auth.ts` protege o acesso ao protótipo hospedado; não é o login
-  das futuras clientes da Feita.
-- `db/schema.ts` ainda está vazio.
+- A vitrine em `/loja/[slug]` lê D1 e R2; o painel demonstrativo em `/` ainda
+  não administra esses dados.
+- O Marco 5 implementa localmente Better Auth, convites, recuperação,
+  memberships e `/painel`; ainda não foi publicado.
+- `app/chatgpt-auth.ts` contém helpers da identidade do Sites, mas não está
+  ligado às rotas e não substitui a autenticação da Feita.
+- `db/schema.ts` contém catálogo, mídia, tabelas do Better Auth, memberships,
+  convites, auditoria e rate limit.
 - O site publicado está vinculado ao projeto existente em
   `.openai/hosting.json`; nunca crie outro site para esta fonte.
 - O repositório oficial do usuário é `javaaaaa-271/feita`.
@@ -75,4 +79,3 @@ Depois de um marco relevante, atualize `docs/HANDOFF.md` com:
 - testes executados;
 - riscos ou bloqueios;
 - próxima ação concreta.
-

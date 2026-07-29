@@ -35,6 +35,14 @@ O Marco 4 está integrado e publicado como checkpoint controlado:
   controlada;
 - carrinho da cliente persistido no navegador e separado por loja.
 
+O Marco 5 está implementado somente na branch de trabalho local:
+
+- Better Auth sobre D1/Drizzle;
+- acesso de comerciante apenas por convite;
+- login, logout e recuperação por código;
+- vínculo usuário–loja e `/painel` protegido;
+- rate limit persistente e testes com duas contas/lojas.
+
 O protótipo está disponível em:
 
 https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site
@@ -44,7 +52,7 @@ https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site
 - o painel em `/` ainda guarda seus dados apenas na sessão atual e recarregar a
   página restaura os produtos de demonstração;
 - D1/R2 estão ativos para `/loja/[slug]`, mas nenhuma loja real foi carregada;
-- ainda não há login ou administração hospedada;
+- ainda não há login ou administração hospedada; o Marco 5 não foi publicado;
 - pedidos ainda não são persistidos;
 - a vitrine persistida usa o WhatsApp configurado para a loja, mas a mensagem
   nunca é enviada automaticamente;
@@ -80,6 +88,7 @@ ele.
 - [ADR de autenticação e persistência](docs/ADR-001-AUTENTICACAO-E-PERSISTENCIA.md)
 - [Roteiro do Marco 3 para uso real](docs/MARCO_3_USO_REAL.md)
 - [Marco 4 — primeira loja compartilhável](docs/MARCO_4_LOJA_COMPARTILHAVEL.md)
+- [Marco 5 — autenticação e isolamento](docs/MARCO_5_AUTENTICACAO_E_ISOLAMENTO.md)
 - [Guia técnico e de diagnóstico](docs/GUIA_TECNICO_FEITA.md)
 
 ## Estrutura do código
@@ -87,6 +96,7 @@ ele.
 - `app/page.tsx`: produto navegável e estado do protótipo;
 - `app/globals.css`: identidade visual e comportamento responsivo;
 - `app/loja/[slug]/`: vitrine pública persistida;
+- `app/auth/` e `auth/`: interfaces, sessão, convites e autorização;
 - `db/`: schema, bindings e consultas isoladas por loja;
 - `drizzle/`: migrations versionadas;
 - `scripts/import-store.mjs`: importação administrativa local e validada;

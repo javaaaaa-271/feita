@@ -4,6 +4,11 @@
 - Data: **28 de julho de 2026**
 - Escopo: primeira fatia real da Fase 2
 
+Nota de implementação: em 29 de julho de 2026, o Marco 5 executou esta decisão
+localmente com Better Auth `1.6.25`, D1/Drizzle, OTP de recuperação, convites e
+memberships. Consulte `MARCO_5_AUTENTICACAO_E_ISOLAMENTO.md`. Nenhuma migration
+ou configuração hospedada foi aplicada.
+
 ## Contexto
 
 A Feita precisa sair de um protótipo com estado local para um SaaS

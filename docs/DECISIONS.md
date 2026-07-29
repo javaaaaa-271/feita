@@ -84,3 +84,14 @@ IDOR com duas lojas antes de dados reais.
 
 Contexto, alternativas, riscos e condições de implementação estão em
 [`ADR-001-AUTENTICACAO-E-PERSISTENCIA.md`](ADR-001-AUTENTICACAO-E-PERSISTENCIA.md).
+
+## D-012 — Contas somente por convite
+
+O signup público do Better Auth permanece fechado. Um convite já contém e-mail,
+loja e papel definidos pelo servidor; seu código é armazenado somente como
+digest, expira e tem uso único.
+
+Provedores sociais futuros podem autenticar uma identidade, mas nunca criarão
+automaticamente loja ou `store_memberships`. Depois da autenticação o servidor
+continuará exigindo usuário existente, convite quando aplicável e vínculo
+explícito com a loja.
