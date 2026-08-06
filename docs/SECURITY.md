@@ -13,6 +13,13 @@ pública de mídia autoriza no D1 antes de ler os bytes do R2. Ainda não existe
 dados persistentes de clientes ou pedidos, administração de catálogo ou
 mutações públicas.
 
+O Marco 6.1 adiciona administração autenticada de produtos em `/painel`. A
+loja presente no caminho é somente um seletor: sessão e membership são
+revalidados no servidor em cada operação. Consultas de recurso combinam sempre
+`products.id` e `products.tenant_id`; um ID pertencente a outra loja recebe a
+mesma resposta 404 de um ID inexistente. O corpo de mutações não aceita
+`storeId`, `tenantId`, `userId` nem outros campos fora da lista operacional.
+
 O Marco 5 está integrado em `main` e `origin/main` no commit `ab39089`. Better
 Auth foi ligado ao D1/Drizzle com login, logout, recuperação por OTP, convite
 com digest, sessão revogável, `store_memberships`, rate limit persistente e
@@ -164,6 +171,20 @@ integrações externas.
 - usar identificadores não sequenciais sem tratá-los como autorização;
 - negar por padrão quando não houver vínculo explícito.
 
+### Catálogo autenticado
+
+- zero memberships mantém a operação negada com 403;
+- um membership abre diretamente a única loja autorizada;
+- múltiplos memberships exigem escolha explícita, sem selecionar o primeiro;
+- a escolha da loja nunca substitui a validação do membership;
+- criação deriva `tenant_id` exclusivamente do vínculo validado;
+- leitura e atualização filtram simultaneamente ID do produto e loja;
+- criação e edição preservam `image_media_id`; o Marco 6.1 não escreve no R2;
+- publicação é reversível e não exclui o registro;
+- preço é convertido de texto brasileiro para centavos inteiros sem `float`;
+- payload, textos, estoque, variações e flags têm validação server-side;
+- mutações exigem origem permitida, sessão válida e membership.
+
 ### Teste de parada de linha: IDOR
 
 Criar duas usuárias, duas lojas e registros distintos. A usuária A não pode ler,
@@ -196,9 +217,9 @@ Qualquer falha nesse conjunto bloqueia publicação.
 - [x] mensagem genérica de login e recuperação;
 - [x] expiração e uso único do token de redefinição;
 - [x] logout invalidando sessão;
-- [ ] query malformada não alterando a consulta;
+- [x] query ou payload malformado não alterando a consulta;
 - [x] IDOR de leitura/autorização com duas sessões e duas lojas;
-- [ ] upload inválido, grande e com MIME falso;
+- [x] upload inválido, grande e com MIME falso no importador local;
 - [x] respostas sem PII ou credenciais desnecessárias nos fluxos de autenticação.
 
 ### Evidência local do Marco 4

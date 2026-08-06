@@ -4,6 +4,42 @@ Atualizado em: **6 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
+## Marco 6.1 — catálogo persistente autenticado
+
+O Marco 6.1 foi desenvolvido localmente a partir do commit aprovado do Marco
+6.0 (`677bb5f`) na branch `codex/marco-6-1-catalogo-persistente`. O painel
+protegido agora administra produtos persistidos no D1, sem alterar `/`, sem
+migration e sem qualquer operação remota.
+
+A área `/painel` resolve a loja assim: zero memberships nega a operação; um
+membership abre diretamente sua loja; dois ou mais exibem uma seleção
+explícita. A rota escolhida contém o ID apenas como contexto. Toda listagem,
+criação ou edição refaz no servidor a cadeia sessão → usuário → membership →
+loja. O tenant de criação vem do vínculo, nunca do corpo, e recursos são lidos
+ou atualizados pela combinação `product.id + tenant_id`. Um produto de outra
+loja responde como inexistente.
+
+São operáveis nome, descrição, categoria, preço, estoque, variações,
+publicação e disponibilidade. Preços digitados na convenção brasileira são
+convertidos exatamente para centavos inteiros; estoque aceita somente inteiro
+não negativo até o limite documentado no código. Textos, lista de variações,
+flags e tamanho total do payload possuem limites server-side. Campos
+desconhecidos — inclusive `storeId`, `tenantId` e `userId` — são recusados.
+
+“Remover da vitrine” apenas define `published = false`: nenhum produto é
+excluído. A mídia associada é preservada e permanece somente leitura. Upload,
+substituição e remoção de imagens ficam para o Marco 6.2. Pedidos, financeiro e
+relatórios continuam fora do escopo. A vitrine pública mantém o carrinho e o
+checkout para WhatsApp existentes e passa a refletir as alterações do mesmo D1.
+
+Os testes usam somente dados fictícios e cobrem duas lojas e sessões reais,
+IDOR de leitura e mutação, 401/403/404, seleção múltipla, persistência,
+publicação, preço, estoque, payload excessivo e origem hostil. A validação final
+passou com 24 testes gerais e 29 provas TypeScript de autenticação e catálogo,
+totalizando 53 testes. Lint passou com somente os dois avisos antigos de
+`<img>`; TypeScript, build Sites e `git diff --check` também passaram. O hash do
+commit fica registrado no fechamento da branch.
+
 ## Marco 6.0 — portão de segurança da autenticação e dos convites
 
 Em 6 de agosto de 2026, o Marco 5 já estava integrado em `main` e

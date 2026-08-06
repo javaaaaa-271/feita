@@ -13,6 +13,11 @@ export type StoreMembership = {
   role: StoreRole;
 };
 
+export type StoreSelection =
+  | { kind: "forbidden" }
+  | { kind: "selected"; membership: StoreMembership }
+  | { kind: "selection_required"; memberships: StoreMembership[] };
+
 export class AuthenticationRequiredError extends Error {
   readonly status = 401;
 
@@ -99,4 +104,14 @@ export async function requireStoreMembership(
     storeName: String(row.name),
     role: row.role,
   };
+}
+
+export function resolveStoreSelection(
+  memberships: StoreMembership[],
+): StoreSelection {
+  if (memberships.length === 0) return { kind: "forbidden" };
+  if (memberships.length === 1) {
+    return { kind: "selected", membership: memberships[0] };
+  }
+  return { kind: "selection_required", memberships };
 }

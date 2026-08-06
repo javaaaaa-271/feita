@@ -44,11 +44,12 @@ Objetivo: deixar de ser demonstração e virar sistema utilizável.
   real e administração autenticada pendentes;
 - [ ] armazenamento de imagens — R2 local e hospedado conectados; carga de
   imagens reais e upload autenticado pendentes;
-- [ ] produtos e categorias persistentes — schema e leitura pública
-  concluídos; edição segura e validação com dados reais pendentes;
+- [x] produtos e categorias persistentes — schema, leitura pública e edição
+  autenticada isolada por loja concluídos localmente; dados reais pendentes;
 - [ ] slug público da loja — rota publicada; primeira loja real ainda não
   importada;
-- [ ] isolamento entre lojas — leitura e sessão cobertas; mutações futuras pendentes;
+- [x] isolamento entre lojas — leitura, sessão e mutações de catálogo cobertas
+  localmente com duas lojas fictícias;
 - [x] permissões básicas — `store_owner` e `platform_admin` no vínculo;
 - [x] estados vazios, erros e carregamento — fluxos de autenticação;
 

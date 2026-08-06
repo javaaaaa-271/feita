@@ -44,6 +44,11 @@ continua sem publicação:
 - vínculo usuário–loja e `/painel` protegido;
 - rate limit persistente e testes com duas contas/lojas.
 
+Os Marcos 6.0 e 6.1 avançam localmente a segurança transversal e o catálogo
+operacional autenticado. O painel em `/painel` já permite administrar produtos
+persistidos e isolados por membership, mas esse trabalho ainda não foi
+publicado nem recebeu dados reais.
+
 O protótipo está disponível em:
 
 https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site
@@ -91,6 +96,7 @@ ele.
 - [Roteiro do Marco 3 para uso real](docs/MARCO_3_USO_REAL.md)
 - [Marco 4 — primeira loja compartilhável](docs/MARCO_4_LOJA_COMPARTILHAVEL.md)
 - [Marco 5 — autenticação e isolamento](docs/MARCO_5_AUTENTICACAO_E_ISOLAMENTO.md)
+- [Marco 6.1 — catálogo persistente autenticado](docs/MARCO_6_1_CATALOGO_PERSISTENTE.md)
 - [Guia técnico e de diagnóstico](docs/GUIA_TECNICO_FEITA.md)
 
 ## Estrutura do código
@@ -99,6 +105,7 @@ ele.
 - `app/globals.css`: identidade visual e comportamento responsivo;
 - `app/loja/[slug]/`: vitrine pública persistida;
 - `app/auth/` e `auth/`: interfaces, sessão, convites e autorização;
+- `app/painel/` e `catalog/`: operação autenticada do catálogo por loja;
 - `db/`: schema, bindings e consultas isoladas por loja;
 - `drizzle/`: migrations versionadas;
 - `scripts/import-store.mjs`: importação administrativa local e validada;

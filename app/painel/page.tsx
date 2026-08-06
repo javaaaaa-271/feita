@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { forbidden, redirect } from "next/navigation";
 import {
   AuthenticationRequiredError,
   listStoreMemberships,
   requireSession,
+  resolveStoreSelection,
 } from "@/auth/authorization";
 import { authRuntimeForRequest } from "@/auth/runtime";
 import { createFeitaAuth } from "@/auth/server";
@@ -39,6 +40,14 @@ export default async function ProtectedPanelPage() {
     runtime.database,
     session.user.id,
   );
+  const selection = resolveStoreSelection(memberships);
+
+  if (selection.kind === "forbidden") forbidden();
+  if (selection.kind === "selected") {
+    redirect(
+      `/painel/lojas/${encodeURIComponent(selection.membership.storeId)}/produtos`,
+    );
+  }
 
   return (
     <main className={styles.page}>
@@ -53,37 +62,38 @@ export default async function ProtectedPanelPage() {
           <LogoutButton />
         </header>
         <section className={styles.main}>
-          <p className={styles.eyebrow}>Área protegida</p>
-          <h1>Seu acesso está funcionando.</h1>
+          <p className={styles.eyebrow}>Catálogo</p>
+          <h1>Escolha a loja que deseja administrar.</h1>
           <p className={styles.description}>
-            Este painel mínimo prova a sessão e o vínculo entre sua conta e as
-            lojas permitidas. A edição do catálogo continua fora deste marco.
+            Cada catálogo permanece separado. A loja escolhida será validada
+            novamente em todas as consultas e alterações.
           </p>
           <div className={styles.account}>
             <span>Conta autenticada</span>
             <strong>{session.user.email}</strong>
           </div>
           <section className={styles.stores} aria-labelledby="stores-title">
-            <h2 id="stores-title">Lojas permitidas</h2>
-            {memberships.length > 0 ? (
-              <ul className={styles.list}>
-                {memberships.map((membership) => (
-                  <li className={styles.store} key={membership.storeId}>
+            <h2 id="stores-title">Suas lojas</h2>
+            <ul className={styles.list}>
+              {memberships.map((membership) => (
+                <li className={styles.store} key={membership.storeId}>
+                  <div>
                     <strong>{membership.storeName}</strong>
                     <span>
                       {membership.role === "store_owner"
                         ? "Responsável pela loja"
                         : "Administração da plataforma"}
                     </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className={styles.empty}>
-                Sua conta está ativa, mas ainda não possui vínculo com uma
-                loja. O acesso administrativo permanece negado.
-              </p>
-            )}
+                  </div>
+                  <Link
+                    className={styles.storeLink}
+                    href={`/painel/lojas/${encodeURIComponent(membership.storeId)}/produtos`}
+                  >
+                    Abrir catálogo
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </section>
         </section>
       </div>
