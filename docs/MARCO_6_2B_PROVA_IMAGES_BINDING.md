@@ -6,6 +6,13 @@ Data da prova: **6 de agosto de 2026**
 
 O resultado é **prova remota pendente; não aprovado para integração**.
 
+Atualização do Marco 6.2C: uma sessão Wrangler autenticada tentou iniciar o
+binding remoto, mas a conta não possuía o subdomínio `workers.dev` exigido pelo
+ambiente de desenvolvimento. Como registrá-lo seria uma alteração de conta não
+autorizada, nenhuma fixture ou transformação remota foi executada. A
+classificação atual é **prova remota bloqueada; integração bloqueada**. O
+registro completo está em `docs/MARCO_6_2C_PROVA_REMOTA_IMAGES.md`.
+
 O spike comprova que a configuração e o fluxo mínimo funcionam na simulação
 offline do Wrangler instalado. Essa simulação, porém, não tem fidelidade
 suficiente para validar orientação EXIF, remoção de metadata ou o serviço que

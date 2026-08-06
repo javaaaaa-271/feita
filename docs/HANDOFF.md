@@ -4,6 +4,33 @@ Atualizado em: **6 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
+## Marco 6.2C — prova remota bloqueada pelo ambiente Workers
+
+O Marco 6.2C partiu do commit aprovado do Marco 6.2B (`c3c3fe9`) na branch
+`codex/marco-6-2c-prova-remota-images`. A autenticação do Wrangler estava
+válida, mas a conta não possuía o subdomínio `workers.dev` necessário para
+iniciar o ambiente remoto. A CLI ofereceu registrá-lo; como isso altera a conta
+e não estava autorizado, a prova parou antes de qualquer servidor, fixture,
+chamada `.info()` ou transformação remota.
+
+A modalidade de binding remoto não alcançou o estado `Ready`. A modalidade de
+Worker remoto não foi iniciada porque depende do mesmo ambiente e repetiria o
+portão proibido. Consultas somente leitura confirmaram ausência de deployment e
+histórico de versões para o nome isolado do spike. Não houve Worker, rota,
+domínio, binding, storage ou versão persistente.
+
+O resultado é **prova remota bloqueada; integração bloqueada**, com 0 de 25
+transformações remotas tentadas e nenhuma fixture transmitida. Não houve
+mudança em D1, R2, Sites, Images Storage ou produção. A próxima ação exige
+autorização explícita e separada para registrar `workers.dev` na conta já
+autenticada, ou o fornecimento de uma conta de prova previamente preparada,
+sem compartilhar credenciais. Detalhes estão em
+`docs/MARCO_6_2C_PROVA_REMOTA_IMAGES.md`.
+
+A validação local permaneceu verde com 71 testes, TypeScript, build Sites, 7
+testes próprios do spike e `git diff --check`. O lint manteve somente os dois
+avisos antigos de `<img>`.
+
 ## Marco 6.2B — prova isolada do Images binding
 
 O Marco 6.2B foi desenvolvido localmente a partir do commit aprovado do Marco
