@@ -4,6 +4,38 @@ Atualizado em: **6 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
+## Marco 6.2B — prova isolada do Images binding
+
+O Marco 6.2B foi desenvolvido localmente a partir do commit aprovado do Marco
+6.1.1 (`31cd65fa`) na branch
+`codex/marco-6-2b-prova-images-binding`. O resultado é **prova remota
+pendente; não aprovado para integração**.
+
+Um Worker-prova isolado, sem D1, R2, Assets, secrets ou identificadores de
+conta, validou as 14 fixtures sintéticas no Images simulado pelo Wrangler. A
+leitura de entrada e saída é limitada, `.info()` confirma formato e dimensões,
+JPEG/PNG/WebP estáticos produzem WebP validado por assinatura e decoder, e SVG,
+GIF animado, WebP animado, APNG, arquivo truncado, conteúdo falso e excesso de
+pixels falham fechados. A inspeção estrutural é necessária porque `.info()`
+offline não informou animação.
+
+O modo offline removeu a metadata sintética, mas não normalizou a orientação
+EXIF. Isso confirma que a simulação de baixa fidelidade não substitui o teste
+remoto. A inspeção somente leitura mostrou que o Wrangler não está autenticado;
+por isso, binding remoto e `wrangler dev --remote` não foram iniciados. Não
+houve login, transformação remota, criação de recurso, migration, deploy ou
+mudança em D1, R2, Sites e produção.
+
+A validação final passou com 71 testes (os 64 anteriores e 7 novos), TypeScript,
+build Sites, testes próprios do spike e `git diff --check`. O lint permaneceu
+sem erros e somente com os dois avisos antigos de `<img>`.
+
+Os detalhes, a matriz completa e os portões para uma continuação controlada
+estão em `docs/MARCO_6_2B_PROVA_IMAGES_BINDING.md`. A próxima ação concreta é
+executar o Marco 6.2C somente após autorização explícita e com uma sessão
+Wrangler já autenticada, mantendo os limites de 25 transformações sintéticas
+por modalidade e parando diante de qualquer exigência de billing.
+
 ## Marco 6.1.1 — mídia pública vinculada ao produto publicado
 
 O Marco 6.1.1 foi desenvolvido localmente a partir do commit `83e74caf` na

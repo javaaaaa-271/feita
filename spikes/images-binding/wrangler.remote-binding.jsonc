@@ -1,0 +1,10 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "feita-images-binding-spike",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-07-29",
+  "images": {
+    "binding": "IMAGES",
+    "remote": true
+  }
+}

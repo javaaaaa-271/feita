@@ -43,3 +43,6 @@ next-env.d.ts
 /.sites-runtime/
 /outputs/
 /work/
+/spikes/images-binding/.generated/
+/spikes/images-binding/.results/
+/spikes/images-binding/.wrangler/
