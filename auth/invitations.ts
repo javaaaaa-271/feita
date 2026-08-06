@@ -5,6 +5,8 @@ import type {
 import { normalizeEmail, sha256Hex } from "./security";
 import type { StoreRole } from "./authorization";
 
+const INVITATION_CLAIM_LEASE_MS = 5 * 60_000;
+
 export class InvitationRejectedError extends Error {
   readonly status = 400;
 
@@ -80,77 +82,219 @@ export async function acceptStoreInvitation(options: {
        WHERE token_digest = ?2
          AND email_normalized = ?3
          AND used_at IS NULL
-         AND claimed_at IS NULL
+         AND (claimed_at IS NULL OR claimed_at <= ?4)
          AND expires_at > ?1
-       RETURNING id, store_id, role`,
+       RETURNING id`,
     )
-    .bind(now, tokenDigest, normalizedEmail)
-    .first<{ id: string; store_id: string; role: StoreRole }>();
+    .bind(
+      now,
+      tokenDigest,
+      normalizedEmail,
+      now - INVITATION_CLAIM_LEASE_MS,
+    )
+    .first<{ id: string }>();
 
   if (!invite) throw new InvitationRejectedError();
 
+  let completed = false;
   try {
-    await options.auth.api.signUpEmail({
-      body: {
+    let user = await findUserByEmail(options.database, normalizedEmail);
+    if (user) {
+      await verifyExistingAccountCredentials({
+        database: options.database,
+        auth: options.auth,
+        headers: options.headers,
         email: normalizedEmail,
-        name: options.name.trim(),
         password: options.password,
-      },
-      headers: options.headers,
+        expectedUserId: user.id,
+      });
+    } else {
+      await options.auth.api.signUpEmail({
+        body: {
+          email: normalizedEmail,
+          name: options.name.trim(),
+          password: options.password,
+        },
+        headers: options.headers,
+      });
+      user = await findUserByEmail(options.database, normalizedEmail);
+    }
+
+    if (!user) throw new InvitationRejectedError();
+
+    await finalizeInvitationAcceptance({
+      database: options.database,
+      inviteId: invite.id,
+      claimedAt: now,
+      email: normalizedEmail,
+      userId: user.id,
+      now,
     });
-
-    const createdUser = await options.database
-      .prepare("SELECT id FROM user WHERE email = ?1 LIMIT 1")
-      .bind(normalizedEmail)
-      .first<{ id: string }>();
-    if (!createdUser) throw new InvitationRejectedError();
-
-    await options.database.batch([
-      options.database
-        .prepare(
-          `INSERT INTO store_memberships (
-             id, user_id, store_id, role, created_at
-           ) VALUES (?1, ?2, ?3, ?4, ?5)`,
-        )
-        .bind(
-          crypto.randomUUID(),
-          createdUser.id,
-          invite.store_id,
-          invite.role,
-          now,
-        ),
-      options.database
-        .prepare("UPDATE user SET email_verified = 1, updated_at = ?1 WHERE id = ?2")
-        .bind(now, createdUser.id),
-      options.database
-        .prepare(
-          `UPDATE store_invites
-           SET used_at = ?1
-           WHERE id = ?2 AND claimed_at = ?1 AND used_at IS NULL`,
-        )
-        .bind(now, invite.id),
-      options.database
-        .prepare(
-          `INSERT INTO audit_events (
-             id, actor_user_id, store_id, action, created_at, metadata_json
-           ) VALUES (?1, ?2, ?3, 'invitation.accepted', ?4, '{}')`,
-        )
-        .bind(
-          crypto.randomUUID(),
-          createdUser.id,
-          invite.store_id,
-          now,
-        ),
-    ]);
+    completed = true;
   } catch {
-    await options.database
+    throw new InvitationRejectedError();
+  } finally {
+    if (!completed) {
+      try {
+        await options.database
+          .prepare(
+            `UPDATE store_invites
+             SET claimed_at = NULL
+             WHERE id = ?1 AND claimed_at = ?2 AND used_at IS NULL`,
+          )
+          .bind(invite.id, now)
+          .run();
+      } catch {
+        // A failed cleanup remains recoverable after the bounded claim lease.
+      }
+    }
+  }
+}
+
+async function findUserByEmail(
+  database: D1Database,
+  email: string,
+): Promise<{ id: string } | null> {
+  return database
+    .prepare("SELECT id FROM user WHERE email = ?1 LIMIT 1")
+    .bind(email)
+    .first<{ id: string }>();
+}
+
+async function verifyExistingAccountCredentials(options: {
+  database: D1Database;
+  auth: FeitaAuth;
+  headers: Headers;
+  email: string;
+  password: string;
+  expectedUserId: string;
+}): Promise<void> {
+  const proof = await options.auth.api.signInEmail({
+    body: {
+      email: options.email,
+      password: options.password,
+      rememberMe: false,
+    },
+    headers: options.headers,
+  });
+
+  if (
+    proof.user.id !== options.expectedUserId ||
+    normalizeEmail(proof.user.email) !== options.email
+  ) {
+    throw new InvitationRejectedError();
+  }
+
+  await options.database
+    .prepare("DELETE FROM session WHERE token = ?1 AND user_id = ?2")
+    .bind(proof.token, options.expectedUserId)
+    .run();
+
+  const remainingProofSession = await options.database
+    .prepare("SELECT id FROM session WHERE token = ?1 LIMIT 1")
+    .bind(proof.token)
+    .first<{ id: string }>();
+  if (remainingProofSession) throw new InvitationRejectedError();
+}
+
+async function finalizeInvitationAcceptance(options: {
+  database: D1Database;
+  inviteId: string;
+  claimedAt: number;
+  email: string;
+  userId: string;
+  now: number;
+}): Promise<void> {
+  const results = await options.database.batch<{
+    results?: { id: string }[];
+  }>([
+    options.database
+      .prepare(
+        `INSERT INTO store_memberships (
+           id, user_id, store_id, role, created_at
+         )
+         SELECT ?1, ?2, store_id, role, ?3
+         FROM store_invites
+         WHERE id = ?4
+           AND claimed_at = ?5
+           AND email_normalized = ?6
+           AND used_at IS NULL
+           AND expires_at > ?3
+         ON CONFLICT(user_id, store_id) DO NOTHING`,
+      )
+      .bind(
+        crypto.randomUUID(),
+        options.userId,
+        options.now,
+        options.inviteId,
+        options.claimedAt,
+        options.email,
+      ),
+    options.database
+      .prepare(
+        `UPDATE user
+         SET email_verified = 1, updated_at = ?1
+         WHERE id = ?2
+           AND EXISTS (
+             SELECT 1
+             FROM store_invites
+             WHERE id = ?3
+               AND claimed_at = ?4
+               AND email_normalized = ?5
+               AND used_at IS NULL
+               AND expires_at > ?1
+           )`,
+      )
+      .bind(
+        options.now,
+        options.userId,
+        options.inviteId,
+        options.claimedAt,
+        options.email,
+      ),
+    options.database
       .prepare(
         `UPDATE store_invites
-         SET claimed_at = NULL
-         WHERE id = ?1 AND claimed_at = ?2 AND used_at IS NULL`,
+         SET used_at = ?1
+         WHERE id = ?2
+           AND claimed_at = ?3
+           AND email_normalized = ?4
+           AND used_at IS NULL
+           AND expires_at > ?1
+           AND EXISTS (
+             SELECT 1
+             FROM store_memberships
+             WHERE user_id = ?5
+               AND store_id = store_invites.store_id
+           )
+         RETURNING id`,
       )
-      .bind(invite.id, now)
-      .run();
+      .bind(
+        options.now,
+        options.inviteId,
+        options.claimedAt,
+        options.email,
+        options.userId,
+      ),
+    options.database
+      .prepare(
+        `INSERT INTO audit_events (
+           id, actor_user_id, store_id, action, created_at, metadata_json
+         )
+         SELECT ?1, ?2, store_id, 'invitation.accepted', ?3, '{}'
+         FROM store_invites
+         WHERE id = ?4 AND claimed_at = ?5 AND used_at = ?3`,
+      )
+      .bind(
+        crypto.randomUUID(),
+        options.userId,
+        options.now,
+        options.inviteId,
+        options.claimedAt,
+      ),
+  ]);
+
+  if (!results[2]?.results?.some((row) => row.id === options.inviteId)) {
     throw new InvitationRejectedError();
   }
 }

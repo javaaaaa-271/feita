@@ -35,7 +35,8 @@ O Marco 4 está integrado e publicado como checkpoint controlado:
   controlada;
 - carrinho da cliente persistido no navegador e separado por loja.
 
-O Marco 5 está implementado somente na branch de trabalho local:
+O Marco 5 está integrado em `main` e `origin/main` no commit `ab39089`, mas
+continua sem publicação:
 
 - Better Auth sobre D1/Drizzle;
 - acesso de comerciante apenas por convite;
@@ -52,7 +53,8 @@ https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site
 - o painel em `/` ainda guarda seus dados apenas na sessão atual e recarregar a
   página restaura os produtos de demonstração;
 - D1/R2 estão ativos para `/loja/[slug]`, mas nenhuma loja real foi carregada;
-- ainda não há login ou administração hospedada; o Marco 5 não foi publicado;
+- ainda não há login ou administração hospedada; o código do Marco 5 está na
+  `main`, mas não foi publicado;
 - pedidos ainda não são persistidos;
 - a vitrine persistida usa o WhatsApp configurado para a loja, mas a mensagem
   nunca é enviada automaticamente;

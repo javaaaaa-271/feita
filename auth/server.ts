@@ -35,31 +35,76 @@ export type FeitaAuthEnvironment = {
 export type FeitaAuthRuntime = {
   database: D1Database;
   environment?: FeitaAuthEnvironment;
-  request?: Request;
+  request: Request;
   waitUntil?: (promise: Promise<unknown>) => void;
   emailSender?: TransactionalEmailSender;
   localEmailCapture?: LocalEmailCapture;
 };
 
-export function createFeitaAuth(runtime: FeitaAuthRuntime) {
+export class AuthRuntimeConfigurationError extends Error {
+  constructor(
+    message =
+      "BETTER_AUTH_SECRET and RATE_LIMIT_HMAC_SECRET are required outside local development.",
+  ) {
+    super(message);
+    this.name = "AuthRuntimeConfigurationError";
+  }
+}
+
+export function isLocalDevelopmentOrigin(value: string): boolean {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+    return ["localhost", "127.0.0.1", "[::1]"].includes(
+      url.hostname.toLowerCase(),
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function resolveAuthRuntimeSecrets(runtime: FeitaAuthRuntime): {
+  secret: string;
+  hmacSecret: string;
+  usesLocalDefaults: boolean;
+} {
   const environment = runtime.environment ?? {};
-  const requestOrigin = runtime.request
-    ? new URL(runtime.request.url).origin
-    : LOCAL_ORIGINS[0];
-  const trustedOrigins = resolveTrustedOrigins(environment);
-  const isProductionOrigin = requestOrigin === PRODUCTION_ORIGIN;
+  const requestOrigin = new URL(runtime.request.url).origin;
+  const authOrigin = environment.BETTER_AUTH_URL
+    ? new URL(environment.BETTER_AUTH_URL).origin
+    : requestOrigin;
+  const allowsLocalDefaults =
+    isLocalDevelopmentOrigin(requestOrigin) &&
+    isLocalDevelopmentOrigin(authOrigin);
   const secret =
-    environment.BETTER_AUTH_SECRET ??
-    (isProductionOrigin ? undefined : LOCAL_AUTH_SECRET);
+    nonEmpty(environment.BETTER_AUTH_SECRET) ??
+    (allowsLocalDefaults ? LOCAL_AUTH_SECRET : undefined);
   const hmacSecret =
-    environment.RATE_LIMIT_HMAC_SECRET ??
-    (isProductionOrigin ? undefined : LOCAL_HMAC_SECRET);
+    nonEmpty(environment.RATE_LIMIT_HMAC_SECRET) ??
+    (allowsLocalDefaults ? LOCAL_HMAC_SECRET : undefined);
 
   if (!secret || !hmacSecret) {
-    throw new Error(
-      "Auth runtime secrets are required for the production origin.",
-    );
+    throw new AuthRuntimeConfigurationError();
   }
+
+  return {
+    secret,
+    hmacSecret,
+    usesLocalDefaults:
+      !nonEmpty(environment.BETTER_AUTH_SECRET) ||
+      !nonEmpty(environment.RATE_LIMIT_HMAC_SECRET),
+  };
+}
+
+export function createFeitaAuth(runtime: FeitaAuthRuntime) {
+  const environment = runtime.environment ?? {};
+  const requestOrigin = new URL(runtime.request.url).origin;
+  const { secret, hmacSecret, usesLocalDefaults } =
+    resolveAuthRuntimeSecrets(runtime);
+  const trustedOrigins = resolveTrustedOrigins(
+    environment,
+    usesLocalDefaults,
+  );
 
   const sender =
     runtime.emailSender ??
@@ -183,6 +228,7 @@ export type FeitaAuth = ReturnType<typeof createFeitaAuth>;
 
 export function resolveTrustedOrigins(
   environment: FeitaAuthEnvironment,
+  localOnly = false,
 ): string[] {
   const configured = (environment.AUTH_TRUSTED_ORIGINS ?? "")
     .split(",")
@@ -199,9 +245,18 @@ export function resolveTrustedOrigins(
       return url.origin;
     });
 
+  if (
+    localOnly &&
+    configured.some((origin) => !isLocalDevelopmentOrigin(origin))
+  ) {
+    throw new AuthRuntimeConfigurationError(
+      "AUTH_TRUSTED_ORIGINS accepts only loopback origins while local defaults are active.",
+    );
+  }
+
   return Array.from(
     new Set([
-      PRODUCTION_ORIGIN,
+      ...(localOnly ? [] : [PRODUCTION_ORIGIN]),
       ...LOCAL_ORIGINS,
       ...configured,
     ]),
@@ -215,4 +270,9 @@ function identityLimitedAction(path: string): string | null {
   }
   if (path === "/email-otp/reset-password") return "password-reset";
   return null;
+}
+
+function nonEmpty(value: string | undefined): string | undefined {
+  const normalized = value?.trim();
+  return normalized ? normalized : undefined;
 }

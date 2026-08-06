@@ -16,7 +16,11 @@ import {
   InvitationRejectedError,
 } from "../auth/invitations";
 import { LocalTransactionalEmailSender } from "../auth/email";
-import { createFeitaAuth, resolveTrustedOrigins } from "../auth/server";
+import {
+  createFeitaAuth,
+  resolveAuthRuntimeSecrets,
+  resolveTrustedOrigins,
+} from "../auth/server";
 import { sha256Hex } from "../auth/security";
 import { openLocalBindings } from "../scripts/local-bindings.mjs";
 
@@ -129,6 +133,76 @@ test("Marco 5 prova autenticação, recuperação e isolamento em D1 limpo", asy
   const passwordB = "frase segura de teste B 2026";
 
   try {
+    await t.test("defaults de segredo existem somente em origens loopback", () => {
+      for (const origin of [
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        "http://[::1]:8787",
+      ]) {
+        assert.doesNotThrow(() =>
+          resolveAuthRuntimeSecrets({
+            database,
+            request: new Request(`${origin}/api/auth/ok`),
+          }),
+        );
+      }
+
+      for (const origin of [
+        "https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site",
+        "https://preview-feita.example.test",
+        "https://alias-feita.example.test",
+        "https://attacker.example",
+        "http://192.0.2.10:3000",
+      ]) {
+        assert.throws(
+          () =>
+            resolveAuthRuntimeSecrets({
+              database,
+              request: new Request(`${origin}/api/auth/ok`),
+            }),
+          /required outside local development/,
+        );
+      }
+
+      assert.throws(
+        () =>
+          resolveAuthRuntimeSecrets({
+            database,
+            request: new Request("http://localhost:3000/api/auth/ok"),
+            environment: {
+              BETTER_AUTH_URL: "https://preview-feita.example.test",
+            },
+          }),
+        /required outside local development/,
+      );
+
+      assert.doesNotThrow(() =>
+        resolveAuthRuntimeSecrets({
+          database,
+          request: new Request("https://preview-feita.example.test/api/auth/ok"),
+          environment: {
+            BETTER_AUTH_SECRET: testSecret,
+            RATE_LIMIT_HMAC_SECRET: rateSecret,
+          },
+        }),
+      );
+
+      const localSecrets = resolveAuthRuntimeSecrets({
+        database,
+        request: new Request("http://localhost:3000/api/auth/ok"),
+      });
+      assert.equal(localSecrets.usesLocalDefaults, true);
+      assert.doesNotThrow(() => resolveTrustedOrigins({}, true));
+      assert.throws(
+        () =>
+          resolveTrustedOrigins(
+            { AUTH_TRUSTED_ORIGINS: "https://preview-feita.example.test" },
+            true,
+          ),
+        /only loopback origins/,
+      );
+    });
+
     await t.test("migration cria todas as tabelas do marco", async () => {
       const tables = await database
         .prepare("SELECT name FROM sqlite_master WHERE type = 'table'")
@@ -172,7 +246,7 @@ test("Marco 5 prova autenticação, recuperação e isolamento em D1 limpo", asy
         .bind(now),
     ]);
 
-    await t.test("convite é de uso único e não guarda token puro", async () => {
+    await t.test("aceitação normal é de uso único e não guarda token puro", async () => {
       const token = "convite-local-a-2026";
       await createStoreInvitation({
         database,
@@ -201,6 +275,20 @@ test("Marco 5 prova autenticação, recuperação e isolamento em D1 limpo", asy
       assert.ok(invite?.used_at);
       assert.equal(invite?.token_digest, await sha256Hex(token));
       assert.notEqual(invite?.token_digest, token);
+      assert.equal(
+        Number(
+          await database
+            .prepare(
+              `SELECT COUNT(*) AS total
+               FROM store_memberships AS sm
+               INNER JOIN user AS u ON u.id = sm.user_id
+               WHERE u.email = ?1 AND sm.store_id = 'store-a'`,
+            )
+            .bind("dona-a@example.test")
+            .first<number>("total"),
+        ),
+        1,
+      );
       await assert.rejects(
         () =>
           acceptStoreInvitation({
@@ -214,7 +302,324 @@ test("Marco 5 prova autenticação, recuperação e isolamento em D1 limpo", asy
           }),
         InvitationRejectedError,
       );
+      assert.equal(
+        Number(
+          await database
+            .prepare(
+              `SELECT COUNT(*) AS total
+               FROM store_memberships AS sm
+               INNER JOIN user AS u ON u.id = sm.user_id
+               WHERE u.email = ?1 AND sm.store_id = 'store-a'`,
+            )
+            .bind("dona-a@example.test")
+            .first<number>("total"),
+        ),
+        1,
+      );
     });
+
+    await t.test(
+      "retry conclui convite após conta criada e lote interrompido",
+      async () => {
+        const email = "retry-convite@example.test";
+        const password = "frase segura para recuperar convite 2026";
+        const token = "convite-retry-seguro-2026";
+        await createStoreInvitation({
+          database,
+          sender,
+          email,
+          storeId: "store-a",
+          role: "store_owner",
+          token,
+        });
+        await database
+          .prepare(
+            `CREATE TRIGGER reject_membership_for_retry
+             BEFORE INSERT ON store_memberships
+             BEGIN
+               SELECT RAISE(ABORT, 'simulated membership failure');
+             END`,
+          )
+          .run();
+
+        await assert.rejects(
+          () =>
+            acceptStoreInvitation({
+              database,
+              auth,
+              headers: requestHeaders("203.0.113.13"),
+              email,
+              name: "Retry Seguro",
+              password,
+              token,
+            }),
+          InvitationRejectedError,
+        );
+        await database.exec("DROP TRIGGER reject_membership_for_retry");
+
+        assert.ok(
+          await database
+            .prepare("SELECT id FROM user WHERE email = ?1")
+            .bind(email)
+            .first(),
+        );
+        assert.deepEqual(
+          await database
+            .prepare(
+              "SELECT claimed_at, used_at FROM store_invites WHERE email_normalized = ?1",
+            )
+            .bind(email)
+            .first(),
+          { claimed_at: null, used_at: null },
+        );
+        assert.equal(
+          Number(
+            await database
+              .prepare(
+                `SELECT COUNT(*) AS total
+                 FROM store_memberships AS sm
+                 INNER JOIN user AS u ON u.id = sm.user_id
+                 WHERE u.email = ?1`,
+              )
+              .bind(email)
+              .first<number>("total"),
+          ),
+          0,
+        );
+
+        await assert.rejects(
+          () =>
+            acceptStoreInvitation({
+              database,
+              auth,
+              headers: requestHeaders("203.0.113.19"),
+              email,
+              name: "Retry Seguro",
+              password: "credencial incorreta no retry 2026",
+              token,
+            }),
+          InvitationRejectedError,
+        );
+        assert.deepEqual(
+          await database
+            .prepare(
+              "SELECT claimed_at, used_at FROM store_invites WHERE email_normalized = ?1",
+            )
+            .bind(email)
+            .first(),
+          { claimed_at: null, used_at: null },
+        );
+
+        await acceptStoreInvitation({
+          database,
+          auth,
+          headers: requestHeaders("203.0.113.14"),
+          email,
+          name: "Retry Seguro",
+          password,
+          token,
+        });
+
+        assert.equal(
+          Number(
+            await database
+              .prepare(
+                `SELECT COUNT(*) AS total
+                 FROM store_memberships AS sm
+                 INNER JOIN user AS u ON u.id = sm.user_id
+                 WHERE u.email = ?1 AND sm.store_id = 'store-a'`,
+              )
+              .bind(email)
+              .first<number>("total"),
+          ),
+          1,
+        );
+        assert.equal(
+          Number(
+            await database
+              .prepare(
+                `SELECT COUNT(*) AS total
+                 FROM session AS s
+                 INNER JOIN user AS u ON u.id = s.user_id
+                 WHERE u.email = ?1`,
+              )
+              .bind(email)
+              .first<number>("total"),
+          ),
+          0,
+        );
+      },
+    );
+
+    await t.test(
+      "código sozinho não assume conta existente com credencial incorreta",
+      async () => {
+        const email = "conta-existente@example.test";
+        const password = "frase segura da conta existente 2026";
+        const token = "convite-conta-existente-2026";
+        await auth.api.signUpEmail({
+          body: { email, name: "Conta Existente", password },
+          headers: requestHeaders("203.0.113.15"),
+        });
+        await createStoreInvitation({
+          database,
+          sender,
+          email,
+          storeId: "store-b",
+          role: "store_owner",
+          token,
+        });
+
+        await assert.rejects(
+          () =>
+            acceptStoreInvitation({
+              database,
+              auth,
+              headers: requestHeaders("203.0.113.16"),
+              email,
+              name: "Conta Existente",
+              password: "credencial incorreta deliberada 2026",
+              token,
+            }),
+          InvitationRejectedError,
+        );
+        assert.deepEqual(
+          await database
+            .prepare(
+              "SELECT claimed_at, used_at FROM store_invites WHERE email_normalized = ?1",
+            )
+            .bind(email)
+            .first(),
+          { claimed_at: null, used_at: null },
+        );
+        assert.equal(
+          Number(
+            await database
+              .prepare(
+                `SELECT COUNT(*) AS total
+                 FROM store_memberships AS sm
+                 INNER JOIN user AS u ON u.id = sm.user_id
+                 WHERE u.email = ?1`,
+              )
+              .bind(email)
+              .first<number>("total"),
+          ),
+          0,
+        );
+      },
+    );
+
+    await t.test(
+      "e-mail divergente, convite expirado e código inválido falham iguais",
+      async () => {
+        const email = "validacoes-convite@example.test";
+        const token = "convite-validacoes-2026";
+        await createStoreInvitation({
+          database,
+          sender,
+          email,
+          storeId: "store-a",
+          role: "store_owner",
+          token,
+          now,
+          expiresInMinutes: 1,
+        });
+        const attempts = [
+          {
+            email: "outro-email@example.test",
+            token,
+            attemptNow: now,
+          },
+          { email, token: "codigo-invalido", attemptNow: now },
+          { email, token, attemptNow: now + 2 * 60_000 },
+        ];
+
+        for (const attempt of attempts) {
+          await assert.rejects(
+            () =>
+              acceptStoreInvitation({
+                database,
+                auth,
+                headers: requestHeaders("203.0.113.17"),
+                email: attempt.email,
+                name: "Validação",
+                password: "frase segura de validação 2026",
+                token: attempt.token,
+                now: attempt.attemptNow,
+              }),
+            (error: unknown) =>
+              error instanceof InvitationRejectedError &&
+              error.message ===
+                "Não foi possível aceitar o convite. Confira os dados e tente novamente.",
+          );
+        }
+      },
+    );
+
+    await t.test(
+      "falha no lote não consome convite nem deixa membership isolado",
+      async () => {
+        const email = "falha-lote@example.test";
+        const token = "convite-falha-lote-2026";
+        await createStoreInvitation({
+          database,
+          sender,
+          email,
+          storeId: "store-b",
+          role: "store_owner",
+          token,
+        });
+        await database
+          .prepare(
+            `CREATE TRIGGER reject_invitation_audit
+             BEFORE INSERT ON audit_events
+             WHEN NEW.action = 'invitation.accepted'
+             BEGIN
+               SELECT RAISE(ABORT, 'simulated audit failure');
+             END`,
+          )
+          .run();
+
+        await assert.rejects(
+          () =>
+            acceptStoreInvitation({
+              database,
+              auth,
+              headers: requestHeaders("203.0.113.18"),
+              email,
+              name: "Falha no lote",
+              password: "frase segura da falha no lote 2026",
+              token,
+            }),
+          InvitationRejectedError,
+        );
+        await database.exec("DROP TRIGGER reject_invitation_audit");
+
+        assert.deepEqual(
+          await database
+            .prepare(
+              "SELECT claimed_at, used_at FROM store_invites WHERE email_normalized = ?1",
+            )
+            .bind(email)
+            .first(),
+          { claimed_at: null, used_at: null },
+        );
+        assert.equal(
+          Number(
+            await database
+              .prepare(
+                `SELECT COUNT(*) AS total
+                 FROM store_memberships AS sm
+                 INNER JOIN user AS u ON u.id = sm.user_id
+                 WHERE u.email = ?1`,
+              )
+              .bind(email)
+              .first<number>("total"),
+          ),
+          0,
+        );
+      },
+    );
 
     await t.test("anônimo é recusado e login correto cria sessão", async () => {
       await assert.rejects(

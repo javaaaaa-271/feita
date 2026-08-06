@@ -2,7 +2,7 @@
 
 Data do checkpoint local: **29 de julho de 2026**
 
-Status: **implementado e validado localmente; não publicado**
+Status: **integrado em `main`/`origin/main` no commit `ab39089`; não publicado**
 
 Este marco cria a fundação de contas da Feita sem habilitar edição de catálogo.
 A vitrine pública continua independente de login. Comerciantes entram somente
@@ -78,19 +78,26 @@ Não existe token de recuperação em URL, `localStorage`, log ou resposta.
 2. Um código aleatório é entregue; o D1 guarda somente SHA-256.
 3. A usuária digita código, nome, e-mail e senha em `/aceitar-convite`.
 4. O servidor exige origem permitida, aplica rate limit e reivindica o convite
-   atomicamente.
-5. Somente então cria a conta pelo Better Auth.
-6. O servidor marca o e-mail como verificado, cria `store_memberships`, consome
-   o convite e registra `invitation.accepted` em um lote D1.
-7. O mesmo convite não pode ser usado novamente.
+   com uma lease curta.
+5. Se a conta não existe, a Better Auth a cria. Essa operação não faz parte da
+   transação que finaliza o convite.
+6. Se a conta já existe, inclusive após tentativa parcial, a Better Auth precisa
+   validar novamente e-mail e senha. A sessão técnica criada para essa prova é
+   removida antes da finalização.
+7. O servidor marca o e-mail como verificado, cria `store_memberships`, consome
+   o convite e registra `invitation.accepted` em um único lote D1.
+8. Falha do lote não consome o convite. Falhas tratadas liberam a lease
+   imediatamente; interrupção abrupta permite retry depois de cinco minutos.
+9. O mesmo convite não pode ser usado novamente e a unicidade do membership
+   impede duplicação.
 
 Não existe endpoint público para emitir convite. Neste checkpoint a emissão é
 uma abstração server-side exercitada nos testes locais. Uma futura operação de
 emissão exige autorização explícita de `platform_admin`.
 
-Uma conta já existente convidada para uma segunda loja ainda não é vinculada
-automaticamente. Esse fluxo futuro deverá exigir sessão válida da mesma conta,
-além do convite.
+Uma conta já existente pode concluir um convite para outra loja somente ao
+apresentar a senha correta para o mesmo e-mail do convite. O código sozinho não
+assume a identidade nem cria o vínculo.
 
 ## Modelo de autorização
 
@@ -147,9 +154,11 @@ Em HTTPS, o cookie é `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/` e não poss
 | `RESEND_API_KEY` | chave privada do Resend |
 | `RESEND_FROM` | remetente verificado |
 
-Os defaults versionados só funcionam em origens locais conhecidas. A origem de
-produção recusa inicialização sem os dois segredos criptográficos. Não usar
-curingas em `AUTH_TRUSTED_ORIGINS`.
+Os defaults versionados só funcionam quando a requisição e o `BETTER_AUTH_URL`
+efetivo usam `localhost`, `127.0.0.1` ou `[::1]`. Toda produção, preview, alias,
+domínio alternativo ou IP não loopback exige `BETTER_AUTH_SECRET` e
+`RATE_LIMIT_HMAC_SECRET` no runtime. Enquanto algum default local estiver
+ativo, `AUTH_TRUSTED_ORIGINS` também só aceita loopback. Não usar curingas.
 
 ## Configuração futura do Resend
 
@@ -188,6 +197,10 @@ definitiva depende da política de retenção.
 
 `npm test` prova:
 
+- defaults de secrets aceitos somente em origens loopback;
+- preview, alias, domínio e IP não loopback recusados sem os dois secrets;
+- tentativa parcial de convite recuperada somente após prova da senha;
+- falha no lote sem consumo isolado do convite ou membership órfão;
 - anônimo recusado em `/painel`;
 - login criando sessão e logout invalidando-a;
 - expiração e revogação;
@@ -212,11 +225,10 @@ definitiva depende da política de retenção.
 2. Secrets de produção ainda não foram configurados.
 3. Conta, domínio e remetente Resend ainda não foram escolhidos/verificados.
 4. Emissão de convite ainda não possui superfície autenticada.
-5. Convite de conta existente para outra loja requer decisão adicional.
-6. Não houve ensaio de e-mail real nem validação no runtime publicado.
-7. D1 não tem RLS; toda futura consulta administrativa exige o contexto de
+5. Não houve ensaio de e-mail real nem validação no runtime publicado.
+6. D1 não tem RLS; toda futura consulta administrativa exige o contexto de
    autorização e teste IDOR.
-8. Nenhum CRUD administrativo deve ser publicado antes desses portões.
+7. Nenhum CRUD administrativo deve ser publicado antes desses portões.
 
 ## n8n
 

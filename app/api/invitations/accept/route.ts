@@ -3,7 +3,11 @@ import {
   InvitationRejectedError,
 } from "@/auth/invitations";
 import { authRuntimeForRequest } from "@/auth/runtime";
-import { createFeitaAuth, resolveTrustedOrigins } from "@/auth/server";
+import {
+  createFeitaAuth,
+  resolveAuthRuntimeSecrets,
+  resolveTrustedOrigins,
+} from "@/auth/server";
 import {
   enforceIdentityRateLimit,
   normalizeEmail,
@@ -13,9 +17,23 @@ import {
 
 export async function POST(request: Request): Promise<Response> {
   const runtime = await authRuntimeForRequest(request);
-  const trustedOrigins = resolveTrustedOrigins(
-    runtime.environment ?? {},
-  );
+  let hmacSecret: string;
+  let auth: ReturnType<typeof createFeitaAuth>;
+  let trustedOrigins: string[];
+  try {
+    const secrets = resolveAuthRuntimeSecrets(runtime);
+    hmacSecret = secrets.hmacSecret;
+    trustedOrigins = resolveTrustedOrigins(
+      runtime.environment ?? {},
+      secrets.usesLocalDefaults,
+    );
+    auth = createFeitaAuth(runtime);
+  } catch {
+    return Response.json(
+      { message: "Serviço de autenticação indisponível." },
+      { status: 503 },
+    );
+  }
   if (!requestOriginIsTrusted(request, trustedOrigins)) {
     return Response.json({ message: "Solicitação recusada." }, { status: 403 });
   }
@@ -42,9 +60,7 @@ export async function POST(request: Request): Promise<Response> {
   try {
     await enforceIdentityRateLimit({
       database: runtime.database,
-      hmacSecret:
-        runtime.environment?.RATE_LIMIT_HMAC_SECRET ??
-        "feita-local-rate-limit-secret-not-valid-for-production-2026",
+      hmacSecret,
       action: "invitation-acceptance",
       email,
       windowSeconds: 60,
@@ -52,7 +68,7 @@ export async function POST(request: Request): Promise<Response> {
     });
     await acceptStoreInvitation({
       database: runtime.database,
-      auth: createFeitaAuth(runtime),
+      auth,
       headers: request.headers,
       email,
       name,

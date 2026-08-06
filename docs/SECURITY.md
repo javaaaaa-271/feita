@@ -13,10 +13,10 @@ pública de mídia autoriza no D1 antes de ler os bytes do R2. Ainda não existe
 dados persistentes de clientes ou pedidos, administração de catálogo ou
 mutações públicas.
 
-Na branch local do Marco 5, Better Auth foi integrado ao D1/Drizzle. Existem
-login, logout, recuperação por OTP, convite com digest, sessão revogável,
-`store_memberships`, rate limit persistente e `/painel` mínimo. Esse código e a
-migration ainda não foram publicados.
+O Marco 5 está integrado em `main` e `origin/main` no commit `ab39089`. Better
+Auth foi ligado ao D1/Drizzle com login, logout, recuperação por OTP, convite
+com digest, sessão revogável, `store_memberships`, rate limit persistente e
+`/painel` mínimo. Esse código e a migration ainda não foram publicados.
 
 O checkpoint hospedado está atrás da política `custom` do Sites, restrita a
 Lorenzo. `app/chatgpt-auth.ts` oferece helpers para headers da identidade do
@@ -64,6 +64,32 @@ Como D1 não oferece a RLS do PostgreSQL, o teste cruzado entre lojas é uma
 barreira de publicação, não uma verificação opcional.
 
 ## Controles obrigatórios para autenticação
+
+### Secrets por ambiente
+
+- defaults conhecidos de desenvolvimento são permitidos somente quando a
+  origem da requisição e o `BETTER_AUTH_URL` efetivo usam `localhost`,
+  `127.0.0.1` ou `[::1]`;
+- qualquer produção, preview, alias, domínio alternativo ou IP não loopback
+  exige `BETTER_AUTH_SECRET` e `RATE_LIMIT_HMAC_SECRET` não vazios no runtime;
+- enquanto algum default local estiver ativo, `AUTH_TRUSTED_ORIGINS` não pode
+  incluir origem não loopback;
+- a decisão não depende de comparar a requisição com uma única URL de produção;
+- ausência de qualquer um dos secrets fora de loopback interrompe a
+  inicialização da autenticação sem incluir valores na resposta ou em logs.
+
+### Recuperação de convite
+
+- criação da conta pela Better Auth e finalização do convite são fases
+  separadas; não há alegação de atomicidade entre elas;
+- uma conta deixada por tentativa parcial só conclui o convite depois que a
+  Better Auth verifica novamente e-mail e senha;
+- a sessão técnica dessa verificação é removida e nunca retorna ao navegador;
+- membership, verificação do e-mail, consumo e auditoria usam um único lote D1;
+- falha do lote não pode deixar convite consumido sem membership;
+- reivindicações abandonadas expiram por lease, permitindo retry determinístico;
+- convite inválido, expirado, consumido ou associado a outro e-mail e senha
+  incorreta recebem a mesma rejeição genérica.
 
 ### Rate limit
 

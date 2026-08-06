@@ -1,8 +1,50 @@
 # Handoff atual
 
-Atualizado em: **29 de julho de 2026**
+Atualizado em: **6 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
+
+## Marco 6.0 — portão de segurança da autenticação e dos convites
+
+Em 6 de agosto de 2026, o Marco 5 já estava integrado em `main` e
+`origin/main` no commit `ab39089`, com a árvore limpa e 38 testes passando. O
+Marco 6.0 foi desenvolvido localmente na branch
+`codex/marco-6-0-portao-seguranca`, sem migration nova e sem operação remota.
+
+Os defaults conhecidos de desenvolvimento para `BETTER_AUTH_SECRET` e
+`RATE_LIMIT_HMAC_SECRET` agora só podem ser usados quando a origem da requisição
+e o `BETTER_AUTH_URL` efetivo são loopback: `localhost`, `127.0.0.1` ou `[::1]`,
+com porta local opcional. Produção, preview, alias, domínio alternativo, host
+arbitrário e IP não loopback exigem os dois secrets no runtime e falham de
+forma fechada quando eles não existem. Enquanto qualquer default local estiver
+ativo, `AUTH_TRUSTED_ORIGINS` também aceita somente origens loopback.
+
+A aceitação de convite passou a ser recuperável em duas fases. A criação da
+conta continua sob responsabilidade da Better Auth e não participa da mesma
+transação da finalização do convite. Se a conta já existir — inclusive depois
+de uma tentativa parcial — a mesma submissão precisa provar e-mail e senha pela
+Better Auth; possuir somente o código não concede vínculo. A sessão técnica
+criada para essa prova é removida antes da finalização. Membership, marcação do
+e-mail como verificado, consumo do convite e auditoria são executados no mesmo
+`D1.batch()`. Falhas tratadas liberam a reivindicação imediatamente; uma
+interrupção abrupta deixa uma lease que pode ser retomada depois de cinco
+minutos. Convite consumido continua recusado e a restrição única impede
+membership duplicado.
+
+Validação do marco: lint passou com os dois avisos antigos de `<img>` e nenhum
+erro; TypeScript passou; `npm test` passou com 24 testes gerais mais 19 provas
+de autenticação; o build Sites passou separadamente; `git diff --check` passou.
+A revisão final não encontrou bypass de signup, distinção de resposta por
+existência de conta, reutilização de convite ou valor de secret em resposta,
+log ou documentação. Nenhuma migration foi criada ou aplicada e nenhuma ação
+remota ocorreu.
+
+Riscos restantes: secrets hospedados e Resend continuam não configurados; a
+emissão de convite ainda não possui superfície de `platform_admin`; uma queda
+abrupta durante a prova de credenciais pode deixar uma sessão técnica sem token
+exposto até ela expirar; e a publicação do Marco 5/6.0 continua bloqueada até
+autorização e ensaio próprios. A próxima ação de código é o primeiro incremento
+tenant-scoped do catálogo, sem misturá-lo a este portão.
 
 ## Auditoria técnica e transferência de conhecimento
 
@@ -24,11 +66,15 @@ TypeScript passou, 22/22 testes passaram, build/artefato Sites passaram e
 `git diff --check` passou. Nenhum dado real foi importado, nenhum recurso,
 acesso ou versão Sites foi alterado e não houve deploy ou push.
 
-## Marco 5 — autenticação e isolamento (somente local)
+## Marco 5 — autenticação e isolamento (integrado; não publicado)
 
 Em 29 de julho de 2026 foi criada a branch
 `codex/marco-5-autenticacao` a partir do `main` limpo, que estava um commit
 documental à frente de `origin/main`. O fetch foi somente leitura.
+
+O trabalho foi posteriormente integrado em `main` e `origin/main` no commit
+`ab39089`. A integração no Git não publicou a autenticação nem aplicou a
+migration em ambiente hospedado.
 
 O marco implementa Better Auth `1.6.25` sobre D1/Drizzle, login, logout,
 recuperação por OTP, convites de uso único, `store_memberships`, auditoria,
@@ -57,9 +103,9 @@ cadeia local de lint, sem correção automática compatível; nenhum desses paco
 de ferramenta foi encontrado no bundle do Worker.
 
 Portões restantes: secrets de produção, domínio/remetente Resend, autorização
-para migration hospedada, operação autenticada de emissão de convites e
-decisão do fluxo de convite para conta já existente. Nenhum desses itens foi
-configurado ou executado.
+para migration hospedada e operação autenticada de emissão de convites. O
+Marco 6.0 resolveu localmente o retry seguro para conta já existente, mas
+nenhum dos demais itens foi configurado ou executado.
 
 ## Onde estamos
 
@@ -93,13 +139,13 @@ schema e recursos vazios. Além do protótipo navegável, agora existe:
 - carrinho persistido por navegador e separado por slug;
 - importador local validado, com dry-run e sem sobrescrita;
 - leitura pública isolada por loja e nenhuma API pública de escrita;
-- fundação local de contas por convite, ainda não publicada;
+- fundação de contas por convite integrada na `main`, ainda não publicada;
 - painel mínimo protegido que mostra somente os vínculos permitidos.
 
 O painel em `/` continua sendo o sandbox de sessão do Marco 3 e não administra
-o novo catálogo persistido. A autenticação e o painel mínimo existem somente
-na branch local do Marco 5; CRUD administrativo, persistência de pedidos e
-importação hospedada continuam não implementados.
+o novo catálogo persistido. A autenticação e o painel mínimo estão integrados
+na `main`, mas não foram publicados; CRUD administrativo, persistência de
+pedidos e importação hospedada continuam não implementados.
 
 ## Marco 4 — primeira loja compartilhável
 
