@@ -17,9 +17,12 @@ export const PUBLIC_PRODUCTS_QUERY = `
 
 export const AUTHORIZED_MEDIA_QUERY = `
   SELECT m.object_key, m.content_type
-  FROM media AS m
-  INNER JOIN stores AS s ON s.id = m.tenant_id
-  WHERE s.slug = ?1 AND s.published = 1 AND m.id = ?2 AND m.tenant_id = s.id
+  FROM stores AS s
+  INNER JOIN products AS p
+    ON p.tenant_id = s.id AND p.published = 1
+  INNER JOIN media AS m
+    ON m.id = p.image_media_id AND m.tenant_id = p.tenant_id
+  WHERE s.slug = ?1 AND s.published = 1 AND m.id = ?2
   LIMIT 1
 `;
 

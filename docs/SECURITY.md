@@ -8,10 +8,8 @@ comprove.
 
 O painel demonstrativo em `/` continua sendo uma interface com estado local. A
 vitrine em `/loja/[slug]` lê loja e produtos do D1 por queries parametrizadas,
-e a rota
-pública de mídia autoriza no D1 antes de ler os bytes do R2. Ainda não existem
-dados persistentes de clientes ou pedidos, administração de catálogo ou
-mutações públicas.
+e a rota pública de mídia autoriza no D1 antes de ler os bytes do R2. Ainda não
+existem dados persistentes de clientes ou pedidos nem mutações públicas.
 
 O Marco 6.1 adiciona administração autenticada de produtos em `/painel`. A
 loja presente no caminho é somente um seletor: sessão e membership são
@@ -184,6 +182,24 @@ integrações externas.
 - preço é convertido de texto brasileiro para centavos inteiros sem `float`;
 - payload, textos, estoque, variações e flags têm validação server-side;
 - mutações exigem origem permitida, sessão válida e membership.
+
+### Leitura pública de mídia
+
+A chave do objeto e o ID da mídia são localizadores, nunca autorização. Antes
+de consultar o R2, a rota pública precisa comprovar no D1, por query
+parametrizada, o grafo completo:
+
+`slug da loja → tenant → produto publicado → products.image_media_id → mídia → objeto R2`
+
+A loja deve estar publicada, o produto e a mídia devem pertencer ao mesmo
+tenant e `products.image_media_id` deve apontar exatamente para `media.id`. Uma
+mídia órfã, associada a produto despublicado, associada a outro tenant ou
+substituída pelo novo ponteiro responde com o mesmo 404 de um recurso
+inexistente, sem executar `R2.get`.
+
+`available = false` não oculta o produto nem sua imagem. A flag apenas impede a
+compra conforme a regra atual; a exposição pública continua sendo controlada
+por `published`.
 
 ### Teste de parada de linha: IDOR
 

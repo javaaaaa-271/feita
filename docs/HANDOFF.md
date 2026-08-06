@@ -4,6 +4,39 @@ Atualizado em: **6 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
+## Marco 6.1.1 — mídia pública vinculada ao produto publicado
+
+O Marco 6.1.1 foi desenvolvido localmente a partir do commit `83e74caf` na
+branch `codex/marco-6-1-1-media-publica`, sem schema, migration ou operação
+remota. A rota pública deixou de tratar o ID ou a chave de uma mídia do tenant
+como autorização suficiente.
+
+Antes de consultar o R2, uma única query parametrizada no D1 agora precisa
+comprovar o grafo:
+
+`slug da loja → tenant → produto publicado → products.image_media_id → mídia → objeto R2`
+
+A loja deve estar publicada; produto e mídia devem pertencer ao mesmo tenant;
+e o ponteiro atual do produto deve apontar exatamente para a mídia solicitada.
+Mídia órfã, de produto despublicado, de outra loja, com associação cruzada ou
+substituída responde como recurso inexistente. A negação ocorre antes de
+`R2.get`, e os headers e a política de cache da resposta autorizada foram
+preservados.
+
+`available = false` continua exibindo produto e imagem na vitrine; somente a
+compra fica indisponível conforme a semântica atual. Produto sem mídia mantém o
+fallback existente. Catálogo administrativo, carrinho e checkout para WhatsApp
+não foram alterados.
+
+Os testes locais usam apenas dados fictícios e cobrem loja não publicada,
+duas lojas, associação entre tenants, mídia órfã, produto despublicado,
+indisponibilidade comercial, fallback sem imagem, troca do ponteiro, tentativa
+direta por chave, respostas 404 equivalentes e ausência de chamada ao R2 após
+negação no D1. A validação final passou com 24 testes gerais e 40 provas
+TypeScript, totalizando 64 testes. Lint passou com somente os dois avisos
+antigos de `<img>`; TypeScript, build Sites e `git diff --check` também
+passaram. O hash do commit fica registrado no fechamento da branch.
+
 ## Marco 6.1 — catálogo persistente autenticado
 
 O Marco 6.1 foi desenvolvido localmente a partir do commit aprovado do Marco

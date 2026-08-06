@@ -1,5 +1,5 @@
 import { getD1Database, getImagesBucket, MissingLocalBindingError } from "@/db";
-import { findPublicMedia } from "@/db/store-repository";
+import { respondWithPublicMedia } from "@/db/public-media-response";
 
 export const dynamic = "force-dynamic";
 
@@ -9,19 +9,12 @@ export async function GET(
 ) {
   try {
     const { slug, mediaId } = await params;
-    const media = await findPublicMedia(await getD1Database(), slug, mediaId);
-    if (!media) return new Response("Imagem não encontrada.", { status: 404 });
-
-    const object = await (await getImagesBucket()).get(media.objectKey);
-    if (!object?.body) return new Response("Imagem não encontrada.", { status: 404 });
-
-    return new Response(object.body, {
-      headers: {
-        "Cache-Control": "public, max-age=3600",
-        "Content-Disposition": "inline",
-        "Content-Type": media.contentType,
-        "X-Content-Type-Options": "nosniff",
-      },
+    return await respondWithPublicMedia({
+      database: await getD1Database(),
+      slug,
+      mediaId,
+      readObject: async (objectKey) =>
+        (await getImagesBucket()).get(objectKey),
     });
   } catch (error) {
     if (error instanceof MissingLocalBindingError) {

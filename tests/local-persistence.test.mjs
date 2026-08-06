@@ -91,6 +91,9 @@ test("migração limpa persiste e consultas públicas não vazam entre duas loja
         `INSERT INTO media (id, tenant_id, object_key, content_type, size_bytes, created_at)
          VALUES ('media-b', 'store-b', 'stores/store-b/media.webp', 'image/webp', 10, ?1)`,
       ).bind(now),
+      db.prepare(
+        "UPDATE products SET image_media_id = 'media-b' WHERE id = 'product-b'",
+      ),
     ]);
 
     const storeA = await queryPublicStore(db, "loja-a");
