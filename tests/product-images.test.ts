@@ -65,7 +65,7 @@ function imageRequest(options: {
   return new Request(`${baseURL}${options.path}`, {
     method: options.method,
     headers: requestHeaders,
-    body: options.bytes,
+    body: options.bytes?.slice().buffer,
   });
 }
 
@@ -121,7 +121,7 @@ function createImagesBinding(outputWebP: Uint8Array): ImagesBinding {
             async output() {
               return {
                 response: () =>
-                  new Response(outputWebP, {
+                  new Response(outputWebP.slice().buffer, {
                     headers: { "content-type": "image/webp" },
                   }),
               };

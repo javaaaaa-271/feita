@@ -235,7 +235,7 @@ export async function transformUpload(request: Request, images: ImagesBinding) {
       .transform(resizeOptions(width, height))
       .output({ format: "image/webp" });
     const response = transformed.response();
-    const output = await readLimitedStream(response.body, MAX_OUTPUT_BYTES);
+    const output = await readLimitedStream(response.body, MAX_OUTPUT_BYTES, 400);
     if (
       response.headers.get("content-type")?.split(";", 1)[0].trim() !== "image/webp" ||
       !hasWebPSignature(output)
@@ -341,6 +341,7 @@ async function readRequestBytes(request: Request) {
 export async function readLimitedStream(
   stream: ReadableStream<Uint8Array> | null,
   maximumBytes: number,
+  overflowStatus: 400 | 413 = 413,
 ) {
   if (!stream) return new Uint8Array();
   const reader = stream.getReader();
@@ -353,7 +354,7 @@ export async function readLimitedStream(
       total += value.byteLength;
       if (total > maximumBytes) {
         await reader.cancel();
-        throw new ImageValidationError(413);
+        throw new ImageValidationError(overflowStatus);
       }
       chunks.push(value);
     }
