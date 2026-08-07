@@ -11,6 +11,12 @@ export interface StoreImagesBucket {
   get(key: string): Promise<{
     body: ReadableStream;
   } | null>;
+  put(
+    key: string,
+    value: Uint8Array | ReadableStream,
+    options?: { httpMetadata?: { contentType?: string } },
+  ): Promise<unknown>;
+  delete(key: string): Promise<void>;
 }
 
 async function getWorkerEnv() {

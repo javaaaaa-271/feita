@@ -107,6 +107,8 @@ function withSecurityHeaders(request: Request, response: Response): Response {
   const pathname = new URL(request.url).pathname;
   if (
     pathname === "/painel" ||
+    pathname.startsWith("/painel/") ||
+    pathname.startsWith("/api/painel/") ||
     pathname.startsWith("/api/auth/") ||
     pathname.startsWith("/api/invitations/")
   ) {
