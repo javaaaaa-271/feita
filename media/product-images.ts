@@ -125,7 +125,10 @@ export async function replaceProductImage(options: {
         .bind(mediaId, options.storeId, objectKey, output.byteLength, now),
       update,
     ]);
-    const changes = Number(results[1]?.meta?.changes ?? 0);
+    const updateResult = results[1] as
+      | { meta?: { changes?: number } }
+      | undefined;
+    const changes = Number(updateResult?.meta?.changes ?? 0);
     if (changes !== 1) {
       await removeDetachedMedia(options.database, options.bucket, {
         id: mediaId,
@@ -179,7 +182,7 @@ export async function removeProductImage(options: {
   });
 
   if (current.image_media_id) {
-    const result = await options.database
+    const result = (await options.database
       .prepare(
         `UPDATE products SET image_media_id = NULL, updated_at = ?1
          WHERE id = ?2 AND tenant_id = ?3 AND image_media_id = ?4`,
@@ -190,7 +193,7 @@ export async function removeProductImage(options: {
         options.storeId,
         current.image_media_id,
       )
-      .run();
+      .run()) as { meta?: { changes?: number } };
     if (Number(result.meta?.changes ?? 0) !== 1) throw new ImageStorageError();
     if (current.object_key) {
       await removeDetachedMedia(options.database, options.bucket, {
