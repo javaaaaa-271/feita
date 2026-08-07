@@ -1,25 +1,26 @@
 # Marco 6.2C — prova remota controlada do Images binding
 
-Data da tentativa: **6 de agosto de 2026**
+Data da conclusão: **7 de agosto de 2026**
 
 ## Classificação
 
-O resultado é **prova remota bloqueada; integração bloqueada**.
+O resultado é **prova remota aprovada; integração do Images liberada para o
+próximo marco**.
 
-A sessão Wrangler estava autenticada, mas a conta ainda não possuía o
-subdomínio `workers.dev` exigido para iniciar o ambiente de desenvolvimento
-remoto. O Wrangler ofereceu registrar esse subdomínio. Como isso altera a
-configuração da conta e não estava autorizado, a prova parou antes de iniciar
-qualquer servidor, enviar fixture ou chamar o Images binding.
+A tentativa inicial de 6 de agosto parou corretamente antes de qualquer chamada
+remota porque a conta ainda não possuía um subdomínio `workers.dev`. Depois de
+autorização explícita do proprietário, o subdomínio foi registrado e as duas
+modalidades previstas foram executadas com fixtures sintéticas.
 
-Não houve tentativa de contornar o portão com login, conta temporária,
-deployment, criação de Worker, ativação de plano ou alteração de billing.
+A aprovação comprova o comportamento remoto do Images binding para a política
+de entrada e transformação do spike. Ela não publica o Feita e não integra, por
+si só, upload, substituição ou remoção de imagens ao código de produção.
 
-## Estado inicial e isolamento
+## Estado e isolamento
 
-A tentativa partiu do commit aprovado do Marco 6.2B,
-`c3c3fe9bdaf77438ba1e06bbccf8b184bb307d30`, com árvore limpa. A branch do
-marco é `codex/marco-6-2c-prova-remota-images`.
+A prova partiu da branch
+`codex/marco-6-2c-prova-remota-images`, com HEAD
+`abbb773b2cb3574aace3566c0671ef59ef7bd148` e árvore limpa.
 
 Versões efetivas:
 
@@ -27,148 +28,128 @@ Versões efetivas:
 - Miniflare `4.20260722.0`;
 - workerd `1.20260722.1`.
 
-O schema instalado confirma que o objeto `images` aceita somente `binding` e
-o booleano opcional `remote`; `binding` é obrigatório. A configuração
-`wrangler.remote-binding.jsonc` contém apenas o entrypoint isolado, a
-`compatibility_date` já comprovada e `IMAGES` com `remote: true`. Não contém
-D1, R2, Assets, secrets, service bindings, filas, rotas, domínios ou
-identificadores de conta.
+O Worker-prova `feita-images-binding-spike` contém somente o entrypoint
+isolado e o binding `IMAGES`. Não possui D1, R2, Assets, secrets, service
+bindings, filas, rotas, domínio de produção ou identificadores de conta. O
+spike não é importado pelo Worker principal e `.openai/hosting.json` não foi
+alterado.
 
-O nome do Worker-prova foi consultado em modo somente leitura antes da
-conclusão: não havia deployment nem histórico de versões com esse nome. O
-spike continua sem importação pelo Worker principal, e
-`.openai/hosting.json` não foi alterado.
+Nenhuma fixture contém dado comercial ou pessoal. Os relatórios brutos ficam
+em `spikes/images-binding/.results/`, ignorados pelo Git.
 
-## Portões de plano e cobrança
+## Limites de plano e execução
 
-A documentação oficial vigente informa que todas as contas ficam, por padrão,
-no Images Free e que transformações de imagens externas estão disponíveis no
-Free. O plano inclui até 5.000 transformações únicas por mês. Ao ultrapassar o
-limite, novas transformações falham com o erro 9422 e não há cobrança
-automática. Chamadas de `IMAGES.info()` não são cobradas.
+A prova usou apenas transformações de imagens externas disponíveis no Images
+Free. Não houve ativação de Images Paid, método de pagamento, upgrade,
+assinatura ou Images Storage.
 
-Cloudflare Images Storage é uma capacidade do plano Paid e não foi usado. Não
-houve ativação de Images Paid, método de pagamento, upgrade, mudança de
-assinatura ou acesso a storage.
-
-O erro 9432 documentado para billing legado não ocorreu. A prova foi bloqueada
-antes pela ausência do subdomínio de desenvolvimento Workers.
+Foram autorizadas no máximo 25 transformações que alcançassem
+`IMAGES.input().transform().output()`. O roteiro registrou 5 transformações
+únicas aceitas em cada modalidade, total operacional de 10.
 
 ## Modalidade A — binding remoto com código local
 
-Configuração selecionada:
+Comando executado:
 
-```json
-{
-  "name": "feita-images-binding-spike",
-  "main": "src/worker.ts",
-  "compatibility_date": "2026-07-29",
-  "images": {
-    "binding": "IMAGES",
-    "remote": true
-  }
-}
+```text
+npx wrangler dev --config spikes/images-binding/wrangler.remote-binding.jsonc --port 8792
 ```
 
-Essa modalidade manteria o Worker local e encaminharia somente operações do
-binding marcado com `remote: true` para a Cloudflare. Ao iniciar a sessão, o
-Wrangler interrompeu antes do estado `Ready` e exigiu o registro prévio de um
-subdomínio `workers.dev`. A opção oferecida pela CLI apontava para onboarding
-da conta, portanto não foi aceita.
+O Worker permaneceu local em `127.0.0.1:8792` e somente o binding
+`IMAGES`, configurado com `remote: true`, foi resolvido pela Cloudflare.
 
-Consequências:
+Resultado:
 
-- nenhum endpoint local ficou disponível;
-- nenhuma fixture foi enviada;
-- `IMAGES.info()` não foi chamado remotamente;
-- `IMAGES.input().transform().output()` não foi chamado;
-- o processo terminou com falha e não permaneceu em execução.
+- 14 fixtures transmitidas;
+- 5 transformações únicas aceitas;
+- orientação EXIF normalizada;
+- metadata sintética removida;
+- saída WebP válida com uma página;
+- nenhuma divergência em relação à política esperada.
 
-## Modalidade B — Worker remoto
+## Modalidade B — preview remoto temporário
 
-Não foi iniciada. A documentação do Wrangler informa que
-`wrangler dev --remote` envia o código a um ambiente temporário de preview na
-Cloudflare e conecta todos os bindings remotamente. Essa modalidade depende do
-mesmo ambiente Workers que a CLI acabara de bloquear por ausência do
-subdomínio. Iniciá-la novamente só repetiria o portão ou ofereceria a mesma
-alteração de conta proibida.
+Comando executado:
 
-Não houve upload de código, sessão temporária de preview, prompt aceito,
-deployment ou servidor remoto.
+```text
+npx wrangler dev --remote --config spikes/images-binding/wrangler.jsonc --port 8792
+```
 
-## Matriz da tentativa
+O Wrangler informou que esse modo foi substituído pelo modelo mais novo de
+bindings remotos, mas iniciou o preview temporário normalmente. A sessão foi
+encerrada com `Ctrl + C` depois da bateria. Não houve `wrangler deploy`.
 
-| Fixture | Binding remoto, código local | Worker remoto |
-| --- | --- | --- |
-| JPEG estático | não executada: sessão bloqueada | não executada: portão compartilhado |
-| PNG estático | não executada: sessão bloqueada | não executada: portão compartilhado |
-| WebP estático | não executada: sessão bloqueada | não executada: portão compartilhado |
-| JPEG com orientação EXIF | não executada: sessão bloqueada | não executada: portão compartilhado |
-| imagem com metadata sintética | não executada: sessão bloqueada | não executada: portão compartilhado |
-| SVG | não executada: sessão bloqueada | não executada: portão compartilhado |
-| GIF animado | não executada: sessão bloqueada | não executada: portão compartilhado |
-| WebP animado | não executada: sessão bloqueada | não executada: portão compartilhado |
-| APNG | não executada: sessão bloqueada | não executada: portão compartilhado |
-| JPEG truncado | não executada: sessão bloqueada | não executada: portão compartilhado |
-| conteúdo falso | não executada: sessão bloqueada | não executada: portão compartilhado |
-| bytes divergentes do Content-Type | não executada: sessão bloqueada | não executada: portão compartilhado |
-| excesso de pixels | não executada: sessão bloqueada | não executada: portão compartilhado |
-| 8 MiB + 1 byte | não executada: sessão bloqueada | não executada: portão compartilhado |
+Resultado:
 
-Total de tentativas que alcançaram a transformação remota: **0 de 25**.
-Total de fixtures transmitidas: **0**.
+- 14 fixtures transmitidas;
+- 5 transformações únicas aceitas;
+- orientação EXIF normalizada;
+- metadata sintética removida;
+- saída WebP válida com uma página;
+- matriz idêntica à modalidade A.
 
-Por isso, o Marco 6.2C não produz nova evidência empírica sobre `.info()`,
-decodificação, orientação EXIF, remoção de metadata, saída WebP ou equivalência
-entre as modalidades. Permanecem válidas somente as evidências offline do
-Marco 6.2B.
+## Matriz remota consolidada
 
-## Inspeção posterior e recursos temporários
+| Fixture | Binding remoto | Preview remoto | Evidência |
+| --- | --- | --- | --- |
+| JPEG estático | aceita | aceita | `image/jpeg`, 64×40, WebP válida |
+| PNG estático | aceita | aceita | `image/png`, 64×40, WebP válida |
+| WebP estático | aceita | aceita | `image/webp`, 64×40, WebP válida |
+| JPEG com orientação EXIF | aceita | aceita | orientação normalizada para 20×40 |
+| imagem com metadata sintética | aceita | aceita | metadata removida |
+| SVG | rejeitada (400) | rejeitada (400) | formato vetorial proibido |
+| GIF animado | rejeitada (400) | rejeitada (400) | animação proibida |
+| WebP animado | rejeitada (400) | rejeitada (400) | animação proibida |
+| APNG | rejeitada (400) | rejeitada (400) | animação proibida |
+| JPEG truncado | rejeitada (400) | rejeitada (400) | conteúdo inválido |
+| conteúdo falso | rejeitada (400) | rejeitada (400) | bytes não formam imagem |
+| bytes JPEG com Content-Type divergente | aceita | aceita | conteúdo real identificado pelos bytes |
+| excesso de pixels | rejeitada (400) | rejeitada (400) | limite dimensional aplicado |
+| 8 MiB + 1 byte | rejeitada (413) | rejeitada (413) | limite de corpo aplicado |
 
-Depois da falha, consultas somente leitura de deployments e versões para o
-nome isolado retornaram ausência de Worker ou histórico. Como nenhum Worker
-existia, não havia rota, domínio, versão de produção ou binding persistente
-associado ao spike. O código e a configuração também não possuem operação de
-Cloudflare Images Storage.
+O caso de `Content-Type` divergente reutiliza bytes JPEG válidos e não cria uma
+sexta transformação única no resumo do roteiro. Isso confirma que a decisão é
+baseada no conteúdo efetivo, não apenas no cabeçalho declarado.
 
-O Wrangler gerou apenas seu log diagnóstico local fora do repositório. Ele não
-foi commitado e seu caminho, conteúdo operacional e identificadores não são
-reproduzidos neste documento. Não foi executada limpeza destrutiva.
+## Conclusão técnica
 
-Nenhum recurso foi criado, alterado ou removido em D1, R2, Sites, Images
-Storage ou produção. Nenhuma migration, versão Sites, deployment, rota,
-domínio, secret ou binding persistente foi criado.
+A execução remota corrige a lacuna observada na simulação offline do Marco
+6.2B: a orientação EXIF foi normalizada e a metadata foi removida. Os dois modos
+remotos apresentaram o mesmo comportamento para todas as 14 fixtures.
 
-## Validação local final
+Ficam comprovados para o próximo marco:
 
-- `npm run lint`: passou sem erros e manteve somente os dois avisos antigos de
-  `<img>` em `app/page.tsx`;
-- `npx tsc --noEmit`: passou;
-- `npm test`: passou com 24 testes gerais e 47 provas TypeScript, totalizando
-  71 testes;
-- `npm run build`: passou e validou o artefato Sites existente;
-- `npm run test:images-spike`: passou com 7 de 7 testes;
-- `git diff --check`: passou;
-- o artefato principal continua sem referência ao spike.
+- inspeção do conteúdo real antes da transformação;
+- aceitação somente de JPEG, PNG e WebP estáticos;
+- rejeição de formatos animados, vetoriais, corrompidos ou excessivos;
+- normalização de orientação EXIF;
+- remoção de metadata;
+- saída WebP válida com uma página.
 
-## Próximo portão
+## Recursos e produção
 
-Para repetir a prova, o proprietário precisa autorizar explicitamente uma das
-duas condições abaixo, sem fornecer credenciais ao código ou à documentação:
+O preview remoto temporário foi encerrado. Não houve comando de deploy
+permanente, publicação do Feita, migration, alteração de D1/R2/Sites, rota de
+produção, secret, binding persistente do app ou uso de Images Storage.
 
-1. registrar o subdomínio `workers.dev` na conta já autenticada; ou
-2. executar o spike em outra conta previamente preparada para desenvolvimento
-   Workers e com Images Free disponível.
+O subdomínio `workers.dev` permanece como configuração técnica da conta,
+separada do domínio futuro do produto.
 
-Essa autorização deve ser tratada como alteração de conta separada. Depois que
-o portão existir, a prova deve recomeçar confirmando branch, HEAD, árvore,
-autenticação, plano e ausência do Worker-prova. As duas modalidades devem usar
-as mesmas 14 fixtures e manter o teto agregado de 25 chamadas que realmente
-alcancem `IMAGES.input().transform().output()`.
+## Próximo marco
 
-Até essa prova passar, continuam bloqueados: integração do Images ao Feita,
-upload, migração de hospedagem, uso de D1/R2 pelo spike e qualquer deploy de
-preview ou produção.
+A prova libera a implementação controlada do fluxo autenticado:
+
+1. receber a imagem no painel;
+2. aplicar os limites comprovados antes da persistência;
+3. transformar a saída para WebP pelo binding `IMAGES`;
+4. gravar no R2 sob chave derivada no servidor;
+5. atualizar `image_media_id` dentro do tenant autorizado;
+6. preservar substituição e remoção seguras;
+7. cobrir IDOR, falhas parciais e limpeza do objeto anterior.
+
+Esse trabalho deve ocorrer em uma única branch funcional nova depois que os
+marcos comprovados forem integrados à `main`. A publicação, bindings de
+produção, migrations e dados reais continuam exigindo autorização própria.
 
 ## Fontes oficiais
 
