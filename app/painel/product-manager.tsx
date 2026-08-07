@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import type { CatalogProduct } from "@/catalog/products";
+import { ProductImageEditor } from "./product-image-editor";
 import styles from "./panel.module.css";
 
 type ProductForm = {
@@ -51,6 +52,9 @@ export function ProductManager({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
   const endpoint = `/api/painel/stores/${encodeURIComponent(storeId)}/products`;
+  const editingProduct = editingId
+    ? products.find((product) => product.id === editingId) ?? null
+    : null;
 
   function startCreate() {
     setEditingId(null);
@@ -81,6 +85,12 @@ export function ProductManager({
     if (pendingAction) return;
     setFormOpen(false);
     setErrors({});
+  }
+
+  function updateProductImage(product: CatalogProduct) {
+    setProducts((current) =>
+      current.map((item) => (item.id === product.id ? product : item)),
+    );
   }
 
   async function saveProduct(event: FormEvent<HTMLFormElement>) {
@@ -419,9 +429,19 @@ export function ProductManager({
                   Mostrar na vitrine
                 </label>
               </div>
-              {editingId && (
+              {editingProduct ? (
+                <ProductImageEditor
+                  product={editingProduct}
+                  endpoint={`${endpoint}/${encodeURIComponent(editingProduct.id)}/image`}
+                  disabled={Boolean(pendingAction)}
+                  onBusyChange={(busy) =>
+                    setPendingAction(busy ? "image" : null)
+                  }
+                  onProductChange={updateProductImage}
+                />
+              ) : (
                 <p className={styles.imageNote}>
-                  A imagem atual será preservada. A troca de imagens virá em uma próxima etapa.
+                  Salve o produto primeiro para adicionar a imagem.
                 </p>
               )}
               <div className={styles.formButtons}>

@@ -514,6 +514,120 @@
   background: #f0eee8;
 }
 
+.imageEditor {
+  display: grid;
+  gap: 13px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #f5f3ed;
+}
+
+.imageEditorHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.imageEditorHeading h3,
+.imageEditorHeading p {
+  margin: 0;
+}
+
+.imageEditorHeading h3 {
+  font-size: 0.92rem;
+}
+
+.imageEditorHeading p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.imagePreview {
+  width: 74px;
+  height: 74px;
+  flex: 0 0 74px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: white;
+  color: var(--wine);
+  font-weight: 800;
+}
+
+.imagePreview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imagePicker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 10px 12px;
+  overflow: hidden;
+  border: 1px dashed #aaa397;
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.imagePicker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.imagePicker:focus-within {
+  outline: 3px solid rgba(126, 51, 40, 0.22);
+  outline-offset: 2px;
+}
+
+.imageActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.imageActions button {
+  border: 1px solid var(--wine);
+  border-radius: 8px;
+  background: var(--wine);
+  color: white;
+  padding: 9px 12px;
+  font-weight: 760;
+  cursor: pointer;
+}
+
+.imageActions .removeImage {
+  background: transparent;
+  color: #9b3027;
+  border-color: #cba9a4;
+}
+
+.imageActions button:disabled,
+.imagePicker:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.imageSuccess {
+  margin: 0;
+  color: #35613a;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
 .formButtons {
   display: flex;
   justify-content: flex-end;
