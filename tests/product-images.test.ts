@@ -210,10 +210,12 @@ test("Marco 6.2 prova imagens autenticadas, isolamento e falhas parciais", async
     }
 
     async function signIn(email: string) {
+      const requestHeaders = headers();
+      requestHeaders.set("content-type", "application/json");
       const response = await auth.handler(
         new Request(`${baseURL}/api/auth/sign-in/email`, {
           method: "POST",
-          headers: headers(),
+          headers: requestHeaders,
           body: JSON.stringify({ email, password }),
         }),
       );
@@ -354,10 +356,12 @@ test("Marco 6.2 prova imagens autenticadas, isolamento e falhas parciais", async
       const oldMediaId = await database
         .prepare("SELECT image_media_id FROM products WHERE id = 'product-a'")
         .first<string>("image_media_id");
+      assert.ok(oldMediaId);
       const oldKey = await database
         .prepare("SELECT object_key FROM media WHERE id = ?1")
         .bind(oldMediaId)
         .first<string>("object_key");
+      assert.ok(oldKey);
       const response = await handleProductImageRequest({
         request: imageRequest({
           path: pathA,
@@ -383,6 +387,7 @@ test("Marco 6.2 prova imagens autenticadas, isolamento e falhas parciais", async
       const mediaId = await database
         .prepare("SELECT image_media_id FROM products WHERE id = 'product-a'")
         .first<string>("image_media_id");
+      assert.ok(mediaId);
       bucket.failDelete = true;
       const response = await handleProductImageRequest({
         request: imageRequest({ path: pathA, method: "DELETE", cookie: cookieA }),
