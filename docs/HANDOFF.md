@@ -4,6 +4,42 @@ Atualizado em: **9 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
+## Marco 6.3A — pacote local para Worker direto
+
+O Marco 6.3A foi preparado a partir de `origin/main` no commit `116edb8`, na
+branch `codex/marco-6-3a-worker-direto`. O resultado continua exclusivamente
+local: nenhum Worker ou recurso foi criado, nenhum deploy ou migration foi
+executado e o checkpoint Sites existente não foi alterado.
+
+`wrangler.jsonc` agora é a fonte única dos bindings do Worker e declara
+exatamente `ASSETS`, `DB`, `STORE_IMAGES` e `IMAGES`. O Cloudflare Vite Plugin
+consome esse arquivo diretamente; a configuração inline que duplicava D1 e R2
+foi removida. O build Vinext preserva `worker/index.ts` como fonte e produz o
+entrypoint implantável `dist/server/index.js`, acompanhado de um manifesto com
+uma única declaração de cada binding.
+
+`npm run worker:dry-run` constrói o artefato, executa somente
+`wrangler deploy --dry-run`, verifica os quatro bindings na saída real, prova
+pelo metafile que o entrypoint é `dist/server/index.js` e remove os arquivos
+temporários ao encerrar. Quatro novos testes impedem ausência ou duplicação de
+bindings, retorno de `localBindingConfig`, divergência no manifesto Vinext e
+dry-run sobre o entrypoint incorreto. Os testes TypeScript passaram a usar
+`node --import tsx --test`, sem mudança de versões ou cobertura.
+
+A validação final local passou com lint, TypeScript, build Vinext e artefato
+Sites, 84 testes, dry-run direto e `git diff --check`. O lint manteve somente
+os dois avisos antigos de `<img>`; o Vinext manteve o aviso conhecido de que a
+classificação estática ainda não identifica todas as rotas dinâmicas. No
+Windows desta execução, o diretório do Git Bash precisou ser acrescentado ao
+`PATH` do processo para que os scripts `bash` existentes fossem encontrados;
+os scripts do repositório não foram alterados para contornar o ambiente.
+
+O desenho completo está em `docs/MARCO_6_3A_WORKER_DIRETO.md`. A próxima ação
+concreta é revisar os dois commits locais do Marco 6.3A e decidir, em uma etapa
+separada, sobre o push da branch. O Marco 6.3B continua bloqueado até
+autorização remota explícita e planejamento dos recursos de ensaio, secrets e
+reversão. Nenhuma implantação deve ocorrer nessa mesma etapa.
+
 ## Marco 6.2 — upload autenticado de imagens concluído localmente
 
 O Marco 6.2 foi desenvolvido a partir do commit aprovado do Marco 6.2C
