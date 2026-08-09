@@ -4,6 +4,48 @@ Atualizado em: **7 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
+## Marco 6.2 — upload autenticado de imagens concluído localmente
+
+O Marco 6.2 foi desenvolvido a partir do commit aprovado do Marco 6.2C
+(`9b7d2c7`) na branch `codex/marco-6-2-upload-imagens`. O painel protegido
+agora adiciona, substitui e remove a imagem de um produto persistido, sempre
+refazendo no servidor a cadeia sessão → usuária → membership → loja → produto.
+O ID da loja presente na rota continua sendo somente contexto e não concede
+acesso.
+
+O upload lê no máximo 8 MiB, identifica JPEG, PNG ou WebP estático pelos bytes,
+recusa animação e arquivo truncado, confirma formato e dimensões com
+`IMAGES.info()`, limita a 4096 × 4096 e 16 megapixels e reprocessa a saída para
+WebP de até 1800 px. A saída também possui leitura limitada a 4 MiB e validação
+de MIME e assinatura antes de chegar ao R2. IDs e chaves são gerados pelo
+servidor e isolados por loja.
+
+Na substituição, o novo objeto é gravado antes de um único `D1.batch()` criar a
+mídia e trocar o ponteiro do produto por comparação com o valor anterior. A
+mídia antiga só é limpa depois que o novo ponteiro está confirmado. Na
+remoção, o produto é desvinculado no D1 antes da tentativa de apagar o objeto.
+Falha de limpeza pode deixar mídia órfã para reconciliação posterior, mas ela
+não permanece pública e não reverte o ponteiro seguro. As mutações possuem
+limite persistente de 10 operações por minuto por usuária e loja.
+
+A interface do painel mostra prévia local, bloqueia arquivos acima do limite e
+mantém feedback de adição, substituição e remoção. Os testes cobrem duas lojas,
+IDOR antes da transformação, sessão e origem hostil, formatos proibidos,
+limites, falha de gravação, ordem segura de substituição/remoção e rate limit.
+
+Validação final local: build Vinext e artefato Sites passaram; TypeScript
+passou; lint passou sem erros e com os dois avisos antigos de `<img>`; 80 testes
+passaram (24 JavaScript e 56 TypeScript); `git diff --check` passou. Nenhum
+deploy, migration, transformação remota, dado real, secret ou operação nos D1
+e R2 hospedados foi executado.
+
+A integração no código está pronta, mas a publicação permanece bloqueada: o
+Sites atual não expõe de forma documentada o binding customizado `IMAGES` para
+o aplicativo principal. A próxima ação concreta é hospedar o Vinext diretamente
+em um Cloudflare Worker controlado pelo proprietário, preservar o site atual
+como ponto de recuperação e então executar um ensaio remoto ponta a ponta com
+dados sintéticos antes de qualquer loja real.
+
 ## Marco 6.2C — prova remota aprovada
 
 Em **7 de agosto de 2026**, o subdomínio `workers.dev` foi registrado com
