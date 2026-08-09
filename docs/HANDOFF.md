@@ -4,7 +4,7 @@ Atualizado em: **9 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
-## Marco 6.3A — pacote para Worker direto integrado na main
+## Marco 6.3A — pacote para Worker direto encerrado
 
 O Marco 6.3A foi preparado a partir de `origin/main` no commit `116edb8`, na
 branch `codex/marco-6-3a-worker-direto`, e depois integrado exclusivamente por
@@ -46,22 +46,39 @@ somente no Git: não houve pull request, merge commit, deploy, migration,
 validação remota do Worker ou operação na Cloudflare. O checkpoint Sites
 existente permanece preservado.
 
-O desenho completo está em `docs/MARCO_6_3A_WORKER_DIRETO.md`. A branch
-`codex/marco-6-3a-worker-direto` ainda existe local e remotamente; sua eventual
-exclusão deve ocorrer em uma etapa separada e somente após verificação. A
-próxima ação concreta é:
+A limpeza final auditou a branch `codex/marco-6-3a-worker-direto` e comprovou
+que ela não possuía commits exclusivos. A referência remota foi removida por
+push normal, sem force. A primeira execução de `git fetch --prune origin` após
+a exclusão foi interrompida porque a configuração local ainda continha um
+refspec específico para a branch já apagada. Somente esse refspec obsoleto foi
+removido; o refspec da `main` e todos os demais valores legítimos foram
+preservados. Depois da correção, `git fetch --prune origin` passou e a branch
+local foi removida com `git branch -d`.
 
-1. auditar a branch `codex/marco-6-3a-worker-direto` e, mediante autorização
-   separada, removê-la local e remotamente;
-2. depois, planejar o Marco 6.3B sem executar mudanças remotas;
-3. exigir para o Marco 6.3B autorização remota explícita, inventário dos
-   recursos e bindings reais, configuração segura dos secrets, ambiente ou
-   estratégia de ensaio, plano de reversão para o checkpoint Sites e validação
-   de autenticação, isolamento entre lojas, D1, R2 e Images antes de qualquer
-   publicação real.
+A branch `codex/marco-6-3a-worker-direto` não existe mais local nem
+remotamente. Os commits `57a9320` e `5277261` continuam preservados e
+alcançáveis pela `main`; antes desta atualização documental, `main` e
+`origin/main` estavam em `e6060dc`. Nenhum código, dependência ou configuração
+de hospedagem foi alterado. Não houve deploy, migration, pull request, merge,
+rebase, validação remota do Worker ou operação na Cloudflare. O checkpoint
+Sites permanece preservado e o Marco 6.3A está encerrado.
+
+O desenho completo está em `docs/MARCO_6_3A_WORKER_DIRETO.md`. A próxima ação
+concreta é planejar documentalmente o Marco 6.3B, sem executar alterações
+remotas. Antes de qualquer execução, o plano deve exigir:
+
+1. autorização remota explícita;
+2. inventário dos recursos e bindings reais;
+3. configuração segura dos secrets;
+4. ambiente ou estratégia de ensaio;
+5. plano de reversão para o checkpoint Sites;
+6. validação da autenticação e teste obrigatório de isolamento entre duas
+   lojas;
+7. validação de D1, R2 e Images;
+8. critérios objetivos de aprovação e interrupção.
 
 O Marco 6.3B continua bloqueado. Nenhuma implantação foi autorizada por esta
-integração documental.
+limpeza documental.
 
 ## Marco 6.2 — upload autenticado de imagens concluído localmente
 
