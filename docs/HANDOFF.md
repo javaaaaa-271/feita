@@ -1,6 +1,6 @@
 # Handoff atual
 
-Atualizado em: **7 de agosto de 2026**
+Atualizado em: **9 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
