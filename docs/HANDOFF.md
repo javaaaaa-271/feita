@@ -4,12 +4,16 @@ Atualizado em: **9 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
-## Marco 6.3A — pacote local para Worker direto
+## Marco 6.3A — pacote para Worker direto integrado na main
 
 O Marco 6.3A foi preparado a partir de `origin/main` no commit `116edb8`, na
-branch `codex/marco-6-3a-worker-direto`. O resultado continua exclusivamente
-local: nenhum Worker ou recurso foi criado, nenhum deploy ou migration foi
-executado e o checkpoint Sites existente não foi alterado.
+branch `codex/marco-6-3a-worker-direto`, e depois integrado exclusivamente por
+fast-forward. O commit técnico
+`57a93202e912190e600a86deff64eb3a7b9cde88` (`feat(infra): preparar
+implantação direta do Worker`) e o commit documental
+`52772619563285968231a83044c865ff49ae0395` (`docs(infra): registrar o Marco
+6.3A`) preservaram seus hashes e pais originais. Após a integração, `main` e
+`origin/main` chegaram a `52772619563285968231a83044c865ff49ae0395`.
 
 `wrangler.jsonc` agora é a fonte única dos bindings do Worker e declara
 exatamente `ASSETS`, `DB`, `STORE_IMAGES` e `IMAGES`. O Cloudflare Vite Plugin
@@ -26,19 +30,38 @@ bindings, retorno de `localBindingConfig`, divergência no manifesto Vinext e
 dry-run sobre o entrypoint incorreto. Os testes TypeScript passaram a usar
 `node --import tsx --test`, sem mudança de versões ou cobertura.
 
-A validação final local passou com lint, TypeScript, build Vinext e artefato
-Sites, 84 testes, dry-run direto e `git diff --check`. O lint manteve somente
-os dois avisos antigos de `<img>`; o Vinext manteve o aviso conhecido de que a
-classificação estática ainda não identifica todas as rotas dinâmicas. No
-Windows desta execução, o diretório do Git Bash precisou ser acrescentado ao
+A validação final local, concluída antes da integração, passou com
+`npm run lint`, `npx tsc --noEmit`, `npm test` com 84 testes aprovados,
+`npm run worker:dry-run`, `npm run build` e `git diff --check`. O lint manteve
+somente os dois avisos antigos de `<img>`; o Vinext manteve o aviso conhecido
+de que a classificação estática ainda não identifica todas as rotas dinâmicas.
+No Windows desta execução, o diretório do Git Bash precisou ser acrescentado ao
 `PATH` do processo para que os scripts `bash` existentes fossem encontrados;
 os scripts do repositório não foram alterados para contornar o ambiente.
 
-O desenho completo está em `docs/MARCO_6_3A_WORKER_DIRETO.md`. A próxima ação
-concreta é revisar os dois commits locais do Marco 6.3A e decidir, em uma etapa
-separada, sobre o push da branch. O Marco 6.3B continua bloqueado até
-autorização remota explícita e planejamento dos recursos de ensaio, secrets e
-reversão. Nenhuma implantação deve ocorrer nessa mesma etapa.
+A integração passou por `git diff --check` antes e depois dos fast-forwards.
+Lint, TypeScript, testes, build e dry-run não foram repetidos nessa etapa porque
+os dois commits permaneceram byte a byte inalterados. A publicação ocorreu
+somente no Git: não houve pull request, merge commit, deploy, migration,
+validação remota do Worker ou operação na Cloudflare. O checkpoint Sites
+existente permanece preservado.
+
+O desenho completo está em `docs/MARCO_6_3A_WORKER_DIRETO.md`. A branch
+`codex/marco-6-3a-worker-direto` ainda existe local e remotamente; sua eventual
+exclusão deve ocorrer em uma etapa separada e somente após verificação. A
+próxima ação concreta é:
+
+1. auditar a branch `codex/marco-6-3a-worker-direto` e, mediante autorização
+   separada, removê-la local e remotamente;
+2. depois, planejar o Marco 6.3B sem executar mudanças remotas;
+3. exigir para o Marco 6.3B autorização remota explícita, inventário dos
+   recursos e bindings reais, configuração segura dos secrets, ambiente ou
+   estratégia de ensaio, plano de reversão para o checkpoint Sites e validação
+   de autenticação, isolamento entre lojas, D1, R2 e Images antes de qualquer
+   publicação real.
+
+O Marco 6.3B continua bloqueado. Nenhuma implantação foi autorizada por esta
+integração documental.
 
 ## Marco 6.2 — upload autenticado de imagens concluído localmente
 
