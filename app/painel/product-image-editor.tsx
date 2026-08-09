@@ -24,20 +24,21 @@ export function ProductImageEditor({
   onBusyChange: (busy: boolean) => void;
   onProductChange: (product: CatalogProduct) => void;
 }) {
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selection, setSelection] = useState<{
+    file: File;
+    previewUrl: string;
+  } | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    if (!file) {
-      setPreviewUrl(null);
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+    return () => {
+      if (selection) URL.revokeObjectURL(selection.previewUrl);
+    };
+  }, [selection]);
+
+  const file = selection?.file ?? null;
+  const previewUrl = selection?.previewUrl ?? null;
 
   function chooseFile(event: ChangeEvent<HTMLInputElement>) {
     const next = event.target.files?.[0] ?? null;
@@ -45,11 +46,13 @@ export function ProductImageEditor({
     setNotice("");
     if (next && next.size > MAX_INPUT_BYTES) {
       event.target.value = "";
-      setFile(null);
+      setSelection(null);
       setError("Escolha uma imagem de até 8 MB.");
       return;
     }
-    setFile(next);
+    setSelection(
+      next ? { file: next, previewUrl: URL.createObjectURL(next) } : null,
+    );
   }
 
   async function upload() {
@@ -65,7 +68,7 @@ export function ProductImageEditor({
         return;
       }
       onProductChange(result.product);
-      setFile(null);
+      setSelection(null);
       setNotice(product.imageUrl ? "Imagem substituída." : "Imagem adicionada.");
     } catch {
       setError("Não foi possível salvar a imagem. Tente novamente.");
@@ -86,7 +89,7 @@ export function ProductImageEditor({
         return;
       }
       onProductChange(result.product);
-      setFile(null);
+      setSelection(null);
       setNotice("Imagem removida.");
     } catch {
       setError("Não foi possível remover a imagem. Tente novamente.");
