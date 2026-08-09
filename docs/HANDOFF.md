@@ -4,6 +4,30 @@ Atualizado em: **9 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
+## Marco 6.3B — ensaio remoto planejado e bloqueado
+
+O plano operacional do primeiro ensaio remoto foi registrado em
+`docs/MARCO_6_3B_ENSAIO_REMOTO.md`. O Worker candidato será validado somente
+em um endereço isolado de `workers.dev`, com D1, R2, duas lojas e duas
+identidades, todos exclusivamente sintéticos. O checkpoint Sites continuará
+inalterado e não haverá domínio, rota ou dado real no ensaio.
+
+A execução foi dividida em quatro autorizações independentes: A0 para
+inventário somente leitura; A1 para recursos isolados; A2 para secrets,
+migrations, fixtures, deploy e testes; e A3 para eventual limpeza destrutiva.
+Cada portão precisa de autorização explícita e não libera automaticamente o
+seguinte. Billing inesperado, destino ambíguo, diferença no artefato, secret
+exposto, falha de autenticação, IDOR ou vigésima quinta transformação de imagem
+interrompem o marco.
+
+Esta etapa alterou somente documentação no Git. Não houve deploy, migration,
+criação de recurso, configuração de secret, rota, domínio, dado remoto ou
+operação mutável na Cloudflare. O Marco 6.3B continua bloqueado.
+
+A próxima ação concreta é solicitar a autorização A0 e, somente depois,
+inventariar em modo de leitura a conta, o nome do Worker, D1, R2, bindings,
+billing e ausência de rota de produção. Nenhuma mutação faz parte de A0.
+
 ## Marco 6.3A — pacote para Worker direto encerrado
 
 O Marco 6.3A foi preparado a partir de `origin/main` no commit `116edb8`, na
@@ -63,22 +87,10 @@ de hospedagem foi alterado. Não houve deploy, migration, pull request, merge,
 rebase, validação remota do Worker ou operação na Cloudflare. O checkpoint
 Sites permanece preservado e o Marco 6.3A está encerrado.
 
-O desenho completo está em `docs/MARCO_6_3A_WORKER_DIRETO.md`. A próxima ação
-concreta é planejar documentalmente o Marco 6.3B, sem executar alterações
-remotas. Antes de qualquer execução, o plano deve exigir:
-
-1. autorização remota explícita;
-2. inventário dos recursos e bindings reais;
-3. configuração segura dos secrets;
-4. ambiente ou estratégia de ensaio;
-5. plano de reversão para o checkpoint Sites;
-6. validação da autenticação e teste obrigatório de isolamento entre duas
-   lojas;
-7. validação de D1, R2 e Images;
-8. critérios objetivos de aprovação e interrupção.
-
-O Marco 6.3B continua bloqueado. Nenhuma implantação foi autorizada por esta
-limpeza documental.
+O desenho completo do pacote local está em
+`docs/MARCO_6_3A_WORKER_DIRETO.md`; o plano remoto seguinte está em
+`docs/MARCO_6_3B_ENSAIO_REMOTO.md`. O Marco 6.3A permanece encerrado e o
+Marco 6.3B permanece bloqueado até a autorização A0.
 
 ## Marco 6.2 — upload autenticado de imagens concluído localmente
 
