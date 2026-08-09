@@ -4,6 +4,10 @@
   "main": "worker/index.ts",
   "compatibility_date": "2026-07-28",
   "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./dist/client"
+  },
   "d1_databases": [
     {
       "binding": "DB",
@@ -17,5 +21,8 @@
       "binding": "STORE_IMAGES",
       "bucket_name": "feita-local-images"
     }
-  ]
+  ],
+  "images": {
+    "binding": "IMAGES"
+  }
 }
