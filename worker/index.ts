@@ -1,6 +1,7 @@
 /** Cloudflare Worker entry point for the vinext-starter template. */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
+import { guardMarco63BRequest } from "./marco-6-3b-guard";
 
 interface Env {
   ASSETS: Fetcher;
@@ -15,6 +16,7 @@ interface Env {
       };
     };
   };
+  MARCO_6_3B_ACCESS_SECRET?: string;
 }
 
 interface ExecutionContext {
@@ -60,6 +62,12 @@ const SECURITY_HEADERS: Readonly<Record<string, string>> = {
 
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const guarded = await guardMarco63BRequest(request, env);
+    if (guarded.response) {
+      return withSecurityHeaders(request, guarded.response);
+    }
+    request = guarded.request;
+
     const url = new URL(request.url);
     let response: Response;
 

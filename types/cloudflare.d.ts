@@ -2,6 +2,10 @@ interface Fetcher {
   fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
 }
 
+interface SubtleCrypto {
+  timingSafeEqual(left: BufferSource, right: BufferSource): boolean;
+}
+
 interface D1PreparedStatement {
   bind(...values: unknown[]): D1PreparedStatement;
   first<T = Record<string, unknown>>(column?: string): Promise<T | null>;
@@ -27,6 +31,7 @@ declare module "cloudflare:workers" {
     BETTER_AUTH_URL?: string;
     AUTH_TRUSTED_ORIGINS?: string;
     RATE_LIMIT_HMAC_SECRET?: string;
+    MARCO_6_3B_ACCESS_SECRET?: string;
     RESEND_API_KEY?: string;
     RESEND_FROM?: string;
   };

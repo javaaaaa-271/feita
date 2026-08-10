@@ -1,10 +1,28 @@
 import assert from "node:assert/strict";
+import { timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import test from "node:test";
 
 const productionOrigin =
   "https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site";
+const trialSecret = "local-rendered-worker-trial-secret-2026";
+const trialSecretHeader = "x-feita-ensaio-secret";
+
+if (typeof crypto.subtle.timingSafeEqual !== "function") {
+  Object.defineProperty(crypto.subtle, "timingSafeEqual", {
+    configurable: true,
+    value(left, right) {
+      return timingSafeEqual(asBytes(left), asBytes(right));
+    },
+  });
+}
+
+function asBytes(value) {
+  return ArrayBuffer.isView(value)
+    ? new Uint8Array(value.buffer, value.byteOffset, value.byteLength)
+    : new Uint8Array(value);
+}
 
 async function loadWorker() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -15,10 +33,17 @@ async function loadWorker() {
 
 function workerEnvironment() {
   return {
+    MARCO_6_3B_ACCESS_SECRET: trialSecret,
     ASSETS: {
       fetch: async () => new Response("Not found", { status: 404 }),
     },
   };
+}
+
+function trialRequest(input, init = {}) {
+  const headers = new Headers(init.headers);
+  headers.set(trialSecretHeader, trialSecret);
+  return new Request(input, { ...init, headers });
 }
 
 function executionContext() {
@@ -28,11 +53,135 @@ function executionContext() {
   };
 }
 
+function meteredTrialEnvironment(budgetResult = null) {
+  const accesses = { ASSETS: 0, DB: 0, STORE_IMAGES: 0, IMAGES: 0, prepares: 0 };
+  const database = {
+    prepare() {
+      accesses.prepares += 1;
+      const statement = {
+        bind() {
+          return statement;
+        },
+        async first() {
+          return budgetResult;
+        },
+      };
+      return statement;
+    },
+  };
+  const environment = {
+    MARCO_6_3B_ACCESS_SECRET: trialSecret,
+    get ASSETS() {
+      accesses.ASSETS += 1;
+      throw new Error("ASSETS não deveria ser acessado");
+    },
+    get DB() {
+      accesses.DB += 1;
+      return database;
+    },
+    get STORE_IMAGES() {
+      accesses.STORE_IMAGES += 1;
+      throw new Error("R2 não deveria ser acessado");
+    },
+    get IMAGES() {
+      accesses.IMAGES += 1;
+      throw new Error("Images não deveria ser acessado");
+    },
+  };
+  return { accesses, environment };
+}
+
+test("barreira secreta do ensaio não alcança bindings sem autorização", async () => {
+  const worker = await loadWorker();
+  const { accesses, environment } = meteredTrialEnvironment();
+  const response = await worker.fetch(
+    new Request("https://trial.example.test/"),
+    environment,
+    executionContext(),
+  );
+
+  assert.equal(response.status, 404);
+  assert.deepEqual(accesses, {
+    ASSETS: 0,
+    DB: 0,
+    STORE_IMAGES: 0,
+    IMAGES: 0,
+    prepares: 0,
+  });
+});
+
+test("orçamento esgotado não entra no aplicativo nem alcança R2, Images ou Assets", async () => {
+  const worker = await loadWorker();
+  const { accesses, environment } = meteredTrialEnvironment(null);
+  const response = await worker.fetch(
+    trialRequest(
+      "https://trial.example.test/api/painel/stores/store-a/products/product-a/image",
+      { method: "PUT", body: new Uint8Array([1, 2, 3]) },
+    ),
+    environment,
+    executionContext(),
+  );
+
+  assert.equal(response.status, 429);
+  assert.deepEqual(accesses, {
+    ASSETS: 0,
+    DB: 1,
+    STORE_IMAGES: 0,
+    IMAGES: 0,
+    prepares: 1,
+  });
+});
+
+test("otimizador Vinext fica indisponível no ensaio antes de Assets e Images", async () => {
+  const worker = await loadWorker();
+  const { accesses, environment } = meteredTrialEnvironment();
+  const response = await worker.fetch(
+    trialRequest(
+      "https://trial.example.test/_vinext/image?url=%2Fimage.jpg&w=640&q=75",
+    ),
+    environment,
+    executionContext(),
+  );
+
+  assert.equal(response.status, 404);
+  assert.deepEqual(accesses, {
+    ASSETS: 0,
+    DB: 0,
+    STORE_IMAGES: 0,
+    IMAGES: 0,
+    prepares: 0,
+  });
+});
+
+test("segredo do ensaio é removido antes de ASSETS.fetch", async () => {
+  const worker = await loadWorker();
+  let receivedSecret;
+  const response = await worker.fetch(
+    trialRequest("https://trial.example.test/favicon.svg"),
+    {
+      MARCO_6_3B_ACCESS_SECRET: trialSecret,
+      ASSETS: {
+        fetch: async (request) => {
+          receivedSecret = request.headers.get(trialSecretHeader);
+          return new Response("asset protegido", {
+            headers: { "content-type": "text/plain" },
+          });
+        },
+      },
+    },
+    executionContext(),
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), "asset protegido");
+  assert.equal(receivedSecret, null);
+});
+
 test("renders product metadata in Brazilian Portuguese", async () => {
   const worker = await loadWorker();
 
   const response = await worker.fetch(
-    new Request("http://localhost/", {
+    trialRequest("http://localhost/", {
       headers: { accept: "text/html" },
     }),
     workerEnvironment(),
@@ -54,7 +203,7 @@ test("renders product metadata in Brazilian Portuguese", async () => {
 test("adds browser hardening headers to application responses", async () => {
   const worker = await loadWorker();
   const response = await worker.fetch(
-    new Request("https://example.test/", {
+    trialRequest("https://example.test/", {
       headers: { accept: "text/html" },
     }),
     workerEnvironment(),
@@ -87,12 +236,12 @@ test("adds browser hardening headers to application responses", async () => {
 test("adds HSTS only to HTTPS responses", async () => {
   const worker = await loadWorker();
   const httpsResponse = await worker.fetch(
-    new Request("https://example.test/"),
+    trialRequest("https://example.test/"),
     workerEnvironment(),
     executionContext(),
   );
   const httpResponse = await worker.fetch(
-    new Request("http://localhost/"),
+    trialRequest("http://localhost/"),
     workerEnvironment(),
     executionContext(),
   );
@@ -107,14 +256,14 @@ test("adds HSTS only to HTTPS responses", async () => {
 test("uses a fixed CORS allowlist without reflecting arbitrary origins", async () => {
   const worker = await loadWorker();
   const allowedResponse = await worker.fetch(
-    new Request(`${productionOrigin}/`, {
+    trialRequest(`${productionOrigin}/`, {
       headers: { origin: productionOrigin },
     }),
     workerEnvironment(),
     executionContext(),
   );
   const rejectedResponse = await worker.fetch(
-    new Request(`${productionOrigin}/`, {
+    trialRequest(`${productionOrigin}/`, {
       headers: { origin: "https://attacker.example" },
     }),
     workerEnvironment(),
@@ -139,7 +288,7 @@ test("uses a fixed CORS allowlist without reflecting arbitrary origins", async (
 test("keeps hardening headers on rejected mutable methods", async () => {
   const worker = await loadWorker();
   const response = await worker.fetch(
-    new Request("https://example.test/", { method: "POST" }),
+    trialRequest("https://example.test/", { method: "POST" }),
     workerEnvironment(),
     executionContext(),
   );
@@ -163,7 +312,7 @@ test("renders accessible invitation-only authentication interfaces", async () =>
     "/aceitar-convite",
   ]) {
     const response = await worker.fetch(
-      new Request(`http://localhost${path}`, {
+      trialRequest(`http://localhost${path}`, {
         headers: { accept: "text/html" },
       }),
       workerEnvironment(),
@@ -191,7 +340,7 @@ test("renders accessible invitation-only authentication interfaces", async () =>
 test("blocks public sign-up and protects /painel with the server session helper", async () => {
   const worker = await loadWorker();
   const response = await worker.fetch(
-    new Request("http://localhost/api/auth/sign-up/email", {
+    trialRequest("http://localhost/api/auth/sign-up/email", {
       method: "POST",
       headers: {
         "content-type": "application/json",

@@ -15,6 +15,13 @@
       "when": 1785300235328,
       "tag": "0001_shallow_robbie_robertson",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1786331390065,
+      "tag": "0002_flaky_skreet",
+      "breakpoints": true
     }
   ]
 }

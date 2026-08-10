@@ -169,6 +169,13 @@ export const rateLimit = sqliteTable("rate_limit", {
   lastRequest: integer("last_request").notNull(),
 });
 
+export const marco63bUploadBudget = sqliteTable("marco_6_3b_upload_budget", {
+  scope: text("scope").primaryKey(),
+  uploadAttempts: integer("upload_attempts").notNull().default(0),
+  uploadBytes: integer("upload_bytes").notNull().default(0),
+  updatedAt: integer("updated_at").notNull(),
+});
+
 export const storeMemberships = sqliteTable(
   "store_memberships",
   {
