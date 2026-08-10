@@ -2,8 +2,9 @@
 
 ## Estado
 
-**Planejado e bloqueado.** Este documento não autoriza deploy, migration,
-criação de recurso, configuração de secret ou qualquer outra operação remota.
+**Blindagem local implementada; execução remota bloqueada.** Este documento não
+autoriza deploy, migration, criação de recurso, configuração de secret ou
+qualquer outra operação remota.
 
 O Marco 6.3B existe para provar, com dados exclusivamente sintéticos, que o
 artefato preparado no Marco 6.3A funciona em um Cloudflare Worker real. O
@@ -42,6 +43,12 @@ O ensaio deve obedecer a todos estes limites:
 7. limitar a 25 transformações remotas de imagem em toda a execução;
 8. não executar limpeza destrutiva sem autorização própria, salvo contenção de
    emergência previamente autorizada para o Worker exato do ensaio.
+9. exigir um segredo exclusivo do ensaio em toda requisição antes de consultar
+   `ASSETS`, `DB`, `STORE_IMAGES` ou `IMAGES`;
+10. limitar cada upload a 8 MiB e reservar atomicamente no D1, antes de entrar
+    na aplicação, no máximo 25 tentativas elegíveis e 200 MiB acumulados;
+11. manter o otimizador genérico `/_vinext/image` indisponível no ensaio para
+    impedir transformações fora do orçamento de uploads autenticados.
 
 ## Topologia do ensaio
 
@@ -68,12 +75,13 @@ não pode substituir silenciosamente `wrangler.jsonc` nem entrar em commit.
 
 | Nome | Tipo | Regra |
 | --- | --- | --- |
-| `ASSETS` | binding | deve apontar somente para `dist/client` do commit aprovado |
+| `ASSETS` | binding | deve apontar somente para `dist/client` do commit aprovado; `assets.run_worker_first` deve ser `true` na fonte e no artefato gerado |
 | `DB` | binding D1 | deve apontar somente para o banco sintético inventariado |
 | `STORE_IMAGES` | binding R2 | deve apontar somente para o bucket sintético inventariado |
 | `IMAGES` | binding | deve estar disponível antes do primeiro upload |
 | `BETTER_AUTH_SECRET` | secret | gerar valor forte e exclusivo para o ensaio |
 | `RATE_LIMIT_HMAC_SECRET` | secret | gerar valor forte e diferente do secret de autenticação |
+| `MARCO_6_3B_ACCESS_SECRET` | secret | valor exclusivo de ao menos 32 bytes; obrigatório no header `x-feita-ensaio-secret` de toda requisição |
 | `RESEND_API_KEY` | secret condicional | obrigatório para aprovar recuperação de senha por e-mail |
 | `BETTER_AUTH_URL` | variável | origem HTTPS exata do Worker de ensaio |
 | `AUTH_TRUSTED_ORIGINS` | variável | allowlist exata, sem curinga, contendo a origem do ensaio |
@@ -82,6 +90,22 @@ não pode substituir silenciosamente `wrangler.jsonc` nem entrar em commit.
 Valores de secret nunca devem aparecer em comando versionado, captura,
 relatório, log ou resposta. A ausência dos dois secrets obrigatórios fora de
 loopback deve continuar falhando de modo fechado.
+
+O segredo de acesso do ensaio também falha fechado quando está ausente, curto
+ou incorreto. O Worker compara dois digests SHA-256 de tamanho fixo com
+`crypto.subtle.timingSafeEqual()` e remove o header antes de encaminhar a
+requisição à aplicação ou a `ASSETS.fetch()`. Como `assets.run_worker_first` é
+obrigatoriamente `true`, a mesma barreira também precede arquivos que existem
+em `dist/client`. Requisições recusadas não leem o corpo e não acessam nenhum
+dos quatro bindings.
+
+Uploads que passam pelo segredo têm o tamanho real lido com limite rígido de
+8 MiB. Somente então uma única instrução `INSERT ... ON CONFLICT DO UPDATE ...
+RETURNING` reserva simultaneamente a tentativa e seus bytes na tabela
+`marco_6_3b_upload_budget`. Reserva negada encerra a requisição sem entrar no
+roteador da aplicação: ela usa apenas essa operação D1 de controle e não alcança
+consultas funcionais, Assets, R2 ou Images. Corpos acima de 8 MiB são negados
+antes até mesmo dessa reserva.
 
 ## Autorizações separadas
 
@@ -189,6 +213,9 @@ Qualquer ambiguidade sobre o D1 de destino é falha de parada de linha.
 | Área | Prova mínima | Aprovação |
 | --- | --- | --- |
 | Empacotamento | entrypoint e quatro bindings iguais ao dry-run | nenhuma diferença |
+| Barreira secreta | secret ausente, curto ou incorreto em rota comum e upload | 404 genérico antes de qualquer binding |
+| Static Assets | solicitar um arquivo real sem secret e repetir com secret válido | sem secret: 404 genérico e `private, no-store`; com secret: arquivo íntegro, sem repassar o header a `ASSETS.fetch()` |
+| Orçamento | concorrência acima de 25 tentativas, mais de 200 MiB acumulados e corpo acima de 8 MiB | reserva atômica; nenhuma passagem para Assets, R2 ou Images |
 | HTTP | HTTPS, HSTS e headers de endurecimento | presentes nas respostas aplicáveis |
 | Cookies | sessão `HttpOnly`, `Secure`, `SameSite=Lax`, sem `Domain` | todos os atributos corretos |
 | Login | senha correta entra; senha errada retorna mensagem genérica | sem enumeração |
@@ -214,6 +241,7 @@ reutilizar URLs conhecidas. Testar apenas a interface não é suficiente.
 O Marco 6.3B só é aprovado quando:
 
 - todas as provas obrigatórias passam no mesmo commit e no mesmo Worker;
+- a barreira secreta e o orçamento atômico passam antes das provas funcionais;
 - nenhuma loja real, domínio de produção ou recurso não inventariado foi usado;
 - os quatro bindings apontam para os destinos aprovados;
 - autenticação, logout, cookies, rate limit e recuperação passaram remotamente;
@@ -230,6 +258,8 @@ Interromper imediatamente diante de:
 - dúvida sobre conta, Worker, D1, R2 ou binding de destino;
 - tentativa de criar rota, domínio ou modificar o projeto Sites;
 - secret ausente, reutilizado, impresso ou incluído em arquivo versionado;
+- barreira secreta ausente ou tentativa de contornar os limites de 25 uploads,
+  200 MiB acumulados ou 8 MiB individuais;
 - migration apontando para banco diferente do inventariado;
 - diferença entre o artefato validado e o artefato enviado;
 - resposta de autenticação que enumere e-mail ou cookie inseguro;

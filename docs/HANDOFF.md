@@ -1,8 +1,165 @@
 # Handoff atual
 
-Atualizado em: **9 de agosto de 2026**
+Atualizado em: **10 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
+
+## Marco 6.3B — inventário A0 concluído
+
+Em **9 de agosto de 2026**, o inventário A0 foi concluído em modo somente
+leitura na conta Cloudflare autorizada. O subdomínio `workers.dev` permanece
+disponível, não há Worker ou projeto Pages implantado nessa conta e o nome
+configurado localmente para o Worker não corresponde a um recurso remoto
+existente. Também não há D1 acessível na conta. O R2 não está habilitado e a
+consulta autorizada foi recusada pelo provedor com o estado próprio de serviço
+não ativado; nenhum bucket foi criado e nenhuma tentativa de habilitação foi
+feita.
+
+Os recursos físicos administrados pelo checkpoint Sites não aparecem no
+inventário da conta Cloudflare do proprietário e continuam tratados como
+externos e intocáveis para este ensaio. Não há zona, rota de Worker, domínio
+customizado ou projeto remoto ao qual o ensaio possa se ligar acidentalmente.
+
+O estado remoto dos bindings foi registrado explicitamente: `ASSETS` está
+ausente porque não existe Worker implantado, e `IMAGES` também está ausente e
+sem associação remota. Ambos existem somente como declarações locais no pacote
+validado do Marco 6.3A. O catálogo de planos mostra uma oferta de Images &
+Stream a partir de USD 0/mês, com 5.000 transformações únicas mensais incluídas,
+mas a conta não possui assinatura Images/Stream ativa. A tela de transformações
+mostra uso zero e informa que a capacidade não pode ser habilitada sem uma zona;
+nenhuma zona ou capacidade foi adicionada.
+
+Na cobrança, a única assinatura listada é `Workers Free`, ativa, e não existe
+método de pagamento cadastrado. Assim, o A0 está concluído, mas a criação do R2
+e qualquer ativação de Images permanecem sob um portão de custo: antes de
+prosseguir, a execução precisa provar por mecanismo autorizado que o ensaio não
+exigirá cobrança, método de pagamento, upgrade ou aceite fora do escopo. O
+checkpoint Sites, o Git remoto e todos os recursos Cloudflare permaneceram
+inalterados durante o A0.
+
+### Portão de custo do A1 — bloqueado antes de qualquer criação
+
+Depois da autorização para executar o Marco 6.3B, a página oficial de planos
+do R2 foi consultada novamente sem mutação. Embora o total imediato exibido
+seja USD 0 e o nível gratuito inclua 10 GB, 1 milhão de operações Classe A e
+10 milhões de operações Classe B por mês, habilitar o serviço exige a ação
+`Adicionar assinatura do R2 à minha conta`. O aceite cria uma assinatura com
+renovação automática, cobrança por uso acima das franquias e possibilidade de
+pré-autorização da forma de pagamento.
+
+Como a autorização determinou interromper antes de qualquer ação que pudesse
+gerar cobrança, exigir método de pagamento ou ampliar o escopo, a execução
+parou antes desse aceite. Não foram criados Worker, D1 ou R2; não foram
+configurados secrets ou variáveis; nenhuma migration, fixture, transformação,
+publicação ou teste remoto foi executado. A reversão terminou como operação
+nula, pois não havia recurso de ensaio para excluir ou configuração para
+restaurar. O checkpoint Sites permaneceu intacto.
+
+Antes do bloqueio, o candidato `a164a12` passou novamente por lint sem erros e
+com os dois avisos históricos de `<img>`, TypeScript, 84 testes, build, dry-run
+com `ASSETS`, `DB`, `STORE_IMAGES` e `IMAGES`, e `git diff --check`. O
+entrypoint validado foi `dist/server/index.js`, com SHA-256
+`3ffe6fcd8d9758177e85f248e368ecadb08341261e5b874ba4b1d0c6328d51fb`. Foram
+usados Node 24.14.0, Wrangler 4.114.0, Vinext 0.0.50 e workerd
+1.20260722.1. Nenhum arquivo de runtime mudou em relação ao commit técnico do
+Marco 6.3A.
+
+Uma nova autorização específica para aderir à assinatura do R2 e aceitar a
+possibilidade de cobrança por uso foi recebida. O checkout oficial foi aberto,
+mas a ativação exige cartão e endereço de cobrança que não estavam cadastrados
+na conta. Nenhum dado de pagamento foi inferido ou preenchido pelo agente.
+
+Depois de o proprietário informar que o R2 estava ativo, o estado foi
+revalidado antes de criar recursos. A API continuou respondendo com o código
+`10042`, que identifica R2 não habilitado, e a cobrança continuou listando
+somente `Workers Free`, sem assinatura R2 ou método de pagamento. O checkout
+ainda exibia a etapa `Ativar R2`, com os campos de cobrança não preenchidos.
+Assim, a ativação não foi concluída nesta conta, o R2 permanece inativo e
+nenhum recurso de ensaio foi criado. A próxima ação concreta é o proprietário
+concluir o checkout na mesma conta e verificar que R2 aparece como assinatura
+ativa; até lá, A1, A2 e A3 permanecem bloqueados.
+
+### Interrupção e reversão do ensaio remoto
+
+Em **9 de agosto de 2026**, uma nova verificação confirmou que o R2 estava
+ativo. Foram então criados exclusivamente para o Marco 6.3B o Worker
+`feita-ensaio-6-3b-20260809`, o D1 `feita-ensaio-6-3b-db-20260809` e o bucket
+R2 `feita-ensaio-6-3b-images-20260809`. As duas migrations locais foram
+aplicadas ao D1 vazio, dois secrets gerados apenas em memória foram associados
+ao Worker e o candidato validado foi publicado somente no subdomínio isolado
+`workers.dev`. Não houve rota customizada, domínio, DNS, dado real ou operação
+no checkpoint Sites.
+
+O proprietário interrompeu a execução antes do início da prova. Nenhuma
+fixture, identidade, loja ou produto sintético chegou a ser inserido; nenhuma
+requisição funcional foi enviada ao Worker; e nenhuma chamada ao binding R2 ou
+ao binding Images foi executada. O uso do bucket de ensaio terminou em **zero
+objetos** e zero bytes armazenados, e o uso de Images em **zero
+transformações**. No R2 ocorreram apenas as chamadas administrativas necessárias
+para criar, listar e excluir o bucket; o contador faturável da conta não foi
+consultado depois da interrupção.
+
+A reversão autorizada foi aplicada imediatamente. Primeiro o Worker foi
+excluído, desativando seu acesso público; depois foram excluídos somente o D1 e
+o bucket R2 citados acima. A verificação final confirmou que o Worker não
+existe e que as listas remotas de D1 e R2 não contêm os recursos de ensaio.
+Consequentemente, `ASSETS`, `DB`, `STORE_IMAGES` e `IMAGES` não permanecem
+vinculados a nenhum Worker do Marco 6.3B. A assinatura R2 da conta não foi
+alterada.
+
+O Marco 6.3B está interrompido e nenhuma etapa da prova deve ser retomada sem
+nova autorização explícita. Sites, domínio, DNS e produção permaneceram
+integralmente fora do ensaio.
+
+### Blindagem local antes de qualquer novo ensaio
+
+Em **10 de agosto de 2026**, foi implementada somente no checkout local uma
+barreira obrigatória para o Worker direto do Marco 6.3B. Toda requisição agora
+precisa apresentar o secret exclusivo `MARCO_6_3B_ACCESS_SECRET`, com ao menos
+32 bytes, no header `x-feita-ensaio-secret`. Secret ausente, curto ou incorreto
+recebe 404 genérico antes da leitura do corpo e antes de qualquer acesso a
+`ASSETS`, `DB`, `STORE_IMAGES` ou `IMAGES`. `assets.run_worker_first = true`
+permanece explícito tanto no `wrangler.jsonc` quanto na configuração gerada,
+obrigando inclusive arquivos estáticos reais a atravessar primeiro o Worker.
+Depois de calcular dois digests SHA-256 de tamanho fixo, a comparação usa
+`crypto.subtle.timingSafeEqual()`; o header é removido antes de a aplicação ou
+`ASSETS.fetch()` receber a requisição.
+
+O endpoint genérico `/_vinext/image` permanece indisponível durante o ensaio,
+impedindo transformações fora do fluxo autenticado de produto. Uploads de
+produto têm limite individual de 8 MiB aferido pelo corpo real, sem confiar no
+`Content-Length`. Corpos excessivos são recusados antes do D1. Para os demais
+uploads elegíveis, uma única instrução atômica no D1 reserva no máximo 25
+tentativas e 200 MiB acumulados na tabela
+`marco_6_3b_upload_budget`. Quando a reserva é negada, somente essa operação D1
+de controle ocorre: o roteador da aplicação, as demais consultas D1, Assets,
+R2 e Images não são alcançados.
+
+A migration `drizzle/0002_flaky_skreet.sql` foi gerada e aplicada apenas em D1
+local temporário. Testes concorrentes dispararam 40 reservas simultâneas e
+confirmaram exatamente 25 aceitações; o limite acumulado preservou os contadores
+sem alteração ao negar a tentativa excedente. As provas do Worker instrumentam
+os quatro bindings e confirmam zero acesso sem secret, zero acesso a Assets, R2
+e Images após orçamento esgotado e zero acesso ao otimizador Vinext bloqueado.
+Uma prova adicional passa pelo roteamento local real de Static Assets:
+`/favicon.svg` sem secret retorna 404 genérico com `private, no-store`, enquanto
+o mesmo arquivo com secret válido continua sendo servido byte a byte; outra
+prova confirma que o header não chega a `ASSETS.fetch()`. Um stream com oito
+chunks planejados ultrapassa 8 MiB, registra cancelamento antes de consumir a
+fonte completa e não alcança nenhum binding.
+
+Validação local: lint passou sem erros e manteve os dois avisos históricos de
+`<img>`; TypeScript passou; build Vinext e artefato Sites passaram; os 84 testes
+anteriores e 12 novas provas passaram, totalizando 96; o dry-run local do Worker
+validou o entrypoint e os quatro bindings; `git diff --check` passou. Nenhum
+secret real foi gravado: `.env.example` contém somente o nome vazio da variável.
+`.openai/hosting.json` e `package-lock.json` permanecem inalterados.
+
+Não houve consulta ou mutação na Cloudflare, criação de recurso, migration
+remota, deploy, commit ou push. A modificação documental anterior deste handoff
+foi preservada. A próxima ação concreta é revisar integralmente o diff local e
+decidir separadamente se a blindagem pode ser registrada; qualquer nova prova
+remota continua bloqueada até autorização explícita.
 
 ## Marco 6.3B — ensaio remoto planejado e bloqueado
 
