@@ -1,10 +1,10 @@
-# Marco 6.3B — plano do primeiro ensaio remoto
+# Marco 6.3B — plano do ensaio remoto isolado
 
 ## Estado
 
-**Blindagem local implementada; execução remota bloqueada.** Este documento não
-autoriza deploy, migration, criação de recurso, configuração de secret ou
-qualquer outra operação remota.
+**Blindagem e portão fechado determinístico implementados localmente; execução
+remota bloqueada.** Este documento não autoriza deploy, migration, criação de
+recurso, configuração de secret ou qualquer outra operação remota.
 
 O Marco 6.3B existe para provar, com dados exclusivamente sintéticos, que o
 artefato preparado no Marco 6.3A funciona em um Cloudflare Worker real. O
@@ -48,7 +48,10 @@ O ensaio deve obedecer a todos estes limites:
 10. limitar cada upload a 8 MiB e reservar atomicamente no D1, antes de entrar
     na aplicação, no máximo 25 tentativas elegíveis e 200 MiB acumulados;
 11. manter o otimizador genérico `/_vinext/image` indisponível no ensaio para
-    impedir transformações fora do orçamento de uploads autenticados.
+    impedir transformações fora do orçamento de uploads autenticados;
+12. limitar a existência pública do Worker a 20 minutos desde o primeiro deploy;
+13. limitar o portão fechado a 60 segundos desde o deploy, com novas consultas
+    somente depois de resultado transitório e a cada 5 segundos.
 
 ## Topologia do ensaio
 
@@ -106,6 +109,46 @@ RETURNING` reserva simultaneamente a tentativa e seus bytes na tabela
 roteador da aplicação: ela usa apenas essa operação D1 de controle e não alcança
 consultas funcionais, Assets, R2 ou Images. Corpos acima de 8 MiB são negados
 antes até mesmo dessa reserva.
+
+## Portão fechado determinístico
+
+O executor local `npm run worker:closed-gate` deve ser usado antes de migrations,
+fixtures, secrets ou fluxos funcionais. Imediatamente depois do primeiro deploy,
+e antes de qualquer consulta HTTP, ele consulta o plano de controle com
+`wrangler deployments status --json` e exige que a versão recém-criada seja a
+única versão do deployment ativo, com exatamente 100% do tráfego. Divergência de
+versão, divisão de tráfego ou resposta inválida do plano de controle é
+bloqueadora e impede as consultas.
+
+Cada tentativa consulta, sem segredo, uma rota inexistente e `/favicon.svg`.
+O executor recusa qualquer origem que não seja a raiz HTTPS isolada em
+`workers.dev`. As duas URLs recebem um nonce não cacheável e headers explícitos
+de bypass de cache. O registro omite URL, corpo, nome do Worker e identificadores
+e contém somente, para cada resposta:
+
+- categoria e código sanitizado de eventual erro de transporte ou DNS;
+- status HTTP;
+- tamanho em bytes e hash SHA-256 do corpo;
+- valor de `Cache-Control` e se ele é exatamente `private, no-store`;
+- valor e presença de HSTS;
+- igualdade entre status, tamanho, hash e headers das duas respostas.
+
+O resultado segue uma máquina de estados fechada:
+
+- **aprovado:** ambas as URLs retornam exatamente o 404 genérico esperado,
+  `Cache-Control: private, no-store`, HSTS e respostas idênticas;
+- **transitório:** exclusivamente erro reconhecido de DNS, conexão ou TLS, ou
+  HTTP 523; permite outra tentativa depois de 5 segundos, sem iniciar tentativa
+  que ultrapasse 60 segundos contados do deploy;
+- **bloqueador:** qualquer 200, resposta funcional, corpo inesperado, outro
+  status, header divergente, erro de transporte não reconhecido ou falha do
+  plano de controle; não permite repetição e exige reversão imediata.
+
+Como a barreira secreta falha antes do roteador e
+`assets.run_worker_first = true`, essas consultas não alcançam `ASSETS`, D1,
+R2 ou Images. O D1 e o bucket podem existir vazios porque seus bindings são
+necessários ao deploy, mas nenhuma migration ou escrita é permitida antes de o
+estado ser **aprovado**.
 
 ## Autorizações separadas
 
@@ -167,38 +210,52 @@ Resultado do portão: inventário aprovado ou interrupção sem mutação.
 ### Etapa 2 — preparar recursos e configuração
 
 1. obter a autorização A1;
-2. criar somente os recursos de ensaio que o inventário considerou necessários;
+2. criar somente um D1 e um bucket R2 vazios, quando necessários aos bindings;
 3. gerar a configuração local não versionada com os quatro bindings;
 4. revisar o destino de cada binding antes de qualquer migration ou upload;
-5. gerar secrets exclusivos e configurar as variáveis da origem de ensaio;
-6. confirmar por inspeção que nenhum valor secreto entrou no repositório.
+5. confirmar que nenhuma migration, fixture, secret ou variável funcional foi
+   aplicada antes do portão fechado;
+6. confirmar por inspeção que nenhum identificador ou valor secreto entrou no
+   repositório.
 
 Se o provedor de e-mail ainda não estiver pronto, convite e login podem ser
 testados com token sintético administrado localmente, mas a recuperação de
 senha não pode ser marcada como aprovada. O marco permanece incompleto até a
 entrega real do OTP em uma caixa de teste controlada.
 
-### Etapa 3 — migrar e semear dados sintéticos
-
-1. aplicar todas as migrations versionadas somente no D1 de ensaio;
-2. confirmar tabelas e índices esperados sem imprimir dados sensíveis;
-3. criar duas lojas fictícias, A e B, com produtos e slugs distintos;
-4. gerar dois convites de uso único com tokens fora do Git;
-5. aceitar os convites pela própria aplicação para que a Better Auth crie as
-   credenciais; nunca inserir ou fabricar hash de senha manualmente;
-6. manter o R2 vazio até o teste autenticado de upload.
-
-Qualquer ambiguidade sobre o D1 de destino é falha de parada de linha.
-
-### Etapa 4 — publicar e testar
+### Etapa 3 — publicar fechado e aprovar o portão
 
 1. obter a autorização A2;
 2. executar um novo dry-run e revisar nome, entrypoint e bindings;
-3. publicar somente o Worker de ensaio em `workers.dev`;
-4. confirmar que nenhuma rota ou domínio foi criado;
-5. executar a matriz abaixo com as duas sessões independentes;
-6. interromper no primeiro problema de segurança ou isolamento;
-7. registrar evidências sem tokens, cookies, e-mails pessoais ou IDs opacos.
+3. publicar somente o Worker de ensaio em `workers.dev`, sem o secret de acesso,
+   e iniciar os relógios de 60 segundos e 20 minutos no primeiro deploy;
+4. confirmar no plano de controle a versão recém-criada sozinha em 100% do
+   tráfego;
+5. executar o portão fechado determinístico sem segredo;
+6. aprovar somente os dois 404 genéricos idênticos; repetir apenas resultado
+   transitório e reverter imediatamente qualquer resultado bloqueador;
+7. confirmar que nenhuma rota ou domínio foi criado e que D1 e R2 continuam
+   vazios e sem migrations.
+
+Qualquer ambiguidade sobre o D1 de destino é falha de parada de linha.
+
+### Etapa 4 — configurar, migrar, semear e testar
+
+1. continuar somente depois de o portão fechado ser aprovado;
+2. gerar secrets exclusivos, configurar as variáveis e instalar o secret de
+   acesso sem gravá-lo ou imprimi-lo;
+3. como `wrangler secret put` publica nova versão, confirmar novamente no plano
+   de controle a nova versão sozinha em 100% e repetir imediatamente as provas
+   sem segredo antes de qualquer fluxo funcional;
+4. aplicar todas as migrations versionadas somente no D1 de ensaio e confirmar
+   tabelas e índices sem imprimir dados sensíveis;
+5. criar duas lojas fictícias, A e B, com produtos e slugs distintos;
+6. gerar dois convites de uso único com tokens fora do Git e aceitá-los pela
+   própria aplicação; nunca inserir ou fabricar hash de senha manualmente;
+7. manter o R2 vazio até o teste autenticado de upload;
+8. executar a matriz abaixo com as duas sessões independentes;
+9. interromper no primeiro problema de segurança, isolamento ou orçamento;
+10. registrar evidências sem tokens, cookies, e-mails pessoais ou IDs opacos.
 
 ### Etapa 5 — encerrar
 
@@ -212,6 +269,7 @@ Qualquer ambiguidade sobre o D1 de destino é falha de parada de linha.
 
 | Área | Prova mínima | Aprovação |
 | --- | --- | --- |
+| Portão fechado | confirmar versão ativa em 100%; consultar rota inexistente e `/favicon.svg` sem segredo | dois 404 genéricos idênticos, `private, no-store` e HSTS, sem acesso a bindings |
 | Empacotamento | entrypoint e quatro bindings iguais ao dry-run | nenhuma diferença |
 | Barreira secreta | secret ausente, curto ou incorreto em rota comum e upload | 404 genérico antes de qualquer binding |
 | Static Assets | solicitar um arquivo real sem secret e repetir com secret válido | sem secret: 404 genérico e `private, no-store`; com secret: arquivo íntegro, sem repassar o header a `ASSETS.fetch()` |
@@ -262,6 +320,9 @@ Interromper imediatamente diante de:
   200 MiB acumulados ou 8 MiB individuais;
 - migration apontando para banco diferente do inventariado;
 - diferença entre o artefato validado e o artefato enviado;
+- deployment diferente da versão esperada ou não direcionado integralmente a ela;
+- resultado bloqueador do portão fechado ou expiração de sua janela de 60 segundos;
+- janela pública total de 20 minutos atingida;
 - resposta de autenticação que enumere e-mail ou cookie inseguro;
 - qualquer indício de IDOR entre as duas lojas;
 - upload inválido aceito, mídia antiga ainda pública ou isolamento incorreto no R2;
@@ -278,11 +339,15 @@ O principal mecanismo de reversão é arquitetural: o ensaio não recebe o
 tráfego do site atual. O checkpoint Sites continua sendo a experiência
 publicada e não depende do sucesso do novo Worker.
 
-Se o Worker de ensaio apresentar falha de segurança, a autorização A2 deve
-permitir conter exclusivamente esse Worker, sem tocar em D1, R2 ou Sites. A
-remoção definitiva dos recursos permanece no portão A3. Antes de qualquer
+Se o Worker de ensaio apresentar falha de segurança, resultado bloqueador,
+perda de controle do orçamento ou atingir 20 minutos desde o primeiro deploy, a
+reversão é imediata. Primeiro o Worker é removido e sua ausência é confirmada,
+encerrando o acesso público. Depois são registradas apenas contagens não
+sensíveis de objetos, bytes, tentativas e transformações; por último, com A3,
+são removidos exclusivamente o bucket R2 e o D1 do ensaio. Antes de qualquer
 exclusão, é obrigatório confirmar nomes, escopo, ausência de dados reais e
-preservação das evidências não sensíveis.
+preservação das evidências não sensíveis. Sites, domínio, DNS e produção nunca
+participam da reversão.
 
 ## Evidências e handoff
 
@@ -295,8 +360,12 @@ O relatório final deve registrar:
 - resultado de cada linha da matriz;
 - quantidade de transformações de imagem consumidas;
 - falhas, interrupções e contenções;
+- para o portão fechado, estado, número de tentativas, campos sanitizados de
+  transporte/HTTP, tamanho e hash dos corpos, headers esperados e igualdade das
+  respostas, sem URLs, corpos ou identificadores;
 - confirmação de ausência de domínio, rota, dados reais e alteração no Sites;
 - estado final do Worker, D1 e R2 de ensaio;
 - recomendação de avançar, corrigir ou abandonar o caminho direto.
 
-O Marco 6.3B começa somente quando a autorização A0 for dada explicitamente.
+Uma nova tentativa remota do Marco 6.3B começa somente com autorização explícita
+e deve seguir esta versão do plano.

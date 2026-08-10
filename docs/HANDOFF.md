@@ -161,9 +161,61 @@ foi preservada. A próxima ação concreta é revisar integralmente o diff local
 decidir separadamente se a blindagem pode ser registrada; qualquer nova prova
 remota continua bloqueada até autorização explícita.
 
+### Segunda prova interrompida e portão fechado determinístico
+
+Uma segunda tentativa usou exclusivamente o candidato publicado
+`cca9442c3c7d52e5fc4c3007d1639134de670a28`, depois de repetir TypeScript, lint,
+96 testes, build, dry-run e `git diff --check`. O inventário inicial não encontrou
+recurso inesperado relacionado ao ensaio. Foram criados somente um D1 e um
+bucket R2 isolados; as três migrations foram aplicadas ao D1 ainda vazio antes
+do primeiro deploy, conforme a ordem então registrada no plano.
+
+O Worker foi publicado somente em `workers.dev`, sem rota, domínio ou o secret
+de acesso. A primeira prova composta do estado fechado não separou com precisão
+erro de transporte, status, corpo e headers e, portanto, não forneceu evidência
+determinística para avançar. Nenhum secret foi instalado e não houve fixture,
+identidade, loja, produto, upload, transformação ou teste funcional. A reversão
+foi imediata: primeiro o Worker foi removido, após 27 segundos de existência
+pública; depois foram registrados zero objetos e zero bytes no R2, zero
+tentativas e bytes no D1 e zero transformações; por último, somente o bucket e o
+D1 isolados foram excluídos. O inventário final não encontrou Worker, D1, bucket,
+binding ou objeto remanescente do ensaio. Sites, domínio, DNS, produção e a
+assinatura R2 permaneceram inalterados.
+
+Em **10 de agosto de 2026**, a correção subsequente permaneceu exclusivamente
+local. O novo executor `npm run worker:closed-gate` consulta primeiro o plano de
+controle e exige que a versão recém-criada seja a única ativa, com 100% do
+tráfego. Ele recusa qualquer origem que não seja a raiz HTTPS isolada em
+`workers.dev`; só então consulta, sem segredo e com nonce não cacheável, uma
+rota inexistente e `/favicon.svg`. Ele registra somente categoria e código
+sanitizados de transporte, status HTTP, tamanho e hash SHA-256 do corpo,
+`Cache-Control`, presença de HSTS e igualdade entre as respostas.
+
+A máquina de estados aprova apenas dois 404 genéricos idênticos com
+`private, no-store` e HSTS. Somente DNS, conexão, TLS ou HTTP 523 são
+transitórios e permitem nova tentativa depois de 5 segundos, sem ultrapassar 60
+segundos desde o deploy. Qualquer 200, resposta funcional, corpo inesperado,
+outro status, header divergente, erro não reconhecido ou diferença no plano de
+controle é bloqueador, não é repetido e exige reversão. Na próxima tentativa, o
+D1 e o bucket poderão existir vazios por causa dos bindings, mas migrations,
+fixtures e secrets ficarão adiados até a aprovação do portão. A janela pública
+total continua limitada a 20 minutos, com remoção do Worker antes do
+armazenamento.
+
+Foram adicionadas provas locais de aprovação, HTTP 523, DNS/conexão/TLS, asset
+200, resposta inesperada, versão ativa em 100%, retry de 5 segundos e limite de
+60 segundos. TypeScript, build e dry-run passaram; os 44 testes JavaScript e 63
+testes TypeScript passaram, totalizando 107. O lint do código rastreado passou
+sem erros e manteve os dois avisos históricos de `<img>` ao excluir explicitamente
+`.wrangler`; sem essa exclusão adicional, o comando também percorre um bundle
+remoto ignorado e preexistente em `.wrangler/` e falha em código gerado. Não
+houve consulta ou mutação na Cloudflare, deploy, migration remota, commit ou push
+nesta correção. A próxima ação concreta é revisar o diff e os resultados locais;
+qualquer nova prova remota continua bloqueada até autorização explícita.
+
 ## Marco 6.3B — ensaio remoto planejado e bloqueado
 
-O plano operacional do primeiro ensaio remoto foi registrado em
+O plano operacional do ensaio remoto isolado foi registrado em
 `docs/MARCO_6_3B_ENSAIO_REMOTO.md`. O Worker candidato será validado somente
 em um endereço isolado de `workers.dev`, com D1, R2, duas lojas e duas
 identidades, todos exclusivamente sintéticos. O checkpoint Sites continuará
@@ -177,13 +229,14 @@ seguinte. Billing inesperado, destino ambíguo, diferença no artefato, secret
 exposto, falha de autenticação, IDOR ou vigésima quinta transformação de imagem
 interrompem o marco.
 
-Esta etapa alterou somente documentação no Git. Não houve deploy, migration,
-criação de recurso, configuração de secret, rota, domínio, dado remoto ou
-operação mutável na Cloudflare. O Marco 6.3B continua bloqueado.
+Na etapa original de planejamento, somente a documentação no Git foi alterada.
+Não houve naquele momento deploy, migration, criação de recurso, configuração
+de secret, rota, domínio, dado remoto ou operação mutável na Cloudflare. O
+Marco 6.3B continua bloqueado depois das tentativas revertidas descritas acima.
 
-A próxima ação concreta é solicitar a autorização A0 e, somente depois,
-inventariar em modo de leitura a conta, o nome do Worker, D1, R2, bindings,
-billing e ausência de rota de produção. Nenhuma mutação faz parte de A0.
+A próxima ação concreta permanece revisar o executor e o plano determinísticos;
+uma nova tentativa remota exige autorização separada e deve reiniciar pelo
+inventário somente leitura.
 
 ## Marco 6.3A — pacote para Worker direto encerrado
 
