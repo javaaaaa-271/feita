@@ -1,8 +1,50 @@
 # Handoff atual
 
-Atualizado em: **10 de agosto de 2026**
+Atualizado em: **18 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
+
+## Marco 6.3B — A0 revalidado e A1 concluído
+
+Em **18 de agosto de 2026**, o inventário A0 foi repetido em modo somente
+leitura antes de qualquer criação. A `main` estava limpa e sincronizada em
+`aad4dccaecf064b7b9c2daf5c59b2a05d4917696`; `workers.dev` continuava
+configurado; o nome datado do Worker estava livre; e a conta não continha
+Worker, projeto Pages, D1, bucket R2, domínio, zona ou rota de produção. Os
+recursos físicos do checkpoint Sites continuaram externos e intocáveis para o
+ensaio.
+
+O estado de custo também foi revalidado sem alteração: `Workers Free` e
+`R2 Paid` estavam ativos, havia uma forma de pagamento principal cadastrada e
+o painel não mostrava uso faturável no período. Images permanecia no plano
+gratuito, com 5 de 5.000 transformações únicas usadas. Nenhum detalhe de conta,
+pagamento, credencial ou identificador remoto foi registrado no repositório.
+
+Depois da autorização A1, foram criados exclusivamente o D1
+`feita-ensaio-6-3b-db-20260818` e o bucket R2 Standard
+`feita-ensaio-6-3b-images-20260818`, ambos na região ENAM. O D1 terminou com
+zero tabelas de aplicação. O R2 terminou com zero objetos e zero bytes. A
+configuração local não versionada ficou em
+`.wrangler/marco-6-3b-20260818/wrangler.generated.jsonc` e contém exatamente
+`ASSETS`, `DB`, `STORE_IMAGES` e `IMAGES`, com Static Assets passando primeiro
+pelo Worker. Nenhuma variável funcional ou secret foi configurado.
+
+Não foi criado nem publicado Worker. Não houve migration, fixture, identidade,
+loja, produto, upload, transformação, requisição funcional, rota, domínio ou
+alteração no checkpoint Sites. Os recursos vazios permanecem isolados na conta;
+qualquer limpeza deles continua dependente da autorização A3.
+
+Antes do A1, TypeScript, build, dry-run e os 107 testes passaram novamente. O
+lint do código rastreado passou sem erros e preservou os dois avisos históricos
+de `<img>` ao excluir `.wrangler`; o comando padrão continua percorrendo o
+bundle remoto ignorado e preexistente nessa pasta, conforme a ressalva já
+registrada. A árvore versionada permaneceu limpa até o registro deste handoff.
+
+A próxima ação concreta é obter autorização A2 separada para publicar o Worker
+fechado, confirmar a versão ativa em 100% e aprovar o portão determinístico
+antes de instalar secrets, aplicar migrations ou carregar fixtures. Essa
+autorização precisa incluir a remoção imediata somente do Worker de ensaio se o
+portão for bloqueador; D1 e R2 continuam sob o portão A3.
 
 ## Marco 6.3B — inventário A0 concluído
 
