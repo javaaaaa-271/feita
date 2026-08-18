@@ -4,6 +4,104 @@ Atualizado em: **18 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
+## Marco 6.3B — A3 concluído e recursos removidos
+
+Em **18 de agosto de 2026**, o A3 foi executado depois de uma nova prova
+somente leitura dos alvos. O D1 continha exclusivamente duas identidades com
+e-mails sintéticos, duas lojas marcadas como fixtures, três produtos, dois
+convites, duas memberships e o contador do ensaio. Não havia identidade ou
+loja fora da fixture, nem linha de mídia. O bucket R2 tinha zero objetos e zero
+bytes. O Worker tinha somente os três secrets do ensaio, a versão aprovada em
+100% e nenhum domínio ou rota de produção.
+
+A limpeza respeitou a ordem de contenção do plano:
+
+1. o Worker `feita-ensaio-6-3b-20260818` foi removido sem `force`; consultas
+   posteriores de deployment e secrets confirmaram sua ausência;
+2. o bucket vazio `feita-ensaio-6-3b-images-20260818` foi removido e deixou de
+   aparecer no inventário R2;
+3. o D1 sintético `feita-ensaio-6-3b-db-20260818` foi removido e deixou de
+   aparecer no inventário D1;
+4. a configuração local, a credencial criptografada, os tokens/fixtures e os
+   executores temporários do ensaio foram apagados da pasta ignorada.
+
+Restam localmente apenas bundles de dry-run ignorados e sem secrets, tokens ou
+fixtures. Eles não apontam mais para recursos existentes e não fazem parte do
+Git. O checkpoint Sites, `.openai/hosting.json`, domínio e DNS permaneceram
+inalterados durante todo o A3.
+
+O estado remoto final do Marco 6.3B é: **Worker ausente, secrets ausentes, D1
+ausente e R2 ausente**. A limpeza é irreversível e as fixtures não precisam ser
+preservadas. O resultado técnico do A2 continua incompleto pelas provas de OTP,
+WebP estático e limite remoto de 200 MiB descritas abaixo; uma nova tentativa
+exige novos A0, A1 e A2, provedor de e-mail funcional e orçamento remoto novo.
+
+## Marco 6.3B — A2 executado, protegido e ainda incompleto
+
+Em **18 de agosto de 2026**, o A2 autorizado foi executado no Worker, D1 e R2
+isolados criados no A1. O candidato corresponde à `main` em `b655601`, cujo
+único avanço sobre o commit técnico `aad4dcc` é documental. O Worker enviado
+foi o bundle reproduzível do dry-run, com SHA-256
+`982d63b7ed6f6790d4aa86a848535d00d46879b98dd52a2f088629f14119a50d`.
+O checkpoint Sites e `.openai/hosting.json` permaneceram inalterados.
+
+Antes do deploy, TypeScript, build, dry-run, `git diff --check` e os 107 testes
+passaram. O lint limitado ao código rastreado passou com zero erros e os dois
+avisos históricos de `<img>`. O comando padrão voltou a percorrer bundles
+ignorados sob `.wrangler` e relatou os mesmos erros de código gerado já
+documentados; isso não alterou o artefato nem o repositório.
+
+O primeiro deploy foi feito sem o segredo de acesso e com exatamente
+`ASSETS`, `DB`, `STORE_IMAGES` e `IMAGES`. O portão fechado passou na primeira
+tentativa: uma única versão recebeu 100% do tráfego e a rota ausente e o
+favicon devolveram o mesmo 404 genérico de 36 bytes, com SHA-256
+`3ce449faa21ba126b9f71ee6821129fb64cbbcde364ca4a2f84ce5e96302fcce`,
+`Cache-Control: private, no-store` e HSTS. Nenhum binding foi alcançado. Depois
+foram instalados três secrets exclusivos e duas origens exatas; o deploy
+protegido continuou em versão única a 100% e o mesmo portão sem segredo passou
+novamente na primeira tentativa.
+
+As três migrations versionadas foram aplicadas somente no D1 inventariado.
+Foram criadas duas lojas, dois convites, duas identidades e dois produtos
+iniciais exclusivamente sintéticos. Os dois convites foram aceitos pela
+aplicação; nenhum hash de senha foi inserido manualmente. A matriz remota
+aprovou:
+
+- barreira ausente ou incorreta e Static Assets protegido;
+- login sem enumeração, cookie `HttpOnly`, `Secure`, `SameSite=Lax` e sem
+  `Domain`, origem hostil recusada, cadastro público fechado e logout com
+  revogação efetiva;
+- memberships com zero, uma e múltiplas lojas, sem seleção implícita;
+- catálogo criado, editado e relido com persistência;
+- IDOR A → B e B → A para lista, leitura, mutação e upload;
+- JPEG e PNG estáticos transformados em WebP, mídia pública somente vinculada,
+  substituição com revogação da URL anterior e remoção com 404 posterior;
+- SVG, GIF/WebP/APNG animados, arquivo falso, truncado, pixels excessivos e
+  corpo acima de 8 MiB recusados;
+- limite concorrente encerrado em exatamente 25 reservas e a tentativa seguinte
+  recusada com 429; o D1 terminou com 25 tentativas e 235.102 bytes;
+- rate limit remoto em 429 e vitrine contendo somente o produto da loja certa.
+
+O R2 terminou novamente vazio, com zero objetos e zero bytes, e não restou
+linha de mídia vinculada. Foram produzidas duas transformações remotas válidas.
+O D1 preserva somente fixtures sintéticas: duas lojas, duas identidades, três
+produtos e duas memberships finais usadas para provar os estados zero e
+múltiplo. Nenhum dado real, domínio, rota, DNS ou recurso Sites foi usado.
+
+O resultado do A2 é **incompleto, não uma reprovação de isolamento**. A resposta
+de recuperação permaneceu genérica para e-mail existente ou ausente, mas não
+há provedor `RESEND` configurado e nenhum OTP foi entregue a uma caixa
+controlada. O WebP estático válido e o limite acumulado de 200 MiB também não
+foram repetidos remotamente depois que o orçamento inviolável de 25 tentativas
+foi atingido; ambos continuam cobertos apenas pela matriz local. Por isso o
+Marco 6.3B não pode ser marcado como aprovado.
+
+O portão fechado nunca falhou, portanto a autorização condicional de remoção
+do Worker não foi acionada durante o A2. Naquele encerramento, Worker, D1, R2,
+secrets e fixtures foram preservados atrás da barreira até a autorização A3.
+Nenhum valor de credencial foi registrado no Git ou neste handoff. O estado
+posterior e definitivo desses recursos está registrado na seção A3 acima.
+
 ## Marco 6.3B — A0 revalidado e A1 concluído
 
 Em **18 de agosto de 2026**, o inventário A0 foi repetido em modo somente
