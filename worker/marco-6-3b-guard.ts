@@ -1,4 +1,6 @@
 export const MARCO_6_3B_SECRET_HEADER = "x-feita-ensaio-secret";
+export const SITES_AUTHENTICATED_USER_ID_HEADER =
+  "oai-authenticated-user-id";
 export const MARCO_6_3B_MINIMUM_SECRET_BYTES = 32;
 export const MARCO_6_3B_MAX_UPLOAD_ATTEMPTS = 25;
 export const MARCO_6_3B_MAX_UPLOAD_BYTES = 200 * 1024 * 1024;
@@ -10,6 +12,7 @@ const PRODUCT_IMAGE_UPLOAD_PATH =
 
 type TrialGuardEnvironment = {
   DB: D1Database;
+  FEITA_PRIVATE_PREVIEW_USER_ID?: string;
   MARCO_6_3B_ACCESS_SECRET?: string;
 };
 
@@ -25,12 +28,18 @@ export async function guardMarco63BRequest(
     return { request: withoutTrialSecret(request) };
   }
 
-  if (
-    !(await secretsMatch(
+  const [hasTrialSecret, hasPrivatePreviewIdentity] = await Promise.all([
+    secretsMatch(
       environment.MARCO_6_3B_ACCESS_SECRET,
       request.headers.get(MARCO_6_3B_SECRET_HEADER),
-    ))
-  ) {
+    ),
+    secretsMatch(
+      environment.FEITA_PRIVATE_PREVIEW_USER_ID,
+      request.headers.get(SITES_AUTHENTICATED_USER_ID_HEADER),
+    ),
+  ]);
+
+  if (!hasTrialSecret && !hasPrivatePreviewIdentity) {
     return { response: deniedResponse() };
   }
 

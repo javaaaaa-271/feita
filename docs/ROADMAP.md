@@ -54,8 +54,8 @@ Objetivo: deixar de ser demonstração e virar sistema utilizável.
 - [x] permissões básicas — `store_owner` e `platform_admin` no vínculo;
 - [x] estados vazios, erros e carregamento — fluxos de autenticação;
 - [x] landing pública e cadastro por OTP — concluídos localmente; entrega real
-  em caixa controlada e Turnstile server-side provados; domínio/remetente
-  próprios, configuração hospedada e publicação pendentes;
+  em caixa controlada e Turnstile server-side provados; checkpoint privado
+  publicado; domínio/remetente próprios e liberação navegável pendentes;
 
 Critério de saída: duas lojas diferentes conseguem usar o sistema sem acessar
 os dados uma da outra, e nada desaparece ao recarregar.

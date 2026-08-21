@@ -34,10 +34,13 @@ recuperação. A validação server-side ocorre antes de Better Auth e do acesso
 D1, rejeita token ausente, grande, reutilizado, com `action` ou hostname
 divergentes e falha fechada fora de loopback quando as chaves reais não estão
 configuradas. O widget de produção foi provisionado em modo gerenciado e
-limitado ao hostname atual, mas suas chaves ainda não estão no ambiente
-hospedado e esse código não foi publicado. O fluxo continua bloqueado para
-produção até domínio/remetente próprios no Resend, secrets hospedados,
-migrations, publicação controlada e nova prova remota de autenticação e IDOR.
+limitado ao hostname atual. Código, secrets e migrations foram publicados
+somente no checkpoint privado do Sites, ainda atrás do portão secreto do
+ensaio. A prova remota confirmou falha fechada, páginas com o secret, schema
+completo, sessão anônima e rejeições genéricas sem criar conta ou loja. O fluxo
+continua bloqueado para produção pública até domínio/remetente próprios no
+Resend, decisão explícita sobre o portão navegável e nova prova remota completa
+de autenticação e IDOR.
 
 O checkpoint hospedado está atrás da política `custom` do Sites, restrita a
 Lorenzo. `app/chatgpt-auth.ts` oferece helpers para headers da identidade do
@@ -154,6 +157,19 @@ barreira de publicação, não uma verificação opcional.
   Git, logs ou documentação;
 - permitir em CSP somente `https://challenges.cloudflare.com` para o script e
   o frame do desafio.
+
+### Prévia privada no Sites
+
+- manter o projeto com acesso `custom`, um único proprietário, zero visitantes
+  externos e nenhum grupo;
+- guardar o ID permitido somente como secret hospedado, sem registrá-lo na
+  fonte ou em documentação;
+- aceitar navegação sem o header técnico apenas quando
+  `oai-authenticated-user-id` coincide exatamente com esse ID;
+- manter falha `404` para identidade ausente ou divergente;
+- preservar o secret técnico e os limites do ensaio como caminho independente
+  para provas automatizadas;
+- revalidar a política do Sites antes de cada publicação privada.
 
 ### Enumeração de usuários
 
