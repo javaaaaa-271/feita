@@ -1,0 +1,56 @@
+.page { min-height: 100svh; background: #f7f3ec; color: #251f1b; }
+.header { width: min(1040px, calc(100% - 36px)); min-height: 76px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(77,59,48,.15); }
+.brand { display: inline-flex; align-items: center; gap: 9px; color: inherit; font-size: 1.32rem; font-weight: 850; letter-spacing: -.05em; text-decoration: none; }
+.brand span { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 9px; background: #813c2d; color: #fffaf4; font-size: 1rem; }
+.back { color: #5f554f; font-size: .82rem; font-weight: 730; text-decoration: none; }
+.intro { width: min(1040px, calc(100% - 36px)); margin: 0 auto; padding: 78px 0 64px; border-bottom: 1px solid rgba(77,59,48,.15); }
+.eyebrow { margin: 0 0 15px; color: #813c2d; font-size: .72rem; font-weight: 840; letter-spacing: .13em; text-transform: uppercase; }
+.intro h1 { max-width: 780px; margin: 0; font-size: clamp(3rem, 6vw, 5.4rem); line-height: .96; letter-spacing: -.06em; text-wrap: balance; }
+.intro > p:not(.eyebrow) { max-width: 690px; margin: 26px 0 0; color: #655a53; font-size: 1.08rem; line-height: 1.7; }
+.draftNotice { max-width: 760px; margin-top: 34px; padding: 18px 20px; display: grid; grid-template-columns: 150px 1fr; gap: 20px; border-left: 3px solid #813c2d; background: rgba(255,255,255,.42); }
+.draftNotice strong { font-size: .82rem; }
+.draftNotice span { color: #6c625b; font-size: .8rem; line-height: 1.55; }
+.content { width: min(1040px, calc(100% - 36px)); margin: 0 auto; display: grid; grid-template-columns: 190px minmax(0, 700px); justify-content: space-between; gap: 72px; padding: 70px 0 90px; }
+.index { position: sticky; top: 28px; align-self: start; display: grid; gap: 15px; }
+.index > span { color: #8a8079; font-size: .68rem; font-weight: 780; letter-spacing: .1em; text-transform: uppercase; }
+.index nav { display: grid; }
+.index a { padding: 9px 0; border-bottom: 1px solid rgba(77,59,48,.12); color: #4f4742; font-size: .8rem; font-weight: 680; text-decoration: none; }
+.document { min-width: 0; }
+.document section { scroll-margin-top: 28px; padding: 0 0 64px; }
+.document section + section { padding-top: 64px; border-top: 1px solid rgba(77,59,48,.15); }
+.sectionNumber { margin: 0 0 15px; color: #813c2d; font-family: var(--font-geist-mono); font-size: .7rem; }
+.document h2 { margin: 0 0 24px; font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1; letter-spacing: -.05em; }
+.document h3 { margin: 34px 0 10px; font-size: 1rem; }
+.document p, .document li { color: #5f554f; font-size: .94rem; line-height: 1.75; }
+.document p { margin: 0 0 17px; }
+.document ul { margin: 10px 0 22px; padding-left: 20px; }
+.document li + li { margin-top: 8px; }
+.document strong { color: #302925; }
+.document a { color: #813c2d; text-underline-offset: 3px; }
+.channel { margin-top: 28px; padding: 22px; border: 1px solid #d7cabe; border-radius: 12px; background: #fffdf9; }
+.channel p { margin: 8px 0 0; }
+.footer { width: min(1040px, calc(100% - 36px)); margin: 0 auto; padding: 28px 0 36px; display: flex; justify-content: space-between; gap: 24px; border-top: 1px solid rgba(77,59,48,.15); color: #7b716a; font-size: .74rem; }
+.footer a { color: #813c2d; font-weight: 760; text-decoration: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  .back:hover, .index a:hover, .footer a:hover { color: #813c2d; }
+}
+
+@media (max-width: 760px) {
+  .header { min-height: 68px; }
+  .intro { padding: 56px 0 48px; }
+  .intro h1 { font-size: clamp(2.8rem, 14vw, 4.4rem); }
+  .draftNotice { grid-template-columns: 1fr; gap: 8px; }
+  .content { grid-template-columns: 1fr; gap: 48px; padding-top: 48px; }
+  .index { position: static; }
+  .index nav { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 18px; }
+  .document section { padding-bottom: 48px; }
+  .document section + section { padding-top: 48px; }
+  .footer { flex-direction: column; }
+}
+
+@media (max-width: 440px) {
+  .brand { font-size: 0; }
+  .back { font-size: .76rem; }
+  .index nav { grid-template-columns: 1fr; }
+}

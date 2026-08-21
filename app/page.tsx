@@ -24,36 +24,48 @@ export default function LandingPage() {
 
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>Sua vitrine. Seus pedidos. Tudo no lugar.</p>
-          <h1>Venda pelo WhatsApp sem se perder no WhatsApp.</h1>
+          <p className={styles.eyebrow}>Feita para quem vende pelo WhatsApp</p>
+          <h1>Organize seus produtos. Receba pedidos sem bagunça.</h1>
           <p className={styles.lead}>
-            A Feita organiza seus produtos em uma vitrine bonita e transforma a
-            escolha da cliente em um pedido fácil de conferir.
+            Sua cliente escolhe pela vitrine. Você recebe o pedido pronto para
+            conferir e continuar a conversa no WhatsApp.
           </p>
           <div className={styles.actions}>
-            <Link className={styles.primary} href="/cadastro">Criar minha loja</Link>
-            <Link className={styles.secondary} href="/demonstracao">Ver demonstração</Link>
+            <Link className={styles.primary} href="/cadastro">Criar minha vitrine</Link>
+            <Link className={styles.secondary} href="/demonstracao">
+              Explorar demonstração <span aria-hidden="true">→</span>
+            </Link>
           </div>
           <p className={styles.assurance}>Comece grátis para testar. Sem cartão agora.</p>
         </div>
 
-        <div className={styles.preview} aria-label="Exemplo de pedido organizado na Feita">
-          <div className={styles.previewTop}>
-            <div><span>EM</span><strong>Estúdio Manacá</strong></div>
-            <small>Pedido 04</small>
+        <div className={styles.previewShell} aria-label="Exemplo de pedido organizado na Feita">
+          <div className={styles.previewHeading}>
+            <div>
+              <span className={styles.statusDot} aria-hidden="true" />
+              <strong>Pedido pronto</strong>
+            </div>
+            <span>Hoje, 14:32</span>
           </div>
-          <div className={styles.product}>
-            <div className={styles.productArt}>CA</div>
-            <div><strong>Caderno Aurora</strong><span>Terracota · 2 unidades</span></div>
-            <b>R$ 118,80</b>
+          <div className={styles.preview}>
+            <div className={styles.previewTop}>
+              <div><span>EM</span><strong>Estúdio Manacá</strong></div>
+              <small>Pedido 04</small>
+            </div>
+            <div className={styles.product}>
+              <div className={styles.productArt}>CA</div>
+              <div><strong>Caderno Aurora</strong><span>Terracota · 2 unidades</span></div>
+              <b>R$ 118,80</b>
+            </div>
+            <div className={styles.product}>
+              <div className={`${styles.productArt} ${styles.green}`}>BS</div>
+              <div><strong>Bloco Semanal</strong><span>Verde oliva · 1 unidade</span></div>
+              <b>R$ 28,00</b>
+            </div>
+            <div className={styles.total}><span>Total do pedido</span><strong>R$ 146,80</strong></div>
+            <div className={styles.whatsapp}>Continuar pelo WhatsApp <span>→</span></div>
           </div>
-          <div className={styles.product}>
-            <div className={`${styles.productArt} ${styles.green}`}>BS</div>
-            <div><strong>Bloco Semanal</strong><span>Verde oliva · 1 unidade</span></div>
-            <b>R$ 28,00</b>
-          </div>
-          <div className={styles.total}><span>Total do pedido</span><strong>R$ 146,80</strong></div>
-          <div className={styles.whatsapp}>Continuar pelo WhatsApp <span>→</span></div>
+          <p className={styles.previewNote}>A cliente montou este pedido pela sua vitrine.</p>
         </div>
       </section>
 
@@ -82,9 +94,21 @@ export default function LandingPage() {
       </section>
 
       <footer className={styles.footer}>
-        <span>feita</span>
-        <p>Seu negócio, em ordem.</p>
-        <Link href="/entrar">Já tenho acesso</Link>
+        <div className={styles.footerBrand}>
+          <span>feita</span>
+          <p>Seu negócio, em ordem.</p>
+        </div>
+        <nav className={styles.footerLinks} aria-label="Transparência e informações legais">
+          <Link href="/transparencia#privacidade">Privacidade</Link>
+          <Link href="/transparencia#termos">Termos de uso</Link>
+          <Link href="/transparencia#cookies">Cookies</Link>
+          <Link href="/transparencia#seguranca">Segurança</Link>
+          <Link href="/transparencia#direitos">Seus direitos</Link>
+        </nav>
+        <div className={styles.footerAccess}>
+          <span>Versão privada de validação</span>
+          <Link href="/entrar">Já tenho acesso</Link>
+        </div>
       </footer>
     </main>
   );

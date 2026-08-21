@@ -177,7 +177,7 @@ test("segredo do ensaio é removido antes de ASSETS.fetch", async () => {
   assert.equal(receivedSecret, null);
 });
 
-test("renders product metadata in Brazilian Portuguese", async () => {
+test("renders the landing promise and product metadata in Brazilian Portuguese", async () => {
   const worker = await loadWorker();
 
   const response = await worker.fetch(
@@ -196,10 +196,37 @@ test("renders product metadata in Brazilian Portuguese", async () => {
   const html = await response.text();
   assert.match(html, /<html[^>]*\blang=["']pt-BR["']/i);
   assert.match(html, /<title>Feita — seu negócio, em ordem<\/title>/i);
-  assert.match(html, /Venda pelo WhatsApp sem se perder no WhatsApp/i);
+  assert.match(html, /Organize seus produtos\. Receba pedidos sem bagunça\./i);
+  assert.match(html, /Pedido pronto/i);
   assert.match(html, /href="\/cadastro"/i);
+  assert.match(html, /href="\/transparencia#privacidade"/i);
+  assert.match(html, /href="\/transparencia#direitos"/i);
   assert.doesNotMatch(html, /\bcodex-preview\b/i);
+  assert.doesNotMatch(html, /100% LGPD|certificad[oa] pela LGPD/i);
   assert.doesNotMatch(html, /Caderno Jardim|Planner Semanal|Cartão Presente/i);
+});
+
+test("renders the transparency center without claiming an official LGPD seal", async () => {
+  const worker = await loadWorker();
+  const response = await worker.fetch(
+    trialRequest("http://localhost/transparencia", {
+      headers: { accept: "text/html" },
+    }),
+    workerEnvironment(),
+    executionContext(),
+  );
+
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /Como a Feita cuida dos dados/i);
+  assert.match(html, /id="privacidade"/i);
+  assert.match(html, /id="termos"/i);
+  assert.match(html, /id="cookies"/i);
+  assert.match(html, /id="seguranca"/i);
+  assert.match(html, /id="direitos"/i);
+  assert.match(html, /não grava pedidos nem cadastros de clientes no servidor/i);
+  assert.match(html, /não credencia empresas privadas/i);
+  assert.doesNotMatch(html, /100% LGPD|selo oficial da Feita|certificad[oa] pela LGPD/i);
 });
 
 test("adds browser hardening headers to application responses", async () => {

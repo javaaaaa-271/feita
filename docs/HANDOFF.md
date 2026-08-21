@@ -4,6 +4,74 @@ Atualizado em: **21 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
+## Centro de transparência e rodapé legal
+
+Em **21 de agosto de 2026**, a landing recebeu links funcionais para
+Privacidade, Termos de uso, Cookies, Segurança e Direitos. Todos apontam para o
+novo `/transparencia`, que funciona como um centro único e direto durante a
+validação do produto.
+
+O texto descreve somente o comportamento comprovado na fonte atual: conta,
+sessão, loja, catálogo e imagens podem ser persistidos; o carrinho fica no
+navegador da cliente; nome, endereço, pagamento e observações apenas compõem a
+mensagem revisada no navegador e não são gravados pelo servidor. A passagem
+para o WhatsApp acontece somente depois de uma ação explícita da cliente.
+
+A página identifica Cloudflare, Resend e WhatsApp, explica cookies essenciais e
+`localStorage`, lista direitos dos titulares e resume os controles técnicos já
+provados. Também informa expressamente que não existe certificação ou selo
+oficial da Feita perante a ANPD. Nenhuma razão social, CNPJ, domínio, prazo de
+retenção ou canal oficial foi inventado: esses itens aparecem como pendências
+antes da abertura pública e o e-mail pessoal do proprietário não foi exposto.
+
+Um teste novo prova as cinco seções, a descrição de que pedidos não são
+persistidos e a ausência de alegações como `100% LGPD`. O teste da landing
+também cobre os links do rodapé. O lint terminou sem erros e manteve somente os
+dois avisos históricos de `<img>`. O build Sites foi validado e a suíte completa
+passou com **130 testes** (46 JS + 84 TS). `git diff --check` também passou.
+
+A versão Sites associada a este estado é a **11**, preservando o acesso privado
+exclusivo do proprietário. Antes da abertura pública ainda são obrigatórios:
+definição da pessoa jurídica responsável, domínio próprio, canal de privacidade,
+política de retenção, contratos com operadores e revisão jurídica final.
+
+## Landing — direção visual mais humana e precisa
+
+Em **21 de agosto de 2026**, a primeira dobra da landing foi retrabalhada para
+reduzir a aparência genérica de SaaS e eliminar a inclinação que deixava o
+exemplo de pedido visualmente instável. O `rotate(1.1deg)` e o selo flutuante
+foram removidos; o pedido agora usa uma grade reta, borda mais contida, sombra
+curta e uma linha de status alinhada ao conteúdo.
+
+A promessa principal passou a ser `Organize seus produtos. Receba pedidos sem
+bagunça.`. A ação dominante é `Criar minha vitrine`; a demonstração virou um
+link secundário. A microinteração ficou restrita ao feedback de pressão e ao
+deslocamento curto da seta em dispositivos com mouse, com propriedades
+explícitas, curva forte de saída e `prefers-reduced-motion`. Não há movimento
+decorativo contínuo nem animação de entrada.
+
+O pacote público `emilkowalski/skills` foi instalado localmente para as próximas
+sessões. Seus princípios de hierarquia, resposta imediata, movimento com
+propósito e detalhes coerentes orientaram a revisão, sem copiar marca, código ou
+identidade visual externa. A fonte continua sendo a identidade própria da
+Feita.
+
+A prévia local foi conferida visualmente em desktop, com o cartão reto e sem
+quebras ou sobreposição na primeira dobra. Os breakpoints de celular foram
+ajustados no CSS, mas a automação visual disponível nesta sessão não permitiu
+redimensionar o viewport para uma captura móvel; essa conferência física ainda
+deve ser repetida antes de publicar.
+
+O lint terminou sem erros e manteve somente os dois avisos históricos de
+`<img>` na demonstração. O build Sites foi validado e a suíte completa passou
+com **129 testes** (45 JS + 84 TS), incluindo a expectativa atualizada para a
+nova promessa e o estado `Pedido pronto`. `git diff --check` também passou.
+
+Esta revisão está somente na fonte local: não foi commitada nem publicada. A
+próxima ação concreta é o proprietário aprovar a composição na prévia local,
+conferi-la em um celular e então decidir se ela entra no próximo commit e na
+versão hospedada.
+
 ## Prévia privada navegável — autorização do proprietário
 
 Em **21 de agosto de 2026**, o proprietário autorizou substituir, somente para
