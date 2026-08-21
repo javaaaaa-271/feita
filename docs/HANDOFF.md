@@ -4,6 +4,41 @@ Atualizado em: **21 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
+## Marco 8 — publicação privada e prova remota parcial
+
+Em **21 de agosto de 2026**, o candidato do Marco 8 foi salvo como versão 8 e
+publicado no projeto Sites existente, preservando o acesso `custom` restrito
+exclusivamente ao proprietário. A revisão hospedada de ambiente entrou em
+vigor com Better Auth, rate limit, Resend de teste, Turnstile e o portão do
+ensaio configurados; todos os valores sensíveis permanecem como secrets do
+runtime e fora do Git, logs e documentação.
+
+As migrations hospedadas criaram as 14 tabelas esperadas. Depois da publicação,
+`user`, `stores`, `store_memberships`, `products`, `session` e `verification`
+continuavam vazias. As únicas escritas da prova foram registros técnicos de
+rate limit produzidos por uma tentativa de login com identidade sintética; não
+houve conta, loja, sessão, OTP ou produto criado.
+
+O portão remoto respondeu `404`, `Cache-Control: private, no-store` e HSTS sem
+o secret. Com o secret correto, `/` e `/cadastro` responderam `200`, e o HTML do
+cadastro recebeu a site key hospedada. A sessão anônima respondeu `200` sem
+identidade; login sintético incorreto respondeu `401` sem repetir o e-mail; e
+signup e recuperação sem token Turnstile responderam `403` antes de mutações.
+Os logs recentes do Worker não continham erros.
+
+A publicação ainda não está liberada para uso público nem marcada como prova
+remota completa. O portão do ensaio continua impedindo navegação comum, e a
+matriz de cadastro real, cookies, logout, recuperação, duas lojas e IDOR exige
+uma sessão de navegador controlada que apresente esse header. Remover ou trocar
+essa barreira por acesso privado do Sites é uma decisão de segurança separada.
+Também falta escolher e registrar um domínio da Feita: `unitickets.com.br`, o
+único domínio cadastrado no Resend, retorna domínio inexistente no DNS.
+
+A próxima decisão concreta é escolher entre manter o checkpoint fechado para
+ensaio técnico ou autorizar uma prévia privada navegável, protegida pelo acesso
+do Sites, para concluir o fluxo real no navegador. Em qualquer dos casos,
+domínio e remetente próprios continuam obrigatórios antes de acesso público.
+
 ## Marco 8 — Turnstile local e widget de produção
 
 Em **21 de agosto de 2026**, o cadastro público, o reenvio do código de
