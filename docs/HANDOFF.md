@@ -14,17 +14,18 @@ runtime. Identidade ausente ou divergente continua recebendo o mesmo `404`; o
 secret técnico, o bloqueio do otimizador e o orçamento de uploads permanecem
 ativos.
 
-Dois testes novos cobrem liberação da identidade exata e falha fechada para
-identidade ausente ou diferente. A suíte completa passou com **127 testes**
-(45 JS + 82 TS), o lint terminou sem erros e com os dois avisos históricos de
+Quatro testes novos cobrem liberação por ID e e-mail exatos e falha fechada para
+identidade ausente ou diferente. A suíte completa passou com **129 testes**
+(45 JS + 84 TS), o lint terminou sem erros e com os dois avisos históricos de
 `<img>`, e o build Sites foi validado.
 
 A versão 9 foi publicada no mesmo projeto privado com a revisão 3 das variáveis
-hospedadas. O único ID autorizado foi instalado como secret, sem aparecer na
-fonte. Requisições técnicas que não carregam a identidade assinada do navegador
-continuam recebendo `404`, inclusive quando usam apenas o bypass do Sites; isso
-preserva a falha fechada. A confirmação final do caminho de identidade exige o
-proprietário abrir a prévia autenticada no navegador.
+hospedadas. O primeiro acesso real continuou recebendo `404` porque o ID estável
+enviado ao site não é o mesmo ID administrativo da política de acesso. A versão
+10 corrigiu o caminho usando também o e-mail autenticado exato, normalizado e
+guardado como secret na revisão 4. E-mail ausente ou divergente continua
+falhando fechado. A publicação terminou sem erros de Worker; a confirmação
+visual final depende do proprietário recarregar a prévia autenticada.
 
 O domínio falho `unitickets.com.br` foi removido do Resend com autorização
 explícita. A pesquisa no registrador da Cloudflare encontrou `usefeita.com`

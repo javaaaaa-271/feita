@@ -163,10 +163,11 @@ barreira de publicação, não uma verificação opcional.
 
 - manter o projeto com acesso `custom`, um único proprietário, zero visitantes
   externos e nenhum grupo;
-- guardar o ID permitido somente como secret hospedado, sem registrá-lo na
-  fonte ou em documentação;
+- guardar ID e e-mail permitidos somente como secrets hospedados, sem
+  registrá-los na fonte ou em documentação;
 - aceitar navegação sem o header técnico apenas quando
-  `oai-authenticated-user-id` coincide exatamente com esse ID;
+  `oai-authenticated-user-id` ou `oai-authenticated-user-email` coincide
+  exatamente com a identidade permitida;
 - manter falha `404` para identidade ausente ou divergente;
 - preservar o secret técnico e os limites do ensaio como caminho independente
   para provas automatizadas;
