@@ -158,6 +158,19 @@ barreira de publicação, não uma verificação opcional.
 - permitir em CSP somente `https://challenges.cloudflare.com` para o script e
   o frame do desafio.
 
+### Prévia privada no Sites
+
+- manter o projeto com acesso `custom`, um único proprietário, zero visitantes
+  externos e nenhum grupo;
+- guardar o ID permitido somente como secret hospedado, sem registrá-lo na
+  fonte ou em documentação;
+- aceitar navegação sem o header técnico apenas quando
+  `oai-authenticated-user-id` coincide exatamente com esse ID;
+- manter falha `404` para identidade ausente ou divergente;
+- preservar o secret técnico e os limites do ensaio como caminho independente
+  para provas automatizadas;
+- revalidar a política do Sites antes de cada publicação privada.
+
 ### Enumeração de usuários
 
 Login e recuperação devem responder de forma genérica. O tempo e o formato da

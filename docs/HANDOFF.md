@@ -4,6 +4,27 @@ Atualizado em: **21 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
+## Prévia privada navegável — autorização do proprietário
+
+Em **21 de agosto de 2026**, o proprietário autorizou substituir, somente para
+sua própria conta do Sites, a exigência manual do header do ensaio. O Worker
+passou a aceitar alternativamente o header de identidade autenticada do Sites
+quando ele coincide exatamente com o único ID permitido em um secret do
+runtime. Identidade ausente ou divergente continua recebendo o mesmo `404`; o
+secret técnico, o bloqueio do otimizador e o orçamento de uploads permanecem
+ativos.
+
+Dois testes novos cobrem liberação da identidade exata e falha fechada para
+identidade ausente ou diferente. A suíte completa passou com **127 testes**
+(45 JS + 82 TS), o lint terminou sem erros e com os dois avisos históricos de
+`<img>`, e o build Sites foi validado.
+
+O domínio falho `unitickets.com.br` foi removido do Resend com autorização
+explícita. A pesquisa no registrador da Cloudflare encontrou `usefeita.com`
+disponível por US$ 10,46 no primeiro ano e US$ 10,46 na renovação. A compra não
+foi confirmada nem cobrada; ela exige aprovação do valor final e o cadastro dos
+dados de contato do titular.
+
 ## Marco 8 — publicação privada e prova remota parcial
 
 Em **21 de agosto de 2026**, o candidato do Marco 8 foi salvo como versão 8 e

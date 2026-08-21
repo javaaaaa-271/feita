@@ -13,10 +13,12 @@ import {
   MARCO_6_3B_MAX_UPLOAD_BYTES,
   MARCO_6_3B_SECRET_HEADER,
   reserveMarco63BUpload,
+  SITES_AUTHENTICATED_USER_ID_HEADER,
 } from "../worker/marco-6-3b-guard";
 
 const wranglerExecutable = resolve("node_modules/wrangler/bin/wrangler.js");
 const trialSecret = "local-worker-trial-guard-secret-2026";
+const privatePreviewUserId = "preview-owner-user-id-2026-00000001";
 const uploadURL =
   "https://trial.example.test/api/painel/stores/store-a/products/product-a/image";
 
@@ -158,6 +160,54 @@ test("segredo correto libera rota comum sem consultar o D1 nem repassar o segred
   assert.notEqual(guarded.request, original);
   assert.equal(guarded.request?.headers.get(MARCO_6_3B_SECRET_HEADER), null);
   assert.equal(databaseAccesses, 0);
+});
+
+test("identidade privada exata do Sites libera a prévia sem o secret técnico", async () => {
+  let databaseAccesses = 0;
+  const original = new Request("https://trial.example.test/", {
+    headers: {
+      [SITES_AUTHENTICATED_USER_ID_HEADER]: privatePreviewUserId,
+    },
+  });
+  const guarded = await guardMarco63BRequest(original, {
+    FEITA_PRIVATE_PREVIEW_USER_ID: privatePreviewUserId,
+    MARCO_6_3B_ACCESS_SECRET: trialSecret,
+    get DB(): D1Database {
+      databaseAccesses += 1;
+      throw new Error("DB não deveria ser acessado");
+    },
+  });
+
+  assert.equal(guarded.response, undefined);
+  assert.equal(
+    guarded.request?.headers.get(SITES_AUTHENTICATED_USER_ID_HEADER),
+    privatePreviewUserId,
+  );
+  assert.equal(databaseAccesses, 0);
+});
+
+test("identidade privada ausente ou divergente continua falhando fechada", async () => {
+  for (const suppliedUserId of [undefined, "outro-usuario-privado-000000000001"]) {
+    let databaseAccesses = 0;
+    const guarded = await guardMarco63BRequest(
+      new Request("https://trial.example.test/", {
+        headers: suppliedUserId
+          ? { [SITES_AUTHENTICATED_USER_ID_HEADER]: suppliedUserId }
+          : undefined,
+      }),
+      {
+        FEITA_PRIVATE_PREVIEW_USER_ID: privatePreviewUserId,
+        MARCO_6_3B_ACCESS_SECRET: trialSecret,
+        get DB(): D1Database {
+          databaseAccesses += 1;
+          throw new Error("DB não deveria ser acessado");
+        },
+      },
+    );
+
+    assert.equal(guarded.response?.status, 404);
+    assert.equal(databaseAccesses, 0);
+  }
 });
 
 test("upload individual acima de 8 MiB é recusado antes do D1", async () => {
