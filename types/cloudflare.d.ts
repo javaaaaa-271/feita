@@ -31,6 +31,7 @@ declare module "cloudflare:workers" {
     BETTER_AUTH_URL?: string;
     AUTH_TRUSTED_ORIGINS?: string;
     RATE_LIMIT_HMAC_SECRET?: string;
+    FEITA_PRIVATE_PREVIEW_EMAIL?: string;
     FEITA_PRIVATE_PREVIEW_USER_ID?: string;
     MARCO_6_3B_ACCESS_SECRET?: string;
     RESEND_API_KEY?: string;
