@@ -256,24 +256,30 @@ autorização explícita.
 `app/chatgpt-auth.ts` contém helpers para ler os headers de identidade do Sites,
 mas não é importado por nenhuma rota atual. Portanto, ele não deve ser tratado
 como autorização própria da aplicação; o controle vigente é a política do
-Sites. Antes de um painel administrativo, a Feita ainda precisa implementar
-autenticação e autorização por tenant conforme o ADR.
+Sites. Ele não substitui Better Auth, sessão e autorização por membership já
+implementados para o painel da Feita.
 
 ## Executar localmente
 
-Requisitos: Node.js 22.13 ou superior, npm e Git for Windows. Nesta estação, o
-Git Bash não está no `PATH` padrão do PowerShell, mas os scripts de lint e build
-usam Bash:
+Requisitos: Node.js 22.13 ou superior e npm. Git for Windows também é necessário
+para lint, testes e build. Nesta estação, o Git Bash não está no `PATH` padrão do
+PowerShell, mas o servidor de desenvolvimento não depende dele:
 
 ```powershell
 Set-Location 'C:\Users\USUARIO\Documents\feita'
-$env:Path = 'C:\Program Files\Git\bin;' + $env:Path
 npm install
 npm run db:migrate:local
+npm run store:import -- data/first-store.example.json --apply
 npm run dev
 ```
 
-Use exatamente a URL que o Vite imprimir. Pare com `Ctrl+C`.
+Use exatamente a URL que o Vinext imprimir. Pare com `Ctrl+C`.
+
+Para testar a entrega real do OTP, copie `.dev.vars.example` para `.dev.vars` e
+preencha somente no arquivo local `RESEND_API_KEY` e `RESEND_FROM`. O remetente
+precisa pertencer a um domínio já verificado no Resend. Sem essas variáveis, o
+fluxo não envia e-mail nem imprime o código; a prova automatizada usa captura
+somente em memória. Depois, abra `/cadastro` e conclua conta, código e loja.
 
 ### Validação completa
 

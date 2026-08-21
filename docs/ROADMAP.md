@@ -39,7 +39,8 @@ Objetivo: deixar de ser demonstração e virar sistema utilizável.
 
 - [x] decisão de autenticação e persistência registrada;
 - [x] autenticação — implementada e validada localmente; publicação pendente;
-- [x] empresas e usuários — membership por convite implementado localmente;
+- [x] empresas e usuários — membership por convite e bootstrap público da
+  primeira loja verificada implementados localmente;
 - [ ] banco de dados — D1 local e hospedado provisionados e migrados; operação
   real e administração autenticada pendentes;
 - [ ] armazenamento de imagens — R2 local e hospedado conectados; carga de
@@ -52,6 +53,8 @@ Objetivo: deixar de ser demonstração e virar sistema utilizável.
   localmente com duas lojas fictícias;
 - [x] permissões básicas — `store_owner` e `platform_admin` no vínculo;
 - [x] estados vazios, erros e carregamento — fluxos de autenticação;
+- [x] landing pública e cadastro por OTP — concluídos localmente; Resend real,
+  Turnstile e publicação pendentes;
 
 Critério de saída: duas lojas diferentes conseguem usar o sistema sem acessar
 os dados uma da outra, e nada desaparece ao recarregar.
@@ -115,8 +118,8 @@ Avançar em duas trilhas curtas, sem misturá-las:
 1. observar o uso real da Fase 1 e registrar problemas de clareza;
 2. preparar a fundação segura da Fase 2 com dependências atualizadas, headers e
    decisão explícita de autenticação/banco — concluído;
-3. configurar provedor de e-mail, domínio, remetente e secrets; autorizar a
-   migration hospedada e uma emissão administrativa de convites antes de
-   publicar a fundação Better Auth + D1.
+3. configurar Resend, domínio, remetente, Turnstile e secrets; provar OTP em
+   caixa controlada e autorizar separadamente a migration e a publicação do
+   cadastro Better Auth + D1.
 
 O estado operacional e a sequência detalhada ficam em `docs/HANDOFF.md`.

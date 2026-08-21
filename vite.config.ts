@@ -5,7 +5,7 @@ import { sites } from "./build/sites-vite-plugin";
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 
-export default defineConfig(async () => {
+export default defineConfig(async ({ command }) => {
   // Keep Wrangler and Miniflare state project-local. These are non-secret tool
   // settings; application environment belongs in ignored `.env*` files.
   process.env.WRANGLER_WRITE_LOGS ??= "false";
@@ -28,6 +28,18 @@ export default defineConfig(async () => {
       sites(),
       cloudflare({
         configPath: "./wrangler.jsonc",
+        // In development, Vite must serve source CSS, modules and the HMR
+        // client before the Worker. Production keeps wrangler.jsonc's
+        // run_worker_first=true so the closed trial gate still covers assets.
+        config:
+          command === "serve"
+            ? (workerConfig) => ({
+                assets: {
+                  ...workerConfig.assets,
+                  run_worker_first: false,
+                },
+              })
+            : undefined,
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         inspectorPort: false,
       }),

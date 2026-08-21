@@ -1,8 +1,202 @@
 # Handoff atual
 
-Atualizado em: **18 de agosto de 2026**
+Atualizado em: **21 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
+
+## E-mails transacionais com identidade visual
+
+Em **21 de agosto de 2026**, confirmação de cadastro, recuperação de senha e
+convite passaram a compartilhar um template próprio da Feita. O Resend recebe
+HTML responsivo e fallback em texto simples na mesma requisição. O desenho usa
+uma coluna, fundo creme, terracota, wordmark textual, código como ação dominante
+e aviso de segurança discreto, sem imagens externas, botões decorativos ou
+tokens em links.
+
+O conteúdo dinâmico é escapado antes de entrar no HTML. Códigos de seis dígitos
+mantêm o valor contínuo para não prejudicar cópia e digitação, usando apenas
+espaçamento visual. Os textos informam validade, uso único e o que fazer quando
+a solicitação não veio da destinatária. O convite recebeu o mesmo sistema para
+evitar um terceiro padrão inconsistente.
+
+Foram adicionados quatro testes específicos para HTML responsivo, fallback,
+ausência de URLs com token, textos de segurança, escape contra injeção e payload
+completo enviado ao Resend. A suíte total passou com **120 testes** (45 JS + 75
+TS), o lint terminou com zero erros e somente os dois avisos históricos de
+`<img>`, e o TypeScript passou sem emissão.
+
+Uma recuperação real foi enviada ao iCloud controlado, apareceu com o novo
+preheader e renderizou o HTML na caixa. O único código criado para essa prova
+visual foi invalidado no D1 local logo após a conferência, sem trocar novamente
+a senha da conta. O remetente continua sendo o endereço de testes do Resend;
+domínio e remetente próprios permanecem obrigatórios antes da publicação.
+
+## Prova local real de OTP e primeira loja
+
+Em **21 de agosto de 2026**, a integração local com o Resend foi configurada e
+provada em uma caixa controlada. Foi criada uma chave exclusiva com permissão
+somente de envio; ela, o remetente de teste e novos secrets locais de sessão e
+rate limit ficaram apenas em `.dev.vars`, que permanece ignorado pelo Git.
+Nenhum valor de credencial, OTP ou endereço de e-mail foi registrado na fonte,
+no handoff ou em logs da aplicação.
+
+O cadastro público local enviou o assunto `Confirme seu e-mail na Feita` por
+`Feita <onboarding@resend.dev>`. O painel do Resend marcou a mensagem como
+`Delivered`, e o código recebido foi digitado diretamente pela pessoa na tela
+da Feita. A confirmação abriu a etapa da primeira loja sem expor o código ao
+Codex.
+
+A loja sintética `Vitrine de Teste Feita`, slug
+`vitrine-teste-feita-20260821`, foi criada no D1 local e abriu o catálogo
+autenticado vazio. A inspeção do banco confirmou `published = false`, e-mail
+verificado, uma sessão, role `store_owner`, uma reivindicação única de criação,
+um evento de auditoria e zero produtos. O console da aplicação permaneceu
+limpo; os avisos observados pertenciam exclusivamente a uma extensão do Chrome.
+
+A recuperação de senha também foi provada de ponta a ponta na mesma caixa. A
+primeira tentativa falhou porque o e-mail digitado no formulário não coincidia
+exatamente com o cadastro, e não porque o código estivesse expirado: o D1 ainda
+mostrava o OTP válido, com zero tentativas consumidas. Cinco requisições com o
+e-mail divergente acionaram corretamente o rate limit. Um código que apareceu
+em uma captura de diagnóstico foi imediatamente rotacionado e nunca reutilizado;
+o código novo recebido no iCloud foi usado pela própria pessoa para definir a
+senha final.
+
+O endpoint de redefinição respondeu `200`, a interface confirmou a atualização
+e a inspeção final do D1 encontrou zero sessões anteriores, zero registros
+pendentes de recuperação e uma credencial de senha válida. Portanto, o código
+foi consumido e as sessões abertas antes da troca foram efetivamente revogadas.
+
+Esta prova ainda **não libera publicação**. O único domínio cadastrado no
+Resend está com verificação falha, e `onboarding@resend.dev` serve somente para
+testes destinados à própria conta. Antes de publicar continuam obrigatórios um
+domínio próprio verificado, remetente da Feita, Turnstile validado no servidor,
+secrets hospedados e nova matriz remota de autenticação e IDOR.
+
+A conta e a loja de teste devem ser mantidas para as próximas provas locais;
+qualquer remoção continua exigindo autorização explícita.
+
+## Revisão visual local do Marco 7
+
+Em **21 de agosto de 2026**, a aplicação local foi retomada sem credenciais
+externas e revisada em viewport móvel de 390 × 844. Landing, cadastro, login,
+demonstração e a vitrine sintética `/loja/atelie-aurora` renderizaram com a
+hierarquia, os estados e as ações principais esperadas. A vitrine completou o
+fluxo Caderno Aurora → carrinho → retirada → Pix → revisão da mensagem; o link
+do WhatsApp não foi aberto e nenhuma mensagem foi enviada. O navegador não
+registrou erros nem avisos novos.
+
+Nenhuma conta de teste foi criada nessa revisão para não poluir o D1 local. O
+arquivo `.dev.vars` ainda não existe, portanto a prova de OTP com entrega real
+continua pendente. O servidor de desenvolvimento foi iniciado somente no
+ambiente local e nenhum recurso remoto, Sites, Worker, D1 ou R2 hospedado foi
+alterado.
+
+Passaram `npm run lint` com zero erros e somente os dois avisos históricos de
+`<img>`, `npm test` com **116 testes** (45 JS + 71 TS) e
+`git diff --check`, que exibiu apenas os avisos conhecidos de LF/CRLF no
+Windows. Como os scripts npm dependem de Bash, lint e testes foram executados
+pelo Git Bash já instalado depois de o PowerShell não encontrar `bash` no
+`PATH`.
+
+A próxima ação concreta continua sendo configurar `RESEND_API_KEY` e
+`RESEND_FROM` em `.dev.vars`, com domínio e remetente verificados, e provar o
+cadastro em uma caixa de e-mail controlada. Publicação, migrations remotas e
+secrets hospedados continuam fora de escopo até nova autorização explícita.
+
+## Marco 7 — cadastro público local e primeira loja
+
+Em **18 de agosto de 2026**, foi autorizado e implementado somente no ambiente
+local o primeiro onboarding público da Feita. Nenhum recurso hospedado, domínio,
+Sites, Worker, D1 ou R2 remoto foi criado, migrado ou publicado.
+
+- `/` agora apresenta a proposta da Feita, os três passos do fluxo e chamadas
+  para criar uma loja; o protótipo operacional anterior foi preservado em
+  `/demonstracao`;
+- `/cadastro` conduz conta com senha → OTP de seis dígitos → dados da primeira
+  loja; a confirmação cria a sessão e a loja nasce não publicada;
+- Better Auth exige e-mail verificado para login, armazena o OTP com hash, usa
+  validade de dez minutos, rotação e três tentativas, além de rate limit por IP
+  e digest do e-mail para signup, envio e confirmação;
+- o adaptador Resend passou a enviar o código de verificação quando
+  `RESEND_API_KEY` e `RESEND_FROM` existem; sem ambos, o desenvolvimento não faz
+  requisição de rede nem registra código em log;
+- a criação deriva o usuário exclusivamente da sessão verificada e grava loja,
+  `store_owner`, `store_creation_claims` e auditoria em um único lote D1. A
+  reivindicação única impede duas primeiras lojas concorrentes sem proibir
+  memberships futuras por convite;
+- slugs são normalizados e únicos, o WhatsApp é normalizado para E.164 e
+  conflitos não sobrescrevem outra loja;
+- a migration `0003_awesome_galactus.sql` foi gerada, inspecionada e aplicada
+  somente ao D1 local;
+- a landing recebeu uma imagem social própria em `public/og.png`; vitrines
+  compartilháveis geram metadados próprios e não herdam essa imagem quando não
+  possuem mídia.
+
+A mudança consciente de cadastro por convite para bootstrap público verificado
+está em D-013. Convites continuam sendo o mecanismo para entrar em lojas já
+existentes. A compatibilidade de recuperação de convite usa uma instância de
+Better Auth restrita ao servidor para provar a senha de contas parciais; esse
+handler nunca é exposto como rota pública.
+
+Evidência concluída: TypeScript passou; o lint terminou sem erros e preservou
+somente os dois avisos históricos de `<img>` na demonstração; os 19 testes de
+autenticação cobriram signup → OTP → sessão e uso único do código; os seis
+testes de onboarding provaram lote completo, loja fechada, normalização,
+conflito de slug, segunda loja negada e concorrência sem registro órfão; e
+`npm test` aprovou o build Sites e os **116 testes** completos (45 JS + 71 TS).
+`git diff --check` passou, exibindo apenas avisos de conversão LF/CRLF do Git no
+Windows. As quatro rotas locais `/`, `/cadastro`, `/demonstracao` e `/entrar`
+responderam 200. A vitrine sintética em `/loja/atelie-aurora` emitiu título e
+descrição próprios e não herdou `og.png`; a landing emitiu a imagem social com
+URL absoluta local.
+
+Bloqueios antes de qualquer publicação: verificar domínio e remetente no
+Resend, configurar secrets reais, adicionar e validar Turnstile no servidor,
+provar entrega em caixa controlada e repetir a matriz remota de autenticação e
+IDOR. A próxima ação concreta é o usuário configurar o Resend em `.dev.vars`,
+executar o fluxo em uma caixa própria e autorizar separadamente um novo portão
+de publicação quando essa prova estiver concluída.
+
+## Execução local restaurada no PowerShell
+
+Em **18 de agosto de 2026**, o caminho local foi preparado e provado depois do
+encerramento do A3, sem recriar nem alterar Worker, D1, R2 ou Sites remotos.
+
+- `npm run dev` usa `vinext dev` na porta 5173 e `npm run start` deixou de usar
+  atribuição de variável no formato POSIX, que o PowerShell não reconhece; o
+  próprio `vite.config.ts` já configura o log do Wrangler de modo
+  multiplataforma;
+- no modo de desenvolvimento, os assets passam primeiro pelo Vite para que CSS,
+  módulos do navegador e HMR sejam servidos; build e produção continuam com
+  `run_worker_first=true`, preservando a barreira do Worker sobre Static Assets;
+- sem `MARCO_6_3B_ACCESS_SECRET`, o portão do ensaio libera somente URLs de
+  loopback (`localhost`, `127.0.0.1` e `::1`); qualquer endereço não local
+  continua falhando fechado com 404, e configurar o secret volta a exigi-lo
+  também no loopback;
+- o lint passou a ignorar `.wrangler`, que contém apenas estado e bundles
+  gerados, mantendo todo o código-fonte sob análise;
+- as três migrations foram aplicadas no D1 local e a fixture sintética
+  `Ateliê Aurora` foi importada em `/loja/atelie-aurora` com dois produtos.
+
+As rotas `/`, `/loja/atelie-aurora` e `/entrar` responderam 200 em
+`http://localhost:5173`; a mesma raiz no endereço da rede local respondeu 404.
+Uma primeira execução com Vite direto entregava o HTML, mas deixava
+`/app/globals.css`, `@vite/client` e o módulo virtual do RSC em 404. Depois da
+correção, esses assets responderam 200, as três abas renderizaram o design
+completo, não produziram novos erros no console e a navegação para Produtos
+funcionou por hidratação.
+Passaram `npm run lint` (zero erros e os dois avisos históricos de `<img>`),
+`npx tsc --noEmit`, `npm test` (build validado e 110 testes), além do teste
+focado do portão com nove casos. `git diff --check` deve ser repetido depois
+do registro final deste handoff.
+
+O demo e a vitrine estão prontos para uso local sem credenciais externas. O
+painel autenticado ainda exige convite/conta e o fluxo de OTP real continua
+dependente de um provedor de e-mail configurado; nenhuma credencial deve ser
+gravada no repositório. A próxima ação concreta é abrir as duas URLs locais,
+validar o fluxo visual e só então escolher entre aprimorar a experiência local
+de convite ou iniciar um novo A0 para outra prova remota.
 
 ## Marco 6.3B — A3 concluído e recursos removidos
 

@@ -1,4 +1,4 @@
-import type { Product } from "../page";
+import type { Product } from "../demonstracao/demo-client";
 
 // Dados fictícios carregados somente no desenvolvimento local.
 export const demoProducts: Product[] = [

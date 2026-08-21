@@ -201,6 +201,10 @@ test("Marco 6.2 prova imagens autenticadas, isolamento e falhas parciais", async
           .first<string>("id"),
       );
       await database
+        .prepare("UPDATE user SET email_verified = 1, updated_at = ?1 WHERE id = ?2")
+        .bind(Date.now(), userId)
+        .run();
+      await database
         .prepare(
           "INSERT INTO store_memberships (id, user_id, store_id, role, created_at) VALUES (?1, ?2, ?3, 'store_owner', ?4)",
         )

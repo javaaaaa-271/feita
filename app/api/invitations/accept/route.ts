@@ -27,7 +27,10 @@ export async function POST(request: Request): Promise<Response> {
       runtime.environment ?? {},
       secrets.usesLocalDefaults,
     );
-    auth = createFeitaAuth(runtime);
+    auth = createFeitaAuth({
+      ...runtime,
+      allowUnverifiedPasswordProof: true,
+    });
   } catch {
     return Response.json(
       { message: "Serviço de autenticação indisponível." },

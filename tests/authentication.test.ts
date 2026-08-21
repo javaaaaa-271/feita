@@ -30,7 +30,7 @@ const testSecret = "test-only-better-auth-secret-with-at-least-32-characters";
 const rateSecret = "test-only-rate-limit-secret-with-at-least-32-characters";
 
 type CapturedEmail = {
-  kind: "password-reset" | "invitation";
+  kind: "password-reset" | "invitation" | "email-verification";
   to: string;
   code: string;
 };
@@ -127,6 +127,7 @@ test("Marco 5 prova autenticação, recuperação e isolamento em D1 limpo", asy
       AUTH_TRUSTED_ORIGINS: baseURL,
     },
     emailSender: sender,
+    allowUnverifiedPasswordProof: true,
   });
   const now = Date.now();
   const passwordA = "frase segura de teste A 2026";
@@ -215,6 +216,7 @@ test("Marco 5 prova autenticação, recuperação e isolamento em D1 limpo", asy
         "verification",
         "rate_limit",
         "store_memberships",
+        "store_creation_claims",
         "store_invites",
         "audit_events",
         "auth_identity_rate_limits",
@@ -922,7 +924,7 @@ test("Marco 5 prova autenticação, recuperação e isolamento em D1 limpo", asy
       );
     });
 
-    await t.test("CSRF externo é recusado e signup público está fechado", async () => {
+    await t.test("CSRF externo é recusado e cadastro público exige OTP", async () => {
       await database.prepare("DELETE FROM auth_identity_rate_limits").run();
       await database.prepare("DELETE FROM rate_limit").run();
       const hostile = await authRequest(auth, "/sign-in/email", {
@@ -934,12 +936,58 @@ test("Marco 5 prova autenticação, recuperação e isolamento em D1 limpo", asy
         origin: "https://attacker.example",
       });
       assert.equal(hostile.status, 403);
+      const publicAuth = createFeitaAuth({
+        database,
+        request: new Request(`${baseURL}/api/auth/ok`),
+        environment: {
+          BETTER_AUTH_SECRET: testSecret,
+          RATE_LIMIT_HMAC_SECRET: rateSecret,
+          AUTH_TRUSTED_ORIGINS: baseURL,
+        },
+        emailSender: sender,
+      });
+      const email = "cadastro-publico@example.test";
+      const password = "frase segura do cadastro público 2026";
+      const signup = await authRequest(publicAuth, "/sign-up/email", {
+        body: { email, name: "Cadastro Público", password },
+        ip: "203.0.113.72",
+      });
+      assert.equal(signup.status, 200, await signup.text());
+      assert.equal(
+        await database.prepare("SELECT email_verified FROM user WHERE email = ?1").bind(email).first<number>("email_verified"),
+        0,
+      );
+      const beforeVerification = await signIn(publicAuth, email, password, "203.0.113.73");
+      assert.notEqual(beforeVerification.status, 200);
+      const code = captured
+        .toReversed()
+        .find((item) => item.kind === "email-verification" && item.to === email)?.code;
+      assert.ok(code);
+      const verification = await authRequest(publicAuth, "/email-otp/verify-email", {
+        body: { email, otp: code },
+        ip: "203.0.113.74",
+      });
+      assert.equal(verification.status, 200, await verification.text());
+      const cookie = sessionCookie(verification);
+      assert.equal(
+        await database.prepare("SELECT email_verified FROM user WHERE email = ?1").bind(email).first<number>("email_verified"),
+        1,
+      );
+      assert.equal((await requireSession(publicAuth, new Headers({ cookie }))).user.email, email);
+      assert.notEqual(
+        (
+          await authRequest(publicAuth, "/email-otp/verify-email", {
+            body: { email, otp: code },
+            ip: "203.0.113.75",
+          })
+        ).status,
+        200,
+      );
       const source = await readFile(
         resolve("app/api/auth/[...all]/route.ts"),
         "utf8",
       );
-      assert.match(source, /sign-up\/email/);
-      assert.match(source, /status:\s*404/);
+      assert.doesNotMatch(source, /Cadastro disponível somente por convite/);
       assert.throws(
         () =>
           resolveTrustedOrigins({

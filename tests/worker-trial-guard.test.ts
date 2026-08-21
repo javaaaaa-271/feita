@@ -111,6 +111,37 @@ test("barreira do Marco 6.3B falha fechada antes do D1", async () => {
   }
 });
 
+test("desenvolvimento local sem secret libera apenas endereços de loopback", async () => {
+  for (const hostname of ["localhost", "127.0.0.1", "[::1]"]) {
+    let databaseAccesses = 0;
+    const original = new Request(`http://${hostname}:5173/`, {
+      headers: { [MARCO_6_3B_SECRET_HEADER]: "não-deve-ser-repassado" },
+    });
+    const guarded = await guardMarco63BRequest(original, {
+      get DB(): D1Database {
+        databaseAccesses += 1;
+        throw new Error("DB não deveria ser acessado");
+      },
+    });
+
+    assert.equal(guarded.response, undefined);
+    assert.equal(guarded.request?.headers.get(MARCO_6_3B_SECRET_HEADER), null);
+    assert.equal(databaseAccesses, 0);
+  }
+});
+
+test("loopback continua protegido quando o secret do ensaio está configurado", async () => {
+  const guarded = await guardMarco63BRequest(
+    new Request("http://localhost:5173/"),
+    {
+      MARCO_6_3B_ACCESS_SECRET: trialSecret,
+      DB: {} as D1Database,
+    },
+  );
+
+  assert.equal(guarded.response?.status, 404);
+});
+
 test("segredo correto libera rota comum sem consultar o D1 nem repassar o segredo", async () => {
   let databaseAccesses = 0;
   const original = new Request("https://trial.example.test/", {

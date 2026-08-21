@@ -196,6 +196,8 @@ test("renders product metadata in Brazilian Portuguese", async () => {
   const html = await response.text();
   assert.match(html, /<html[^>]*\blang=["']pt-BR["']/i);
   assert.match(html, /<title>Feita — seu negócio, em ordem<\/title>/i);
+  assert.match(html, /Venda pelo WhatsApp sem se perder no WhatsApp/i);
+  assert.match(html, /href="\/cadastro"/i);
   assert.doesNotMatch(html, /\bcodex-preview\b/i);
   assert.doesNotMatch(html, /Caderno Jardim|Planner Semanal|Cartão Presente/i);
 });
@@ -301,7 +303,7 @@ test("keeps hardening headers on rejected mutable methods", async () => {
   );
 });
 
-test("renders accessible invitation-only authentication interfaces", async () => {
+test("renders accessible authentication and public onboarding interfaces", async () => {
   const worker = await loadWorker();
   const pages = {};
 
@@ -310,6 +312,7 @@ test("renders accessible invitation-only authentication interfaces", async () =>
     "/esqueci-minha-senha",
     "/redefinir-senha",
     "/aceitar-convite",
+    "/cadastro",
   ]) {
     const response = await worker.fetch(
       trialRequest(`http://localhost${path}`, {
@@ -327,39 +330,29 @@ test("renders accessible invitation-only authentication interfaces", async () =>
   assert.match(pages["/entrar"], /autocomplete="current-password"/i);
   assert.match(pages["/entrar"], />Entrar<\/button>/i);
   assert.match(pages["/entrar"], /Esqueci minha senha/i);
-  assert.match(pages["/entrar"], /somente por convite/i);
+  assert.match(pages["/entrar"], /Crie seu acesso/i);
   assert.match(pages["/redefinir-senha"], /autocomplete="one-time-code"/i);
   assert.match(pages["/redefinir-senha"], /autocomplete="new-password"/i);
   assert.match(pages["/aceitar-convite"], /Código do convite/i);
+  assert.match(pages["/cadastro"], /Criar minha loja/i);
+  assert.match(pages["/cadastro"], /autocomplete="new-password"/i);
+  assert.match(pages["/cadastro"], /código no e-mail protege sua conta/i);
   assert.doesNotMatch(
     Object.values(pages).join("\n"),
     /Entrar com (Google|Apple|telefone)|magic link/i,
   );
 });
 
-test("blocks public sign-up and protects /painel with the server session helper", async () => {
-  const worker = await loadWorker();
-  const response = await worker.fetch(
-    trialRequest("http://localhost/api/auth/sign-up/email", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        origin: "http://localhost",
-      },
-      body: JSON.stringify({
-        email: "publico@example.test",
-        name: "Cadastro Público",
-        password: "senha pública que deve ser recusada",
-      }),
-    }),
-    workerEnvironment(),
-    executionContext(),
-  );
-  assert.equal(response.status, 404);
-  assert.equal(response.headers.get("cache-control"), "private, no-store");
-
+test("protects panel and store creation with server-side session helpers", async () => {
   const panelSource = await readFile(resolve("app/painel/page.tsx"), "utf8");
+  const onboardingSource = await readFile(
+    resolve("app/api/onboarding/store/route.ts"),
+    "utf8",
+  );
   assert.match(panelSource, /requireSession\(auth,\s*requestHeaders\)/);
   assert.match(panelSource, /redirect\("\/entrar"\)/);
   assert.doesNotMatch(panelSource, /searchParams.*(store|tenant)/s);
+  assert.match(onboardingSource, /requireSession\(auth, request\.headers\)/);
+  assert.match(onboardingSource, /userId: session\.user\.id/);
+  assert.doesNotMatch(onboardingSource, /input\.(userId|storeId|tenantId)/);
 });

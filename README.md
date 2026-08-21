@@ -14,6 +14,9 @@ marca, identidade, interface ou código.
 
 O primeiro corte navegável já entrega:
 
+- landing pública em `/` e demonstração em `/demonstracao`;
+- cadastro público local com verificação por código de e-mail;
+- criação protegida da primeira loja, inicialmente não publicada;
 - painel com prioridades do dia;
 - lista de produtos;
 - cadastro de produto em uma gaveta lateral;
@@ -35,13 +38,14 @@ O Marco 4 está integrado e publicado como checkpoint controlado:
   controlada;
 - carrinho da cliente persistido no navegador e separado por loja.
 
-O Marco 5 está integrado em `main` e `origin/main` no commit `ab39089`, mas
-continua sem publicação:
+O Marco 5 está integrado em `main` e o Marco 7 avança localmente sobre ele, mas
+o conjunto continua sem publicação:
 
 - Better Auth sobre D1/Drizzle;
-- acesso de comerciante apenas por convite;
+- acesso por convite e cadastro público verificado por OTP;
 - login, logout e recuperação por código;
 - vínculo usuário–loja e `/painel` protegido;
+- bootstrap de uma única primeira loja por conta, com slug único;
 - rate limit persistente e testes com duas contas/lojas.
 
 Os Marcos 6.0 e 6.1 avançam localmente a segurança transversal e o catálogo
@@ -49,7 +53,7 @@ operacional autenticado. O painel em `/painel` já permite administrar produtos
 persistidos e isolados por membership, mas esse trabalho ainda não foi
 publicado nem recebeu dados reais.
 
-O protótipo está disponível em:
+O checkpoint anterior está disponível em:
 
 https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site
 
@@ -58,8 +62,8 @@ https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site
 - o painel em `/` ainda guarda seus dados apenas na sessão atual e recarregar a
   página restaura os produtos de demonstração;
 - D1/R2 estão ativos para `/loja/[slug]`, mas nenhuma loja real foi carregada;
-- ainda não há login ou administração hospedada; o código do Marco 5 está na
-  `main`, mas não foi publicado;
+- ainda não há cadastro, login ou administração hospedada; o Marco 7 permanece
+  somente local;
 - pedidos ainda não são persistidos;
 - a vitrine persistida usa o WhatsApp configurado para a loja, mas a mensagem
   nunca é enviada automaticamente;
@@ -101,7 +105,9 @@ ele.
 
 ## Estrutura do código
 
-- `app/page.tsx`: produto navegável e estado do protótipo;
+- `app/page.tsx`: landing pública;
+- `app/demonstracao/`: produto navegável com estado de demonstração;
+- `app/cadastro/` e `onboarding/`: cadastro verificado e primeira loja;
 - `app/globals.css`: identidade visual e comportamento responsivo;
 - `app/loja/[slug]/`: vitrine pública persistida;
 - `app/auth/` e `auth/`: interfaces, sessão, convites e autorização;
@@ -124,9 +130,19 @@ Comandos principais:
 ```bash
 npm install
 npm run db:migrate:local
-npm run store:import -- data/first-store.example.json
+npm run store:import -- data/first-store.example.json --apply
 npm run dev
 ```
+
+Para receber o código real no e-mail durante o desenvolvimento, copie
+`.dev.vars.example` para `.dev.vars` e preencha `RESEND_API_KEY` e
+`RESEND_FROM` com um remetente já verificado no Resend. Sem essas duas
+variáveis, nenhum e-mail sai do computador; os testes usam uma caixa de saída
+somente em memória.
+
+Abra a URL exibida pelo Vinext. No Windows, `npm run dev` e `npm run start`
+funcionam diretamente no PowerShell. Os comandos de validação ainda precisam do
+Git Bash disponível no `PATH`.
 
 Validações:
 

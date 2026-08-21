@@ -7,10 +7,10 @@
   },
   "scripts": {
     "install:ci": "bash scripts/install-ci.sh",
-    "dev": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vite",
+    "dev": "vinext dev --port 5173 --hostname 0.0.0.0",
     "build": "bash scripts/build-verified.sh",
-    "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs tests/order-flow.test.mjs tests/storefront.test.mjs tests/local-persistence.test.mjs tests/worker-deployment.test.mjs tests/worker-closed-gate.test.mjs && node --import tsx --test tests/authentication.test.ts tests/catalog.test.ts tests/public-media.test.ts tests/images-binding-spike.test.ts tests/product-images.test.ts tests/worker-trial-guard.test.ts",
+    "start": "vinext start",
+    "test": "npm run build && node --test tests/rendered-html.test.mjs tests/order-flow.test.mjs tests/storefront.test.mjs tests/local-persistence.test.mjs tests/worker-deployment.test.mjs tests/worker-closed-gate.test.mjs && node --import tsx --test tests/email.test.ts tests/authentication.test.ts tests/onboarding.test.ts tests/catalog.test.ts tests/public-media.test.ts tests/images-binding-spike.test.ts tests/product-images.test.ts tests/worker-trial-guard.test.ts",
     "test:images-spike": "node --import tsx --test tests/images-binding-spike.test.ts",
     "spike:images:fixtures": "node spikes/images-binding/generate-fixtures.mjs",
     "spike:images:probe": "node spikes/images-binding/run-probe.mjs",
@@ -18,7 +18,7 @@
     "worker:dry-run": "bash scripts/worker-deploy-dry-run.sh",
     "worker:closed-gate": "node scripts/worker-closed-gate.mjs",
     "validate:artifact": "bash scripts/validate-artifact.sh",
-    "lint": "bash scripts/sites-env.sh -- eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern spikes/images-binding/.wrangler",
+    "lint": "bash scripts/sites-env.sh -- eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern .wrangler --ignore-pattern spikes/images-binding/.wrangler",
     "db:generate": "bash scripts/sites-env.sh -- drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply feita-local --local",
     "store:import": "node scripts/import-store.mjs"

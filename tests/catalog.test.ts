@@ -108,12 +108,17 @@ test("Marco 6.1 prova catálogo autenticado e isolamento entre lojas", async (t)
       body: { email, name, password },
       headers: headers(),
     });
-    return String(
+    const userId = String(
       await database
         .prepare("SELECT id FROM user WHERE email = ?1")
         .bind(email)
         .first<string>("id"),
     );
+    await database
+      .prepare("UPDATE user SET email_verified = 1, updated_at = ?1 WHERE id = ?2")
+      .bind(Date.now(), userId)
+      .run();
+    return userId;
   }
 
   async function signIn(email: string) {

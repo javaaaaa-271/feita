@@ -45,6 +45,18 @@ test("Vite consumes wrangler.jsonc without recreating D1 or R2 bindings", async 
   assert.doesNotMatch(source, /d1_databases|r2_buckets/);
 });
 
+test("desenvolvimento usa Vinext e deixa os assets de origem com o Vite", async () => {
+  const packageJson = await readJson("package.json");
+  const source = await readFile(path.join(projectRoot, "vite.config.ts"), "utf8");
+
+  assert.equal(
+    packageJson.scripts.dev,
+    "vinext dev --port 5173 --hostname 0.0.0.0",
+  );
+  assert.match(source, /command\s*===\s*["']serve["']/);
+  assert.match(source, /run_worker_first:\s*false/);
+});
+
 test("Vinext build emits one deployable binding of each kind", async () => {
   const outputConfig = await readJson("dist/server/wrangler.json");
   const bindings = collectBindings(outputConfig);

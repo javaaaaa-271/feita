@@ -39,6 +39,9 @@ export type FeitaAuthRuntime = {
   waitUntil?: (promise: Promise<unknown>) => void;
   emailSender?: TransactionalEmailSender;
   localEmailCapture?: LocalEmailCapture;
+  // Restricted to the server-side invitation recovery proof. Never expose an
+  // auth handler built with this flag as a public route.
+  allowUnverifiedPasswordProof?: boolean;
 };
 
 export class AuthRuntimeConfigurationError extends Error {
@@ -128,9 +131,13 @@ export function createFeitaAuth(runtime: FeitaAuthRuntime) {
     emailAndPassword: {
       enabled: true,
       autoSignIn: false,
+      requireEmailVerification: !runtime.allowUnverifiedPasswordProof,
       minPasswordLength: 12,
       maxPasswordLength: 128,
       revokeSessionsOnPasswordReset: true,
+    },
+    emailVerification: {
+      autoSignInAfterVerification: true,
     },
     account: {
       accountLinking: {
@@ -144,7 +151,10 @@ export function createFeitaAuth(runtime: FeitaAuthRuntime) {
       window: 60,
       max: 30,
       customRules: {
+        "/sign-up/email": { window: 60, max: 3 },
         "/sign-in/email": { window: 60, max: 5 },
+        "/email-otp/send-verification-otp": { window: 60, max: 3 },
+        "/email-otp/verify-email": { window: 60, max: 5 },
         "/email-otp/request-password-reset": { window: 60, max: 3 },
         "/email-otp/reset-password": { window: 60, max: 5 },
       },
@@ -168,7 +178,12 @@ export function createFeitaAuth(runtime: FeitaAuthRuntime) {
             action,
             email: normalizeEmail(email),
             windowSeconds: 60,
-            max: action === "password-reset-request" ? 3 : 5,
+            max:
+              action === "password-reset-request" ||
+              action === "sign-up" ||
+              action === "email-verification-request"
+                ? 3
+                : 5,
           });
         } catch (error) {
           if (error instanceof RateLimitExceededError) {
@@ -182,16 +197,20 @@ export function createFeitaAuth(runtime: FeitaAuthRuntime) {
     },
     plugins: [
       emailOTP({
-        disableSignUp: true,
+        disableSignUp: false,
+        sendVerificationOnSignUp: true,
         otpLength: 6,
         expiresIn: 10 * 60,
         allowedAttempts: 3,
         resendStrategy: "rotate",
         storeOTP: "hashed",
         async sendVerificationOTP({ email, otp, type }) {
-          if (type !== "forget-password") return;
+          if (type !== "forget-password" && type !== "email-verification") return;
           const delivery = sender.send({
-            kind: "password-reset",
+            kind:
+              type === "email-verification"
+                ? "email-verification"
+                : "password-reset",
             to: email,
             code: otp,
             expiresInMinutes: 10,
@@ -264,7 +283,14 @@ export function resolveTrustedOrigins(
 }
 
 function identityLimitedAction(path: string): string | null {
+  if (path === "/sign-up/email") return "sign-up";
   if (path === "/sign-in/email") return "sign-in";
+  if (path === "/email-otp/send-verification-otp") {
+    return "email-verification-request";
+  }
+  if (path === "/email-otp/verify-email") {
+    return "email-verification";
+  }
   if (path === "/email-otp/request-password-reset") {
     return "password-reset-request";
   }

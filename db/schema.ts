@@ -199,6 +199,23 @@ export const storeMemberships = sqliteTable(
   ],
 );
 
+// A public account can bootstrap exactly one first store. The unique user key
+// makes concurrent onboarding requests deterministic without restricting
+// future memberships added by invitation.
+export const storeCreationClaims = sqliteTable(
+  "store_creation_claims",
+  {
+    userId: text("user_id")
+      .primaryKey()
+      .references(() => user.id, { onDelete: "cascade" }),
+    storeId: text("store_id")
+      .notNull()
+      .references(() => stores.id, { onDelete: "cascade" }),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [uniqueIndex("store_creation_claims_store_unique").on(table.storeId)],
+);
+
 export const auditEvents = sqliteTable(
   "audit_events",
   {

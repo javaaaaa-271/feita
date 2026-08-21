@@ -21,6 +21,10 @@ export async function guardMarco63BRequest(
   request: Request,
   environment: TrialGuardEnvironment,
 ): Promise<TrialGuardResult> {
+  if (!environment.MARCO_6_3B_ACCESS_SECRET && isLoopbackRequest(request)) {
+    return { request: withoutTrialSecret(request) };
+  }
+
   if (
     !(await secretsMatch(
       environment.MARCO_6_3B_ACCESS_SECRET,
@@ -35,6 +39,13 @@ export async function guardMarco63BRequest(
   }
   if (!isProductImageUpload(request)) return { request: withoutTrialSecret(request) };
   return guardUploadBudget(request, environment);
+}
+
+function isLoopbackRequest(request: Request): boolean {
+  const hostname = new URL(request.url).hostname.toLowerCase();
+  return (
+    hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]"
+  );
 }
 
 export async function reserveMarco63BUpload(

@@ -97,6 +97,33 @@
   margin-top: 25px;
 }
 
+.progress {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.progress li {
+  padding: 8px 4px;
+  border-top: 2px solid #ddd5cd;
+  color: #8b8179;
+  font-size: .68rem;
+  font-weight: 780;
+}
+
+.progress .current { border-color: var(--wine); color: var(--wine); }
+.stepCopy { margin: 0; color: var(--muted); font-size: .84rem; line-height: 1.55; }
+.stepCopy strong { color: var(--ink); overflow-wrap: anywhere; }
+.textButton { width: fit-content; padding: 0; border: 0; background: transparent; color: var(--wine); font-size: .84rem; font-weight: 750; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.textButton:disabled { cursor: wait; opacity: .6; }
+.slugField { display: flex; align-items: stretch; overflow: hidden; border: 1px solid #cec9c1; border-radius: 9px; background: #fff; }
+.slugField span { display: flex; align-items: center; padding-left: 12px; color: #857a72; font-size: .76rem; white-space: nowrap; }
+.slugField input { min-width: 0; border: 0; padding-left: 2px; }
+.optional { color: var(--muted); font-weight: 550; }
+
 .field {
   display: grid;
   gap: 7px;

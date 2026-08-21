@@ -6,7 +6,7 @@ comprove.
 
 ## Estado atual
 
-O painel demonstrativo em `/` continua sendo uma interface com estado local. A
+O painel demonstrativo em `/demonstracao` continua sendo uma interface com estado local. A
 vitrine em `/loja/[slug]` lê loja e produtos do D1 por queries parametrizadas,
 e a rota pública de mídia autoriza no D1 antes de ler os bytes do R2. Ainda não
 existem dados persistentes de clientes ou pedidos nem mutações públicas.
@@ -22,6 +22,14 @@ O Marco 5 está integrado em `main` e `origin/main` no commit `ab39089`. Better
 Auth foi ligado ao D1/Drizzle com login, logout, recuperação por OTP, convite
 com digest, sessão revogável, `store_memberships`, rate limit persistente e
 `/painel` mínimo. Esse código e a migration ainda não foram publicados.
+
+O Marco 7 abre localmente o signup público, mas mantém a criação da loja atrás
+da verificação por OTP. A rota de onboarding deriva o usuário da sessão
+verificada, cria loja, ownership, reivindicação única e auditoria em um lote D1,
+e deixa a vitrine não publicada. Rate limits por IP e por digest do e-mail
+cobrem signup, envio e verificação do código. O fluxo não está autorizado para
+publicação: ainda faltam Resend real, Turnstile validado no servidor e nova
+prova remota controlada.
 
 O checkpoint hospedado está atrás da política `custom` do Sites, restrita a
 Lorenzo. `app/chatgpt-auth.ts` oferece helpers para headers da identidade do
@@ -112,6 +120,18 @@ barreira de publicação, não uma verificação opcional.
 - usar tokens de recuperação curtos, de uso único e com expiração;
 - revogar sessão e refresh token no logout;
 - não registrar tokens completos em logs.
+
+### Bootstrap público da loja
+
+- signup não cria sessão antes da confirmação do e-mail;
+- OTP de verificação tem seis dígitos, validade de dez minutos, hash, rotação e
+  limite de três tentativas;
+- o usuário da criação vem somente da sessão e deve estar com e-mail verificado;
+- uma chave única por usuário impede duas primeiras lojas em concorrência;
+- slug único é imposto pelo D1 e conflito não sobrescreve outra loja;
+- a loja nasce com `published = false`;
+- publicação futura exige Turnstile validado no servidor; o widget no navegador
+  sozinho não é controle de segurança.
 
 ### Enumeração de usuários
 

@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import { authClient, configuredSocialProviders } from "@/auth/client";
 import { PasswordInput } from "./password-input";
 import styles from "./auth-shell.module.css";
+import { slugifyStoreName } from "@/onboarding/store-input";
 
 const GENERIC_LOGIN_ERROR =
   "Não foi possível entrar. Confira os dados ou recupere sua senha.";
@@ -68,8 +69,8 @@ export function SignInForm() {
         </Link>
       </form>
       <p className={styles.inviteNotice}>
-        O acesso à Feita é criado somente por convite. Se você recebeu um
-        código, use a página de{" "}
+        Ainda não tem uma loja? <Link className={styles.link} href="/cadastro">Crie seu acesso</Link>.
+        Se você recebeu um convite de outra loja, use a página de{" "}
         <Link className={styles.link} href="/aceitar-convite">
           aceitação de convite
         </Link>
@@ -77,6 +78,189 @@ export function SignInForm() {
       </p>
       {configuredSocialProviders.length > 0 ? (
         <div aria-label="Provedores sociais configurados" />
+      ) : null}
+    </>
+  );
+}
+
+type SignUpStep = "account" | "verification" | "store";
+
+export function SignUpForm() {
+  const [step, setStep] = useState<SignUpStep>("account");
+  const [email, setEmail] = useState("");
+  const [storeName, setStoreName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [slugEdited, setSlugEdited] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function createAccount(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const nextEmail = String(form.get("email") ?? "").trim().toLowerCase();
+    const password = String(form.get("password") ?? "");
+    if (password !== String(form.get("password-confirmation") ?? "")) {
+      setMessage("As senhas precisam ser iguais.");
+      return;
+    }
+    setPending(true);
+    setMessage(null);
+    try {
+      const { error } = await authClient.signUp.email({
+        email: nextEmail,
+        name: String(form.get("name") ?? "").trim(),
+        password,
+      });
+      if (error?.status === 429) {
+        setMessage("Muitas tentativas. Aguarde um minuto e tente novamente.");
+        return;
+      }
+      setEmail(nextEmail);
+      setStep("verification");
+    } catch {
+      setMessage("Não foi possível enviar o código agora. Tente novamente.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function verifyEmail(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setPending(true);
+    setMessage(null);
+    try {
+      const { error } = await authClient.emailOtp.verifyEmail({
+        email,
+        otp: String(form.get("otp") ?? ""),
+      });
+      if (error) {
+        setMessage("Código inválido ou vencido. Confira ou peça outro código.");
+        return;
+      }
+      setStep("store");
+    } catch {
+      setMessage("Código inválido ou vencido. Confira ou peça outro código.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function resendCode() {
+    setPending(true);
+    setMessage(null);
+    try {
+      const { error } = await authClient.emailOtp.sendVerificationOtp({
+        email,
+        type: "email-verification",
+      });
+      setMessage(
+        error
+          ? "Não foi possível reenviar agora. Aguarde e tente novamente."
+          : "Se o e-mail puder receber o código, uma nova mensagem chegará em alguns minutos.",
+      );
+    } catch {
+      setMessage("Não foi possível reenviar agora. Aguarde e tente novamente.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function createStore(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setPending(true);
+    setMessage(null);
+    try {
+      const response = await fetch("/api/onboarding/store", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: String(form.get("store-name") ?? ""),
+          slug: String(form.get("slug") ?? ""),
+          location: String(form.get("location") ?? ""),
+          whatsapp: String(form.get("whatsapp") ?? ""),
+        }),
+      });
+      const result = (await response.json()) as {
+        message?: string;
+        store?: { panelPath?: string };
+      };
+      if (!response.ok || !result.store?.panelPath) {
+        setMessage(result.message ?? "Não foi possível criar a loja agora.");
+        return;
+      }
+      window.location.assign(result.store.panelPath);
+    } catch {
+      setMessage("Não foi possível criar a loja agora. Tente novamente.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <>
+      <ol className={styles.progress} aria-label="Etapas do cadastro">
+        <li className={step === "account" ? styles.current : ""}>1. Conta</li>
+        <li className={step === "verification" ? styles.current : ""}>2. Código</li>
+        <li className={step === "store" ? styles.current : ""}>3. Loja</li>
+      </ol>
+
+      {step === "account" ? (
+        <form className={styles.form} onSubmit={createAccount} aria-busy={pending}>
+          <div className={styles.field}>
+            <label htmlFor="signup-name">Seu nome</label>
+            <input id="signup-name" name="name" autoComplete="name" minLength={2} maxLength={80} required />
+          </div>
+          <EmailField id="signup-email" />
+          <PasswordInput id="signup-password" name="password" label="Crie uma senha" autoComplete="new-password" minLength={12} maxLength={128} hint="Use pelo menos 12 caracteres. Uma frase longa funciona bem." required />
+          <PasswordInput id="signup-password-confirmation" name="password-confirmation" label="Repita a senha" autoComplete="new-password" minLength={12} maxLength={128} required />
+          <FormMessage message={message} />
+          <button className={styles.primary} type="submit" disabled={pending}>{pending ? "Enviando código…" : "Continuar"}</button>
+          <Link className={styles.link} href="/entrar">Já tenho acesso</Link>
+        </form>
+      ) : null}
+
+      {step === "verification" ? (
+        <form className={styles.form} onSubmit={verifyEmail} aria-busy={pending}>
+          <p className={styles.stepCopy}>Enviamos um código de 6 dígitos para <strong>{email}</strong>. Ele vale por 10 minutos.</p>
+          <div className={styles.field}>
+            <label htmlFor="signup-otp">Código de confirmação</label>
+            <input id="signup-otp" name="otp" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required autoFocus />
+          </div>
+          <FormMessage message={message} neutral={message?.startsWith("Se o e-mail")} />
+          <button className={styles.primary} type="submit" disabled={pending}>{pending ? "Confirmando…" : "Confirmar e-mail"}</button>
+          <button className={styles.textButton} type="button" disabled={pending} onClick={resendCode}>Reenviar código</button>
+        </form>
+      ) : null}
+
+      {step === "store" ? (
+        <form className={styles.form} onSubmit={createStore} aria-busy={pending}>
+          <p className={styles.stepCopy}>E-mail confirmado. Agora dê um nome e um endereço para sua primeira vitrine.</p>
+          <div className={styles.field}>
+            <label htmlFor="store-name">Nome da loja</label>
+            <input id="store-name" name="store-name" value={storeName} minLength={2} maxLength={80} onChange={(event) => {
+              const value = event.target.value;
+              setStoreName(value);
+              if (!slugEdited) setSlug(slugifyStoreName(value));
+            }} required />
+          </div>
+          <div className={styles.field}>
+            <label htmlFor="store-slug">Endereço da vitrine</label>
+            <div className={styles.slugField}><span>/loja/</span><input id="store-slug" name="slug" value={slug} minLength={3} maxLength={48} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" onChange={(event) => { setSlugEdited(true); setSlug(slugifyStoreName(event.target.value)); }} required /></div>
+          </div>
+          <div className={styles.field}>
+            <label htmlFor="store-location">Cidade e estado <span className={styles.optional}>(opcional)</span></label>
+            <input id="store-location" name="location" maxLength={100} placeholder="Palmas, TO" />
+          </div>
+          <div className={styles.field}>
+            <label htmlFor="store-whatsapp">WhatsApp com DDD</label>
+            <input id="store-whatsapp" name="whatsapp" type="tel" inputMode="tel" autoComplete="tel" placeholder="(63) 99999-9999" minLength={10} maxLength={24} required />
+          </div>
+          <p className={styles.fieldHint}>Sua loja nasce fechada. Você revisa os produtos antes de publicar o link.</p>
+          <FormMessage message={message} />
+          <button className={styles.primary} type="submit" disabled={pending}>{pending ? "Criando loja…" : "Criar minha loja"}</button>
+        </form>
       ) : null}
     </>
   );
@@ -324,12 +508,17 @@ export function AcceptInvitationForm() {
   );
 }
 
-function EmailField() {
+function FormMessage({ message, neutral = false }: { message: string | null; neutral?: boolean }) {
+  if (!message) return null;
+  return <p className={`${styles.message} ${neutral ? styles.success : styles.error}`} role={neutral ? "status" : "alert"}>{message}</p>;
+}
+
+function EmailField({ id = "email" }: { id?: string }) {
   return (
     <div className={styles.field}>
-      <label htmlFor="email">E-mail</label>
+      <label htmlFor={id}>E-mail</label>
       <input
-        id="email"
+        id={id}
         name="email"
         type="email"
         inputMode="email"

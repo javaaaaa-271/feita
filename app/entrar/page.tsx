@@ -11,7 +11,7 @@ export default function SignInPage() {
       title="Seu negócio continua daqui."
       description="Entre para consultar as lojas ligadas à sua conta. Clientes da vitrine não precisam criar acesso."
       cardTitle="Entrar na Feita"
-      cardDescription="Use o e-mail e a senha definidos ao aceitar seu convite."
+      cardDescription="Use o e-mail e a senha definidos no cadastro ou ao aceitar um convite."
     >
       <SignInForm />
     </AuthPage>

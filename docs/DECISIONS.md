@@ -85,7 +85,7 @@ IDOR com duas lojas antes de dados reais.
 Contexto, alternativas, riscos e condições de implementação estão em
 [`ADR-001-AUTENTICACAO-E-PERSISTENCIA.md`](ADR-001-AUTENTICACAO-E-PERSISTENCIA.md).
 
-## D-012 — Contas somente por convite
+## D-012 — Contas somente por convite (substituída pelo Marco 7)
 
 O signup público do Better Auth permanece fechado. Um convite já contém e-mail,
 loja e papel definidos pelo servidor; seu código é armazenado somente como
@@ -95,3 +95,26 @@ Provedores sociais futuros podem autenticar uma identidade, mas nunca criarão
 automaticamente loja ou `store_memberships`. Depois da autenticação o servidor
 continuará exigindo usuário existente, convite quando aplicável e vínculo
 explícito com a loja.
+
+Esta foi a barreira segura do Marco 5. O Marco 7 altera conscientemente apenas
+o bootstrap da primeira loja conforme D-013; convites continuam válidos para
+acesso a lojas já existentes.
+
+## D-013 — Cadastro público verificado para a primeira loja
+
+Uma pessoa pode criar uma conta pública com nome, e-mail e senha, mas não recebe
+sessão nem pode criar loja antes de confirmar um OTP de seis dígitos enviado ao
+e-mail. O código expira em dez minutos, é armazenado com hash, gira a cada novo
+envio e aceita no máximo três tentativas.
+
+Depois da verificação, o servidor deriva o usuário exclusivamente da sessão e
+cria, em um único lote D1, uma loja inicialmente não publicada, o vínculo
+`store_owner`, a reivindicação única de bootstrap e o evento de auditoria. Uma
+conta pública pode usar esse bootstrap uma única vez; vínculos futuros continuam
+sendo adicionados por convite. Slugs são únicos no banco e lojas não viram
+branches de Git: todas compartilham o mesmo código e permanecem isoladas por
+dados, sessão e membership.
+
+Antes de publicar esse fluxo serão obrigatórios remetente e domínio verificados
+no Resend, secrets de produção, validação server-side do Turnstile, prova em
+caixa de e-mail controlada e repetição da matriz IDOR.

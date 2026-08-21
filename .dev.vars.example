@@ -1,0 +1,8 @@
+# Copie para .dev.vars somente no seu computador. Nunca versionar valores reais.
+BETTER_AUTH_SECRET=
+RATE_LIMIT_HMAC_SECRET=
+BETTER_AUTH_URL=http://localhost:5173
+AUTH_TRUSTED_ORIGINS=http://localhost:5173
+RESEND_API_KEY=
+RESEND_FROM=
+MARCO_6_3B_ACCESS_SECRET=
