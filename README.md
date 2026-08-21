@@ -40,8 +40,8 @@ O Marco 4 está integrado e publicado como checkpoint controlado:
 
 O Marco 5 está integrado em `main`, o Marco 7 adiciona o cadastro público e o
 Marco 8 protege os envios de código com Turnstile server-side. O conjunto foi
-publicado somente como checkpoint privado e permanece atrás do portão do
-ensaio:
+publicado somente como checkpoint privado, aceitando a identidade exata do
+proprietário no Sites e preservando o portão técnico do ensaio:
 
 - Better Auth sobre D1/Drizzle;
 - acesso por convite e cadastro público verificado por OTP;
@@ -66,7 +66,8 @@ https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site
   página restaura os produtos de demonstração;
 - D1/R2 estão ativos para `/loja/[slug]`, mas nenhuma loja real foi carregada;
 - cadastro, login e administração foram publicados somente no checkpoint
-  privado e continuam inacessíveis sem o portão técnico do ensaio;
+  privado; a navegação aceita apenas o proprietário autenticado no Sites ou o
+  secret técnico do ensaio;
 - pedidos ainda não são persistidos;
 - a vitrine persistida usa o WhatsApp configurado para a loja, mas a mensagem
   nunca é enviada automaticamente;

@@ -16,6 +16,7 @@ interface Env {
       };
     };
   };
+  FEITA_PRIVATE_PREVIEW_EMAIL?: string;
   FEITA_PRIVATE_PREVIEW_USER_ID?: string;
   MARCO_6_3B_ACCESS_SECRET?: string;
 }

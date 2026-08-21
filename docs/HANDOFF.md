@@ -19,6 +19,13 @@ identidade ausente ou diferente. A suíte completa passou com **127 testes**
 (45 JS + 82 TS), o lint terminou sem erros e com os dois avisos históricos de
 `<img>`, e o build Sites foi validado.
 
+A versão 9 foi publicada no mesmo projeto privado com a revisão 3 das variáveis
+hospedadas. O único ID autorizado foi instalado como secret, sem aparecer na
+fonte. Requisições técnicas que não carregam a identidade assinada do navegador
+continuam recebendo `404`, inclusive quando usam apenas o bypass do Sites; isso
+preserva a falha fechada. A confirmação final do caminho de identidade exige o
+proprietário abrir a prévia autenticada no navegador.
+
 O domínio falho `unitickets.com.br` foi removido do Resend com autorização
 explícita. A pesquisa no registrador da Cloudflare encontrou `usefeita.com`
 disponível por US$ 10,46 no primeiro ano e US$ 10,46 na renovação. A compra não
@@ -55,10 +62,10 @@ essa barreira por acesso privado do Sites é uma decisão de segurança separada
 Também falta escolher e registrar um domínio da Feita: `unitickets.com.br`, o
 único domínio cadastrado no Resend, retorna domínio inexistente no DNS.
 
-A próxima decisão concreta é escolher entre manter o checkpoint fechado para
-ensaio técnico ou autorizar uma prévia privada navegável, protegida pelo acesso
-do Sites, para concluir o fluxo real no navegador. Em qualquer dos casos,
-domínio e remetente próprios continuam obrigatórios antes de acesso público.
+A prévia privada navegável foi autorizada e publicada na versão 9. A próxima
+ação concreta é o proprietário confirmar que a página abriu autenticada e então
+concluir cadastro, OTP, primeira loja e a matriz remota de sessão e IDOR. Domínio
+e remetente próprios continuam obrigatórios antes de acesso público.
 
 ## Marco 8 — Turnstile local e widget de produção
 

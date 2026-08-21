@@ -55,7 +55,8 @@ Objetivo: deixar de ser demonstração e virar sistema utilizável.
 - [x] estados vazios, erros e carregamento — fluxos de autenticação;
 - [x] landing pública e cadastro por OTP — concluídos localmente; entrega real
   em caixa controlada e Turnstile server-side provados; checkpoint privado
-  publicado; domínio/remetente próprios e liberação navegável pendentes;
+  publicado com acesso navegável do proprietário; confirmação remota completa
+  e domínio/remetente próprios pendentes;
 
 Critério de saída: duas lojas diferentes conseguem usar o sistema sem acessar
 os dados uma da outra, e nada desaparece ao recarregar.

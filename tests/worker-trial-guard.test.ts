@@ -13,12 +13,14 @@ import {
   MARCO_6_3B_MAX_UPLOAD_BYTES,
   MARCO_6_3B_SECRET_HEADER,
   reserveMarco63BUpload,
+  SITES_AUTHENTICATED_USER_EMAIL_HEADER,
   SITES_AUTHENTICATED_USER_ID_HEADER,
 } from "../worker/marco-6-3b-guard";
 
 const wranglerExecutable = resolve("node_modules/wrangler/bin/wrangler.js");
 const trialSecret = "local-worker-trial-guard-secret-2026";
 const privatePreviewUserId = "preview-owner-user-id-2026-00000001";
+const privatePreviewEmail = "preview-owner@example.test";
 const uploadURL =
   "https://trial.example.test/api/painel/stores/store-a/products/product-a/image";
 
@@ -208,6 +210,41 @@ test("identidade privada ausente ou divergente continua falhando fechada", async
     assert.equal(guarded.response?.status, 404);
     assert.equal(databaseAccesses, 0);
   }
+});
+
+test("e-mail autenticado exato do Sites libera a prévia sem o ID interno", async () => {
+  const guarded = await guardMarco63BRequest(
+    new Request("https://trial.example.test/", {
+      headers: {
+        [SITES_AUTHENTICATED_USER_EMAIL_HEADER]:
+          "  PREVIEW-OWNER@EXAMPLE.TEST  ",
+      },
+    }),
+    {
+      FEITA_PRIVATE_PREVIEW_EMAIL: privatePreviewEmail,
+      MARCO_6_3B_ACCESS_SECRET: trialSecret,
+      DB: {} as D1Database,
+    },
+  );
+
+  assert.equal(guarded.response, undefined);
+});
+
+test("e-mail autenticado divergente não libera a prévia privada", async () => {
+  const guarded = await guardMarco63BRequest(
+    new Request("https://trial.example.test/", {
+      headers: {
+        [SITES_AUTHENTICATED_USER_EMAIL_HEADER]: "outra-pessoa@example.test",
+      },
+    }),
+    {
+      FEITA_PRIVATE_PREVIEW_EMAIL: privatePreviewEmail,
+      MARCO_6_3B_ACCESS_SECRET: trialSecret,
+      DB: {} as D1Database,
+    },
+  );
+
+  assert.equal(guarded.response?.status, 404);
 });
 
 test("upload individual acima de 8 MiB é recusado antes do D1", async () => {
