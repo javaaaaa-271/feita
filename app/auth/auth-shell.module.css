@@ -157,6 +157,25 @@
   line-height: 1.45;
 }
 
+.turnstileBox {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.turnstileWidget {
+  min-height: 65px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.turnstileStatus {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
 .passwordField {
   position: relative;
 }

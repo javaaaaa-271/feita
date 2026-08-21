@@ -4,6 +4,45 @@ Atualizado em: **21 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
+## Marco 8 — Turnstile local e widget de produção
+
+Em **21 de agosto de 2026**, o cadastro público, o reenvio do código de
+verificação e o início da recuperação de senha receberam Cloudflare Turnstile.
+O navegador carrega o script oficial de forma explícita, mantém o token apenas
+no estado da tela e exige um desafio novo depois de cada tentativa. A rota de
+autenticação valida o token no servidor antes de inicializar Better Auth ou
+acessar o D1, com timeout, uso único, limite de tamanho e conferência exata de
+`action` e hostname. Falhas de configuração ou de rede fecham o fluxo sem
+expor detalhes internos.
+
+O desenvolvimento em loopback usa exclusivamente o par de chaves fictícias
+oficiais da Cloudflare. Fora de loopback, chaves ausentes ou conhecidamente
+fictícias são rejeitadas. A CSP passou a permitir o domínio exato dos desafios
+em `script-src` e `frame-src`, sem ampliar as demais origens.
+
+O widget **Feita produção** foi criado na conta Cloudflare em modo gerenciado,
+sem pré-liberação e limitado ao hostname público atual
+`projeto-vitrine-mvp.javaaaa-237.chatgpt.site`. Nenhuma chave foi registrada em
+Git, logs ou documentação. Site key, secret key e os demais valores do ensaio
+privado foram instalados no ambiente do Sites, com os valores sensíveis
+marcados como secrets. Essa revisão de ambiente só entra em vigor junto de uma
+versão publicada; neste registro, o checkpoint hospedado ainda estava
+inalterado.
+
+A prova visual local confirmou o desafio concluído e os botões habilitados em
+`/cadastro` e `/esqueci-minha-senha`. Uma requisição real sem token recebeu
+`403` antes de qualquer mutação. TypeScript passou sem emissão, o lint terminou
+com zero erros e apenas os dois avisos históricos de `<img>`, e `npm test`
+aprovou **125 testes** (45 JS + 80 TS), incluindo cinco testes específicos de
+Turnstile.
+
+A próxima ação concreta é publicar o candidato somente no acesso privado e
+repetir remotamente a matriz de autenticação e IDOR. O remetente de teste do
+Resend fica restrito à caixa controlada: antes de liberar tráfego real continuam
+obrigatórios domínio e remetente próprios. O domínio anteriormente cadastrado
+no Resend, `unitickets.com.br`, não resolve no DNS e não serve como domínio da
+Feita.
+
 ## E-mails transacionais com identidade visual
 
 Em **21 de agosto de 2026**, confirmação de cadastro, recuperação de senha e

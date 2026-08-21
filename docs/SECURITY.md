@@ -27,9 +27,17 @@ O Marco 7 abre localmente o signup público, mas mantém a criação da loja atr
 da verificação por OTP. A rota de onboarding deriva o usuário da sessão
 verificada, cria loja, ownership, reivindicação única e auditoria em um lote D1,
 e deixa a vitrine não publicada. Rate limits por IP e por digest do e-mail
-cobrem signup, envio e verificação do código. O fluxo não está autorizado para
-publicação: ainda faltam Resend real, Turnstile validado no servidor e nova
-prova remota controlada.
+cobrem signup, envio e verificação do código.
+
+O Marco 8 adiciona Turnstile ao signup, ao reenvio de confirmação e ao início da
+recuperação. A validação server-side ocorre antes de Better Auth e do acesso ao
+D1, rejeita token ausente, grande, reutilizado, com `action` ou hostname
+divergentes e falha fechada fora de loopback quando as chaves reais não estão
+configuradas. O widget de produção foi provisionado em modo gerenciado e
+limitado ao hostname atual, mas suas chaves ainda não estão no ambiente
+hospedado e esse código não foi publicado. O fluxo continua bloqueado para
+produção até domínio/remetente próprios no Resend, secrets hospedados,
+migrations, publicação controlada e nova prova remota de autenticação e IDOR.
 
 O checkpoint hospedado está atrás da política `custom` do Sites, restrita a
 Lorenzo. `app/chatgpt-auth.ts` oferece helpers para headers da identidade do
@@ -132,6 +140,20 @@ barreira de publicação, não uma verificação opcional.
 - a loja nasce com `published = false`;
 - publicação futura exige Turnstile validado no servidor; o widget no navegador
   sozinho não é controle de segurança.
+
+### Turnstile
+
+- proteger signup, reenvio de confirmação e solicitação de recuperação;
+- manter o token apenas em memória no navegador e renovar após cada tentativa;
+- validar no servidor antes de inicializar autenticação ou banco;
+- conferir `success`, `action` e hostname exatos, com timeout e limite de
+  tamanho;
+- usar somente as chaves fictícias oficiais em loopback e rejeitá-las fora de
+  loopback;
+- manter chave secreta exclusivamente no runtime hospedado, nunca no bundle,
+  Git, logs ou documentação;
+- permitir em CSP somente `https://challenges.cloudflare.com` para o script e
+  o frame do desafio.
 
 ### Enumeração de usuários
 

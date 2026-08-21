@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import { AuthPage } from "@/app/auth/auth-page";
 import { SignUpForm } from "@/app/auth/auth-forms";
+import { turnstileSiteKeyForPage } from "@/auth/turnstile-page";
 
 export const metadata: Metadata = { title: "Criar sua loja — Feita" };
+export const dynamic = "force-dynamic";
 
-export default function SignUpPage() {
+export default async function SignUpPage() {
+  const turnstileSiteKey = await turnstileSiteKeyForPage();
+
   return (
     <AuthPage
       eyebrow="Sua primeira vitrine"
@@ -13,7 +17,7 @@ export default function SignUpPage() {
       cardTitle="Criar minha loja"
       cardDescription="O código no e-mail protege sua conta antes de qualquer loja ser criada."
     >
-      <SignUpForm />
+      <SignUpForm turnstileSiteKey={turnstileSiteKey} />
     </AuthPage>
   );
 }

@@ -218,6 +218,14 @@ test("adds browser hardening headers to application responses", async () => {
   assert.match(contentSecurityPolicy, /frame-ancestors 'none'(?:;|$)/);
   assert.match(contentSecurityPolicy, /object-src 'none'(?:;|$)/);
   assert.match(contentSecurityPolicy, /base-uri 'self'(?:;|$)/);
+  assert.match(
+    contentSecurityPolicy,
+    /script-src[^;]*https:\/\/challenges\.cloudflare\.com/,
+  );
+  assert.match(
+    contentSecurityPolicy,
+    /frame-src[^;]*https:\/\/challenges\.cloudflare\.com/,
+  );
   assert.equal(response.headers.get("x-frame-options"), "DENY");
   assert.equal(response.headers.get("x-content-type-options"), "nosniff");
   assert.equal(
@@ -337,6 +345,11 @@ test("renders accessible authentication and public onboarding interfaces", async
   assert.match(pages["/cadastro"], /Criar minha loja/i);
   assert.match(pages["/cadastro"], /autocomplete="new-password"/i);
   assert.match(pages["/cadastro"], /código no e-mail protege sua conta/i);
+  assert.match(pages["/cadastro"], /Verificando que você é uma pessoa/i);
+  assert.match(
+    pages["/esqueci-minha-senha"],
+    /Verificando que você é uma pessoa/i,
+  );
   assert.doesNotMatch(
     Object.values(pages).join("\n"),
     /Entrar com (Google|Apple|telefone)|magic link/i,
@@ -349,10 +362,22 @@ test("protects panel and store creation with server-side session helpers", async
     resolve("app/api/onboarding/store/route.ts"),
     "utf8",
   );
+  const authRouteSource = await readFile(
+    resolve("app/api/auth/[...all]/route.ts"),
+    "utf8",
+  );
   assert.match(panelSource, /requireSession\(auth,\s*requestHeaders\)/);
   assert.match(panelSource, /redirect\("\/entrar"\)/);
   assert.doesNotMatch(panelSource, /searchParams.*(store|tenant)/s);
   assert.match(onboardingSource, /requireSession\(auth, request\.headers\)/);
   assert.match(onboardingSource, /userId: session\.user\.id/);
   assert.doesNotMatch(onboardingSource, /input\.(userId|storeId|tenantId)/);
+  const authHandler = authRouteSource.slice(
+    authRouteSource.indexOf("async function handleAuthRequest"),
+  );
+  assert.ok(
+    authHandler.indexOf("verifyTurnstileForAuthRequest") <
+      authHandler.indexOf("authRuntimeForRequest"),
+    "Turnstile must run before the auth runtime resolves D1",
+  );
 });

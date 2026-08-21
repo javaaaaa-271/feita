@@ -30,6 +30,8 @@ export type FeitaAuthEnvironment = {
   RATE_LIMIT_HMAC_SECRET?: string;
   RESEND_API_KEY?: string;
   RESEND_FROM?: string;
+  TURNSTILE_SITE_KEY?: string;
+  TURNSTILE_SECRET_KEY?: string;
 };
 
 export type FeitaAuthRuntime = {

@@ -38,15 +38,17 @@ O Marco 4 está integrado e publicado como checkpoint controlado:
   controlada;
 - carrinho da cliente persistido no navegador e separado por loja.
 
-O Marco 5 está integrado em `main` e o Marco 7 avança localmente sobre ele, mas
-o conjunto continua sem publicação:
+O Marco 5 está integrado em `main`, o Marco 7 adiciona o cadastro público e o
+Marco 8 protege os envios de código com Turnstile server-side. O conjunto ainda
+aguarda publicação controlada:
 
 - Better Auth sobre D1/Drizzle;
 - acesso por convite e cadastro público verificado por OTP;
 - login, logout e recuperação por código;
 - vínculo usuário–loja e `/painel` protegido;
 - bootstrap de uma única primeira loja por conta, com slug único;
-- rate limit persistente e testes com duas contas/lojas.
+- rate limit persistente e testes com duas contas/lojas;
+- Turnstile no cadastro, reenvio de confirmação e início da recuperação.
 
 Os Marcos 6.0 e 6.1 avançam localmente a segurança transversal e o catálogo
 operacional autenticado. O painel em `/painel` já permite administrar produtos

@@ -10,7 +10,7 @@
     "dev": "vinext dev --port 5173 --hostname 0.0.0.0",
     "build": "bash scripts/build-verified.sh",
     "start": "vinext start",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs tests/order-flow.test.mjs tests/storefront.test.mjs tests/local-persistence.test.mjs tests/worker-deployment.test.mjs tests/worker-closed-gate.test.mjs && node --import tsx --test tests/email.test.ts tests/authentication.test.ts tests/onboarding.test.ts tests/catalog.test.ts tests/public-media.test.ts tests/images-binding-spike.test.ts tests/product-images.test.ts tests/worker-trial-guard.test.ts",
+    "test": "npm run build && node --test tests/rendered-html.test.mjs tests/order-flow.test.mjs tests/storefront.test.mjs tests/local-persistence.test.mjs tests/worker-deployment.test.mjs tests/worker-closed-gate.test.mjs && node --import tsx --test tests/turnstile.test.ts tests/email.test.ts tests/authentication.test.ts tests/onboarding.test.ts tests/catalog.test.ts tests/public-media.test.ts tests/images-binding-spike.test.ts tests/product-images.test.ts tests/worker-trial-guard.test.ts",
     "test:images-spike": "node --import tsx --test tests/images-binding-spike.test.ts",
     "spike:images:fixtures": "node spikes/images-binding/generate-fixtures.mjs",
     "spike:images:probe": "node spikes/images-binding/run-probe.mjs",

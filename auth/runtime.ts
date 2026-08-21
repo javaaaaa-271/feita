@@ -8,8 +8,9 @@ import {
 
 export async function authRuntimeForRequest(
   request: Request,
+  providedEnvironment?: Record<string, unknown>,
 ): Promise<FeitaAuthRuntime> {
-  const environment = await getWorkerEnvironment();
+  const environment = providedEnvironment ?? (await getWorkerEnvironment());
   let waitUntil: FeitaAuthRuntime["waitUntil"];
 
   try {

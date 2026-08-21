@@ -4,8 +4,10 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { authClient, configuredSocialProviders } from "@/auth/client";
 import { PasswordInput } from "./password-input";
+import { TurnstileWidget } from "./turnstile-widget";
 import styles from "./auth-shell.module.css";
 import { slugifyStoreName } from "@/onboarding/store-input";
+import { TURNSTILE_TOKEN_HEADER } from "@/auth/turnstile";
 
 const GENERIC_LOGIN_ERROR =
   "Não foi possível entrar. Confira os dados ou recupere sua senha.";
@@ -85,7 +87,11 @@ export function SignInForm() {
 
 type SignUpStep = "account" | "verification" | "store";
 
-export function SignUpForm() {
+export function SignUpForm({
+  turnstileSiteKey,
+}: {
+  turnstileSiteKey: string;
+}) {
   const [step, setStep] = useState<SignUpStep>("account");
   const [email, setEmail] = useState("");
   const [storeName, setStoreName] = useState("");
@@ -93,6 +99,8 @@ export function SignUpForm() {
   const [slugEdited, setSlugEdited] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileReset, setTurnstileReset] = useState(0);
 
   async function createAccount(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -103,6 +111,10 @@ export function SignUpForm() {
       setMessage("As senhas precisam ser iguais.");
       return;
     }
+    if (!turnstileToken) {
+      setMessage("Aguarde a proteção terminar antes de continuar.");
+      return;
+    }
     setPending(true);
     setMessage(null);
     try {
@@ -110,9 +122,20 @@ export function SignUpForm() {
         email: nextEmail,
         name: String(form.get("name") ?? "").trim(),
         password,
+        fetchOptions: {
+          headers: { [TURNSTILE_TOKEN_HEADER]: turnstileToken },
+        },
       });
       if (error?.status === 429) {
         setMessage("Muitas tentativas. Aguarde um minuto e tente novamente.");
+        return;
+      }
+      if (error) {
+        setMessage(
+          error.status === 403
+            ? "Confirme a proteção e tente novamente."
+            : "Não foi possível criar a conta agora. Tente novamente.",
+        );
         return;
       }
       setEmail(nextEmail);
@@ -120,6 +143,8 @@ export function SignUpForm() {
     } catch {
       setMessage("Não foi possível enviar o código agora. Tente novamente.");
     } finally {
+      setTurnstileToken(null);
+      setTurnstileReset((value) => value + 1);
       setPending(false);
     }
   }
@@ -147,12 +172,19 @@ export function SignUpForm() {
   }
 
   async function resendCode() {
+    if (!turnstileToken) {
+      setMessage("Aguarde a proteção terminar antes de reenviar.");
+      return;
+    }
     setPending(true);
     setMessage(null);
     try {
       const { error } = await authClient.emailOtp.sendVerificationOtp({
         email,
         type: "email-verification",
+        fetchOptions: {
+          headers: { [TURNSTILE_TOKEN_HEADER]: turnstileToken },
+        },
       });
       setMessage(
         error
@@ -162,6 +194,8 @@ export function SignUpForm() {
     } catch {
       setMessage("Não foi possível reenviar agora. Aguarde e tente novamente.");
     } finally {
+      setTurnstileToken(null);
+      setTurnstileReset((value) => value + 1);
       setPending(false);
     }
   }
@@ -215,8 +249,14 @@ export function SignUpForm() {
           <EmailField id="signup-email" />
           <PasswordInput id="signup-password" name="password" label="Crie uma senha" autoComplete="new-password" minLength={12} maxLength={128} hint="Use pelo menos 12 caracteres. Uma frase longa funciona bem." required />
           <PasswordInput id="signup-password-confirmation" name="password-confirmation" label="Repita a senha" autoComplete="new-password" minLength={12} maxLength={128} required />
+          <TurnstileWidget
+            key={`signup-${turnstileReset}`}
+            siteKey={turnstileSiteKey}
+            action="signup"
+            onToken={setTurnstileToken}
+          />
           <FormMessage message={message} />
-          <button className={styles.primary} type="submit" disabled={pending}>{pending ? "Enviando código…" : "Continuar"}</button>
+          <button className={styles.primary} type="submit" disabled={pending || !turnstileToken}>{pending ? "Enviando código…" : "Continuar"}</button>
           <Link className={styles.link} href="/entrar">Já tenho acesso</Link>
         </form>
       ) : null}
@@ -228,9 +268,15 @@ export function SignUpForm() {
             <label htmlFor="signup-otp">Código de confirmação</label>
             <input id="signup-otp" name="otp" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required autoFocus />
           </div>
+          <TurnstileWidget
+            key={`email-resend-${turnstileReset}`}
+            siteKey={turnstileSiteKey}
+            action="email_resend"
+            onToken={setTurnstileToken}
+          />
           <FormMessage message={message} neutral={message?.startsWith("Se o e-mail")} />
           <button className={styles.primary} type="submit" disabled={pending}>{pending ? "Confirmando…" : "Confirmar e-mail"}</button>
-          <button className={styles.textButton} type="button" disabled={pending} onClick={resendCode}>Reenviar código</button>
+          <button className={styles.textButton} type="button" disabled={pending || !turnstileToken} onClick={resendCode}>Reenviar código</button>
         </form>
       ) : null}
 
@@ -266,25 +312,45 @@ export function SignUpForm() {
   );
 }
 
-export function ForgotPasswordForm() {
+export function ForgotPasswordForm({
+  turnstileSiteKey,
+}: {
+  turnstileSiteKey: string;
+}) {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(false);
   const [pending, setPending] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileReset, setTurnstileReset] = useState(0);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
     setError(false);
     const form = new FormData(event.currentTarget);
+    if (!turnstileToken) {
+      setPending(false);
+      setError(true);
+      return;
+    }
     try {
-      await authClient.emailOtp.requestPasswordReset({
+      const { error: requestError } = await authClient.emailOtp.requestPasswordReset({
         email: String(form.get("email") ?? ""),
+        fetchOptions: {
+          headers: { [TURNSTILE_TOKEN_HEADER]: turnstileToken },
+        },
       });
+      if (requestError) {
+        setError(true);
+        return;
+      }
       setSuccess(true);
     } catch {
       setSuccess(false);
       setError(true);
     } finally {
+      setTurnstileToken(null);
+      setTurnstileReset((value) => value + 1);
       setPending(false);
     }
   }
@@ -292,6 +358,12 @@ export function ForgotPasswordForm() {
   return (
     <form className={styles.form} onSubmit={submit} aria-busy={pending}>
       <EmailField />
+      <TurnstileWidget
+        key={`password-reset-${turnstileReset}`}
+        siteKey={turnstileSiteKey}
+        action="password_reset"
+        onToken={setTurnstileToken}
+      />
       {success ? (
         <p className={`${styles.message} ${styles.success}`} role="status">
           {GENERIC_RECOVERY_MESSAGE}
@@ -302,7 +374,7 @@ export function ForgotPasswordForm() {
           Não foi possível concluir agora. Tente novamente.
         </p>
       ) : null}
-      <button className={styles.primary} type="submit" disabled={pending}>
+      <button className={styles.primary} type="submit" disabled={pending || !turnstileToken}>
         {pending ? "Solicitando…" : "Enviar código"}
       </button>
       <Link className={styles.link} href="/redefinir-senha">
