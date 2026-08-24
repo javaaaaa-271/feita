@@ -4,6 +4,28 @@ Atualizado em: **24 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
 
+## Prévia pública temporária — 24 a 26 de agosto de 2026
+
+Com autorização explícita do proprietário, a versão 12 foi publicada em 24 de
+agosto de 2026 às 00:52 (America/Sao_Paulo) no projeto Sites existente. O acesso
+da plataforma foi alterado temporariamente de `custom` para `public`, mas a
+barreira da própria Feita libera sem autenticação somente `GET`/`HEAD` de
+`/demonstracao`, seus assets, `favicon.svg` e `og.png`.
+
+A demonstração abre com catálogo fictício e informa que alterações permanecem
+somente naquele navegador. Verificação externa sem identidade confirmou `200`
+em `/demonstracao` e `404` em `/`, `/cadastro`, `/painel` e
+`/api/onboarding/store`; as rotas bloqueadas não alcançam D1. A suíte completa
+passou com **134 testes** (48 JS + 86 TS), o lint terminou sem erros e com os
+dois avisos históricos de `<img>`, e `git diff --check` passou.
+
+O fechamento foi solicitado para 26 de agosto de 2026 às 00:52
+(America/Sao_Paulo). Um agendamento de tarefa vinculado a esta conversa foi
+preparado para restaurar o acesso `custom`, preservar somente o proprietário e
+confirmar que `/demonstracao` voltou a responder como indisponível. Como o
+agendamento usa horário civil explícito, o card apresentado pelo Codex precisa
+ser confirmado na interface para ficar ativo.
+
 ## Fechamento das Fases 1 e 2 — primeira rodada de 24 de agosto
 
 A revisão local pública foi repetida em desktop e em celular de 320 px. Landing,
