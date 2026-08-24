@@ -1,8 +1,45 @@
 # Handoff atual
 
-Atualizado em: **21 de agosto de 2026**
+Atualizado em: **24 de agosto de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
+
+## Fechamento das Fases 1 e 2 — primeira rodada de 24 de agosto
+
+A revisão local pública foi repetida em desktop e em celular de 320 px. Landing,
+cadastro, entrada, demonstração, vitrine e carrinho não apresentaram rolagem
+horizontal. Na vitrine real de teste, um pedido com nome sintético e Pix chegou
+à revisão da mensagem com estrutura e valores corretos; o WhatsApp não foi
+aberto. `/painel` redirecionou corretamente a pessoa sem sessão para `/entrar`.
+
+Na landing de 320 × 568, a ação `Criar minha vitrine` terminava abaixo da
+primeira dobra. O breakpoint de celulares pequenos foi compactado sem reduzir a
+hierarquia: o botão agora termina em aproximadamente 478 px e fica totalmente
+visível. O cadastro da primeira loja também deixou de exigir que a pessoa lide
+com um endereço técnico: o link é gerado pelo nome, aparece como prévia e só
+abre edição quando `Personalizar link` é escolhido. Mensagens de conflito e
+validação agora falam em link da vitrine, não em slug ou endereço de sistema.
+
+O roteiro de uso real foi marcado com o estado atual: `/demonstracao` continua
+adequado para o teste humano de clareza da Fase 1, enquanto o fluxo Better Auth
++ D1 + R2 persistente deve ser repetido depois da liberação controlada. A suíte
+completa passou com **131 testes** (47 JS + 84 TS), incluindo a nova prova da
+criação automática do link. O build Sites passou, `git diff --check` passou e o
+lint terminou sem erros, mantendo somente os dois avisos históricos de `<img>`
+na demonstração.
+
+As fases ainda não devem ser marcadas como concluídas. Para sair da Fase 1,
+Lorenzo precisa executar o roteiro sem explicar a interface à primeira usuária,
+registrar hesitações e corrigir P0/P1; também deve confirmar o nome `Feita`.
+Para sair da Fase 2, faltam domínio e remetente próprios, cadastro/OTP/logout e
+recuperação no ambiente hospedado, duas lojas reais com repetição da matriz
+IDOR, upload R2 real, recarga em outro aparelho e a administração autenticada
+dos dados. Nenhuma publicação, compra de domínio ou migração hospedada foi feita
+nesta rodada.
+
+Próxima ação concreta: fazer o teste humano em `/demonstracao` enquanto o
+domínio é comprado; em seguida configurar domínio e remetente e autorizar uma
+janela separada para a prova remota autenticada.
 
 ## Centro de transparência e rodapé legal
 

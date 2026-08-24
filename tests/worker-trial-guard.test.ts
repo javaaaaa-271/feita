@@ -115,6 +115,66 @@ test("barreira do Marco 6.3B falha fechada antes do D1", async () => {
   }
 });
 
+test("prévia pública libera somente demonstração e arquivos estáticos de leitura", async () => {
+  for (const [method, pathname] of [
+    ["GET", "/demonstracao"],
+    ["HEAD", "/demonstracao/"],
+    ["GET", "/assets/demo-client.js"],
+    ["GET", "/assets/_vinext_fonts/geist.woff2"],
+    ["GET", "/favicon.svg"],
+    ["GET", "/og.png"],
+  ] as const) {
+    let databaseAccesses = 0;
+    const original = new Request(`https://trial.example.test${pathname}`, {
+      method,
+      headers: { [MARCO_6_3B_SECRET_HEADER]: "não-deve-ser-repassado" },
+    });
+    const guarded = await guardMarco63BRequest(original, {
+      MARCO_6_3B_ACCESS_SECRET: trialSecret,
+      get DB(): D1Database {
+        databaseAccesses += 1;
+        throw new Error("DB não deveria ser acessado");
+      },
+    });
+
+    assert.equal(guarded.response, undefined, `${method} ${pathname}`);
+    assert.equal(
+      guarded.request?.headers.get(MARCO_6_3B_SECRET_HEADER),
+      null,
+    );
+    assert.equal(databaseAccesses, 0);
+  }
+});
+
+test("prévia pública mantém conta, dados, APIs e mutações fechados", async () => {
+  for (const [method, pathname] of [
+    ["GET", "/"],
+    ["GET", "/cadastro"],
+    ["GET", "/entrar"],
+    ["GET", "/painel"],
+    ["GET", "/loja/atelie-aurora"],
+    ["GET", "/api/auth/session"],
+    ["GET", "/_vinext/image"],
+    ["POST", "/demonstracao"],
+    ["POST", "/api/onboarding/store"],
+  ] as const) {
+    let databaseAccesses = 0;
+    const guarded = await guardMarco63BRequest(
+      new Request(`https://trial.example.test${pathname}`, { method }),
+      {
+        MARCO_6_3B_ACCESS_SECRET: trialSecret,
+        get DB(): D1Database {
+          databaseAccesses += 1;
+          throw new Error("DB não deveria ser acessado");
+        },
+      },
+    );
+
+    assert.equal(guarded.response?.status, 404, `${method} ${pathname}`);
+    assert.equal(databaseAccesses, 0);
+  }
+});
+
 test("desenvolvimento local sem secret libera apenas endereços de loopback", async () => {
   for (const hostname of ["localhost", "127.0.0.1", "[::1]"]) {
     let databaseAccesses = 0;

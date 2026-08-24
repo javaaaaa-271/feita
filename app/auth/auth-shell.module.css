@@ -119,6 +119,10 @@
 .stepCopy strong { color: var(--ink); overflow-wrap: anywhere; }
 .textButton { width: fit-content; padding: 0; border: 0; background: transparent; color: var(--wine); font-size: .84rem; font-weight: 750; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .textButton:disabled { cursor: wait; opacity: .6; }
+.storefrontLink { display: grid; gap: 5px; padding: 13px 14px; border: 1px solid #ded7cf; border-radius: 9px; background: #f5f1eb; }
+.storefrontLink > span { color: var(--muted); font-size: .72rem; font-weight: 720; }
+.storefrontLink > strong { overflow-wrap: anywhere; color: var(--ink); font-size: .92rem; letter-spacing: -.015em; }
+.storefrontLink .textButton { margin-top: 3px; }
 .slugField { display: flex; align-items: stretch; overflow: hidden; border: 1px solid #cec9c1; border-radius: 9px; background: #fff; }
 .slugField span { display: flex; align-items: center; padding-left: 12px; color: #857a72; font-size: .76rem; white-space: nowrap; }
 .slugField input { min-width: 0; border: 0; padding-left: 2px; }
@@ -210,11 +214,10 @@
   color: white;
   font-weight: 800;
   cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms cubic-bezier(.23, 1, .32, 1);
 }
 
-.primary:hover {
-  background: var(--wine-dark);
-}
+.primary:active { transform: scale(.97); }
 
 .primary:disabled {
   cursor: wait;
@@ -277,6 +280,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .primary {
-    scroll-behavior: auto;
+    transition-duration: 0ms;
   }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .primary:hover { background: var(--wine-dark); }
 }

@@ -50,7 +50,7 @@ export function validateFirstStoreInput(input: FirstStoreInput): {
     throw new FirstStoreValidationError("O nome da loja deve ter entre 2 e 80 caracteres.");
   }
   if (slug.length < 3 || slug.length > 48) {
-    throw new FirstStoreValidationError("O endereço da loja deve ter entre 3 e 48 caracteres.");
+    throw new FirstStoreValidationError("O link da vitrine deve ter entre 3 e 48 caracteres.");
   }
   if (location.length > 100) {
     throw new FirstStoreValidationError("A localização deve ter no máximo 100 caracteres.");

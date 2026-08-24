@@ -92,6 +92,13 @@
   .product b { grid-column: 2; }
 }
 
+@media (max-width: 360px) {
+  .hero { padding-top: 32px; }
+  .hero h1 { font-size: clamp(2.55rem, 13vw, 3rem); }
+  .lead { margin-top: 20px; line-height: 1.52; }
+  .actions { margin-top: 24px; }
+}
+
 @media (hover: hover) and (pointer: fine) {
   .primary:hover { background: #6f3022; }
   .secondary:hover { color: #813c2d; }

@@ -68,7 +68,7 @@ test("Vinext build emits one deployable binding of each kind", async () => {
   await readFile(path.join(projectRoot, "dist/server/index.js"));
 });
 
-test("Static Assets passam primeiro pela barreira secreta no roteamento real", async () => {
+test("Worker real libera somente a demonstração pública e seus arquivos", async () => {
   const port = await availablePort();
   const child = spawn(
     process.execPath,
@@ -99,22 +99,29 @@ test("Static Assets passam primeiro pela barreira secreta no roteamento real", a
 
   try {
     const assetURL = `http://127.0.0.1:${port}/favicon.svg`;
-    const unauthorized = await waitForLocalWorker(child, assetURL, () => output);
-    assert.equal(unauthorized.status, 404);
-    assert.equal(unauthorized.headers.get("cache-control"), "private, no-store");
-    assert.deepEqual(await unauthorized.json(), {
+    const asset = await waitForLocalWorker(child, assetURL, () => output);
+    assert.equal(asset.status, 200);
+    assert.match(asset.headers.get("content-type") ?? "", /^image\/svg\+xml\b/i);
+    assert.deepEqual(
+      Buffer.from(await asset.arrayBuffer()),
+      await readFile(path.join(projectRoot, "dist/client/favicon.svg")),
+    );
+
+    const showcase = await fetch(`http://127.0.0.1:${port}/demonstracao`);
+    assert.equal(showcase.status, 200);
+    assert.match(await showcase.text(), /Prepare sua vitrine/i);
+
+    const blocked = await fetch(`http://127.0.0.1:${port}/cadastro`);
+    assert.equal(blocked.status, 404);
+    assert.equal(blocked.headers.get("cache-control"), "private, no-store");
+    assert.deepEqual(await blocked.json(), {
       message: "Recurso indisponível.",
     });
 
-    const authorized = await fetch(assetURL, {
+    const ownerAccess = await fetch(`http://127.0.0.1:${port}/cadastro`, {
       headers: { [trialSecretHeader]: trialSecret },
     });
-    assert.equal(authorized.status, 200);
-    assert.match(authorized.headers.get("content-type") ?? "", /^image\/svg\+xml\b/i);
-    assert.deepEqual(
-      Buffer.from(await authorized.arrayBuffer()),
-      await readFile(path.join(projectRoot, "dist/client/favicon.svg")),
-    );
+    assert.equal(ownerAccess.status, 200);
   } finally {
     await stopLocalWorker(child);
   }

@@ -42,8 +42,8 @@ const money = new Intl.NumberFormat("pt-BR", {
 
 export default function Home() {
   const [view, setView] = useState<View>("inicio");
-  const [products, setProducts] = useState<Product[]>([]);
-  const [demoMode, setDemoMode] = useState(false);
+  const [products, setProducts] = useState<Product[]>(demoProducts);
+  const [demoMode, setDemoMode] = useState(true);
   const [creating, setCreating] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [checkingOut, setCheckingOut] = useState(false);
@@ -275,8 +275,8 @@ export default function Home() {
 
         {demoMode && (
           <div className="demo-banner" role="note">
-            Catálogo fictício para teste local. Cadastre os produtos reais antes
-            da rodada com a comerciante.
+            Catálogo fictício da prévia. As alterações ficam somente neste
+            navegador.
           </div>
         )}
 

@@ -1,5 +1,14 @@
 # Marco 3 — teste de uso real
 
+> **Atualização de 24 de agosto de 2026:** o roteiro abaixo continua sendo o
+> teste de clareza da Fase 1 e deve ser executado em `/demonstracao`, onde não
+> exige conta nem e-mail. A limitação de dados somente na sessão descrita neste
+> documento vale para essa demonstração. O fluxo real com Better Auth, D1 e R2
+> já persiste conta, loja, catálogo e imagens localmente, mas permanece em
+> acesso privado até a conclusão do domínio, remetente e prova remota. Depois
+> dessa liberação, o mesmo roteiro deve ser repetido no fluxo real para encerrar
+> também a Fase 2.
+
 Este guia ajuda Lorenzo e a primeira comerciante a verificar se a Feita organiza
 um pedido do catálogo até a mensagem do WhatsApp.
 
@@ -15,14 +24,15 @@ automaticamente. A pessoa só sai da Feita quando decide abrir o WhatsApp.
 
 ## Limite importante antes de começar
 
-Os produtos ainda ficam somente na sessão aberta. Recarregar a página apaga o
-catálogo cadastrado. Um link aberto em outro aparelho também não leva os
-produtos desta sessão.
+Na rota `/demonstracao`, os produtos ficam somente na sessão aberta. Recarregar
+a página apaga o catálogo cadastrado. Um link aberto em outro aparelho também
+não leva os produtos desta sessão.
 
 Por isso, esta rodada valida o cadastro e os cinco pedidos **no mesmo navegador,
 sem recarregar a página**. Ela ainda não valida uma vitrine pública
-personalizada em outro celular. Resolver isso exige a persistência que foi
-deliberadamente deixada para um marco futuro.
+personalizada em outro celular. A persistência real já existe na fonte; o que
+falta é repetir a prova no ambiente publicado depois do domínio e do acesso
+controlado estarem prontos.
 
 ## 2. Preparação do catálogo
 

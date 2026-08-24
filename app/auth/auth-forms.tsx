@@ -97,6 +97,7 @@ export function SignUpForm({
   const [storeName, setStoreName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
+  const [customizingSlug, setCustomizingSlug] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -282,7 +283,7 @@ export function SignUpForm({
 
       {step === "store" ? (
         <form className={styles.form} onSubmit={createStore} aria-busy={pending}>
-          <p className={styles.stepCopy}>E-mail confirmado. Agora dê um nome e um endereço para sua primeira vitrine.</p>
+          <p className={styles.stepCopy}>E-mail confirmado. Agora conte como sua primeira vitrine deve aparecer.</p>
           <div className={styles.field}>
             <label htmlFor="store-name">Nome da loja</label>
             <input id="store-name" name="store-name" value={storeName} minLength={2} maxLength={80} onChange={(event) => {
@@ -291,10 +292,34 @@ export function SignUpForm({
               if (!slugEdited) setSlug(slugifyStoreName(value));
             }} required />
           </div>
-          <div className={styles.field}>
-            <label htmlFor="store-slug">Endereço da vitrine</label>
-            <div className={styles.slugField}><span>/loja/</span><input id="store-slug" name="slug" value={slug} minLength={3} maxLength={48} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" onChange={(event) => { setSlugEdited(true); setSlug(slugifyStoreName(event.target.value)); }} required /></div>
+          <div className={styles.storefrontLink}>
+            <span>Seu link da vitrine</span>
+            <strong aria-live="polite">/loja/{slug || "sua-loja"}</strong>
+            <button
+              className={styles.textButton}
+              type="button"
+              aria-expanded={customizingSlug}
+              aria-controls="store-link-customization"
+              onClick={() => {
+                if (customizingSlug) {
+                  setSlugEdited(false);
+                  setSlug(slugifyStoreName(storeName));
+                }
+                setCustomizingSlug((value) => !value);
+              }}
+            >
+              {customizingSlug ? "Usar o nome da loja" : "Personalizar link"}
+            </button>
           </div>
+          {customizingSlug ? (
+            <div className={styles.field} id="store-link-customization">
+              <label htmlFor="store-slug">Como o link deve terminar</label>
+              <div className={styles.slugField}><span>/loja/</span><input id="store-slug" name="slug" value={slug} minLength={3} maxLength={48} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" onChange={(event) => { setSlugEdited(true); setSlug(slugifyStoreName(event.target.value)); }} required /></div>
+              <p className={styles.fieldHint}>Use pelo menos 3 caracteres. Espaços e acentos são ajustados automaticamente.</p>
+            </div>
+          ) : (
+            <input type="hidden" name="slug" value={slug} />
+          )}
           <div className={styles.field}>
             <label htmlFor="store-location">Cidade e estado <span className={styles.optional}>(opcional)</span></label>
             <input id="store-location" name="location" maxLength={100} placeholder="Palmas, TO" />

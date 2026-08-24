@@ -11,6 +11,13 @@ export const MARCO_6_3B_MAX_SINGLE_UPLOAD_BYTES = 8 * 1024 * 1024;
 const UPLOAD_BUDGET_SCOPE = "marco-6-3b";
 const PRODUCT_IMAGE_UPLOAD_PATH =
   /^\/api\/painel\/stores\/[^/]+\/products\/[^/]+\/image\/?$/;
+const PUBLIC_SHOWCASE_PATHS = new Set([
+  "/demonstracao",
+  "/demonstracao/",
+  "/favicon.svg",
+  "/og.png",
+]);
+const PUBLIC_ASSET_PREFIX = "/assets/";
 
 type TrialGuardEnvironment = {
   DB: D1Database;
@@ -27,6 +34,10 @@ export async function guardMarco63BRequest(
   request: Request,
   environment: TrialGuardEnvironment,
 ): Promise<TrialGuardResult> {
+  if (isPublicShowcaseRequest(request)) {
+    return { request: withoutTrialSecret(request) };
+  }
+
   if (!environment.MARCO_6_3B_ACCESS_SECRET && isLoopbackRequest(request)) {
     return { request: withoutTrialSecret(request) };
   }
@@ -58,6 +69,15 @@ export async function guardMarco63BRequest(
   }
   if (!isProductImageUpload(request)) return { request: withoutTrialSecret(request) };
   return guardUploadBudget(request, environment);
+}
+
+function isPublicShowcaseRequest(request: Request): boolean {
+  if (request.method !== "GET" && request.method !== "HEAD") return false;
+  const pathname = new URL(request.url).pathname;
+  return (
+    PUBLIC_SHOWCASE_PATHS.has(pathname) ||
+    pathname.startsWith(PUBLIC_ASSET_PREFIX)
+  );
 }
 
 function isLoopbackRequest(request: Request): boolean {

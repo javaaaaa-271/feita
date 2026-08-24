@@ -206,6 +206,17 @@ test("renders the landing promise and product metadata in Brazilian Portuguese",
   assert.doesNotMatch(html, /Caderno Jardim|Planner Semanal|Cartão Presente/i);
 });
 
+test("opens the public demonstration with a useful fictional catalog", async () => {
+  const source = await readFile(
+    resolve("app/demonstracao/demo-client.tsx"),
+    "utf8",
+  );
+
+  assert.match(source, /useState<Product\[\]>\(demoProducts\)/);
+  assert.match(source, /Catálogo fictício da prévia/);
+  assert.match(source, /alterações ficam somente neste\s+navegador/);
+});
+
 test("renders the transparency center without claiming an official LGPD seal", async () => {
   const worker = await loadWorker();
   const response = await worker.fetch(
@@ -381,6 +392,17 @@ test("renders accessible authentication and public onboarding interfaces", async
     Object.values(pages).join("\n"),
     /Entrar com (Google|Apple|telefone)|magic link/i,
   );
+});
+
+test("keeps the storefront link automatic unless the owner chooses to personalize it", async () => {
+  const source = await readFile(resolve("app/auth/auth-forms.tsx"), "utf8");
+
+  assert.match(source, /Seu link da vitrine/);
+  assert.match(source, /\/loja\/\{slug \|\| "sua-loja"\}/);
+  assert.match(source, /Personalizar link/);
+  assert.match(source, /type="hidden" name="slug" value=\{slug\}/);
+  assert.match(source, /aria-live="polite"/);
+  assert.doesNotMatch(source, />Endereço da vitrine<\/label>/);
 });
 
 test("protects panel and store creation with server-side session helpers", async () => {

@@ -24,7 +24,7 @@ export class StoreSlugUnavailableError extends Error {
   readonly status = 409;
 
   constructor() {
-    super("Este endereço de loja não está disponível.");
+    super("Este link já está em uso. Personalize o link da sua vitrine.");
     this.name = "StoreSlugUnavailableError";
   }
 }
