@@ -15,21 +15,21 @@
   justify-content: space-between;
 }
 
-.brand { display: flex; align-items: center; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .brand > span, .brand > img {
   width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
   display: grid; place-items: center; background: var(--store-accent); color: white;
-  font-weight: 800;
+  font-weight: 800; flex: 0 0 44px;
 }
-.brand div { display: grid; gap: 2px; }
-.brand strong { font-size: 17px; }
+.brand div { display: grid; gap: 2px; min-width: 0; }
+.brand strong { font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .brand small { color: #6d6b63; }
 
 .cartButton, .cartDock button, .reviewButton, .review a {
   border: 0; border-radius: 999px; background: var(--store-accent); color: white;
   font-weight: 750; cursor: pointer;
 }
-.cartButton { padding: 11px 16px; }
+.cartButton { padding: 11px 16px; flex: 0 0 auto; margin-left: 12px; }
 .cartButton span { margin-left: 7px; padding: 2px 7px; border-radius: 50%; background: white; color: var(--store-accent); }
 .cartButton:disabled { opacity: .5; cursor: default; }
 
@@ -40,7 +40,7 @@
   background-size: cover; background-position: center;
 }
 .hero p { margin: 0 0 10px; text-transform: uppercase; font-size: 12px; font-weight: 800; letter-spacing: .18em; }
-.hero h1 { margin: 0; max-width: 650px; font-family: Georgia, serif; font-size: clamp(42px, 7vw, 76px); line-height: .98; }
+.hero h1, .hero h3 { margin: 0; max-width: 650px; font-family: Georgia, serif; font-size: clamp(42px, 7vw, 76px); line-height: .98; overflow-wrap: anywhere; }
 .hero > span { max-width: 620px; margin-top: 20px; font-size: 18px; line-height: 1.5; }
 
 .content { width: min(1120px, calc(100% - 40px)); margin: 28px auto; }
@@ -143,3 +143,16 @@
   .productImage, .productFallback { aspect-ratio: 16/10; }
   .drawer { padding: 20px 16px; }
 }
+
+/* Shared storefront identity, constrained to the settings preview. */
+.identityPreview { background: #f4f1e9; color: #24231f; border: 1px solid #cbc7bc; border-radius: 16px; overflow: hidden; }
+.identityPreview .header { width: auto; height: auto; min-height: 84px; padding: 18px; }
+.identityPreview .brand { min-width: 0; }
+.identityPreview .brand > span { flex: 0 0 44px; }
+.identityPreview .brand strong { overflow-wrap: anywhere; white-space: normal; }
+.identityPreview .hero { width: auto; min-height: 220px; margin: 0 14px; padding: 26px; border-radius: 18px; }
+.identityPreview .hero h3 { font-size: 38px; }
+.identityPreview .hero > span { font-size: 16px; }
+.previewCategory { display: grid; gap: 18px; padding: 24px 18px; }
+.previewCategory > span { justify-self: start; padding: 9px 17px; border-radius: 999px; background: var(--store-accent); color: white; font-size: 14px; }
+.previewCategory small { color: #625f58; font-size: 14px; }

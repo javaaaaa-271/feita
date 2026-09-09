@@ -4,7 +4,7 @@ import { useState } from "react";
 import { authClient } from "@/auth/client";
 import styles from "./panel.module.css";
 
-export function LogoutButton() {
+export function LogoutButton({ appearance = "button" }: { appearance?: "button" | "menu" }) {
   const [pending, setPending] = useState(false);
 
   async function logout() {
@@ -15,7 +15,7 @@ export function LogoutButton() {
 
   return (
     <button
-      className={styles.logout}
+      className={appearance === "menu" ? styles.logoutMenu : styles.logout}
       type="button"
       onClick={logout}
       disabled={pending}

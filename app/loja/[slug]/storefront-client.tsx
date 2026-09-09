@@ -8,6 +8,7 @@ import {
 } from "@/app/storefront.mjs";
 import type { PublicProduct, PublicStore } from "@/db/store-repository";
 import styles from "./storefront.module.css";
+import { StorefrontIdentity } from "./storefront-identity";
 
 type CartItem = {
   productId: string;
@@ -160,41 +161,11 @@ export default function StorefrontClient({ store }: { store: PublicStore }) {
 
   return (
     <main className={styles.page} style={{ "--store-accent": store.accentColor } as React.CSSProperties}>
-      <header className={styles.header}>
-        <div className={styles.brand}>
-          {store.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={store.logoUrl} alt="" />
-          ) : (
-            <span>{store.name.slice(0, 2).toUpperCase()}</span>
-          )}
-          <div>
-            <strong>{store.name}</strong>
-            {store.location && <small>{store.location}</small>}
-          </div>
-        </div>
-        <button
-          className={styles.cartButton}
-          type="button"
-          onClick={() => setOrderOpen(true)}
-          disabled={quantity === 0}
-        >
+      <StorefrontIdentity store={store} action={
+        <button className={styles.cartButton} type="button" onClick={() => setOrderOpen(true)} disabled={quantity === 0}>
           Pedido <span>{quantity}</span>
         </button>
-      </header>
-
-      <section
-        className={styles.hero}
-        style={
-          store.coverUrl
-            ? { backgroundImage: `linear-gradient(90deg, rgba(25,25,23,.88), rgba(25,25,23,.35)), url("${store.coverUrl}")` }
-            : undefined
-        }
-      >
-        <p>Catálogo</p>
-        <h1>{store.name}</h1>
-        <span>{store.description}</span>
-      </section>
+      } />
 
       <section className={styles.content}>
         <div className={styles.details}>

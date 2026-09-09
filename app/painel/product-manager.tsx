@@ -38,16 +38,18 @@ const money = new Intl.NumberFormat("pt-BR", {
 });
 
 export function ProductManager({
+  initialCreateOpen = false,
   initialProducts,
   storeId,
 }: {
+  initialCreateOpen?: boolean;
   initialProducts: CatalogProduct[];
   storeId: string;
 }) {
   const [products, setProducts] = useState(initialProducts);
   const [form, setForm] = useState<ProductForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formOpen, setFormOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(initialCreateOpen);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
@@ -203,9 +205,11 @@ export function ProductManager({
             {products.length} {products.length === 1 ? "produto" : "produtos"}
           </span>
         </div>
-        <button type="button" onClick={startCreate} disabled={Boolean(pendingAction)}>
-          Cadastrar produto
-        </button>
+        {products.length > 0 && (
+          <button type="button" onClick={startCreate} disabled={Boolean(pendingAction)}>
+            Cadastrar produto
+          </button>
+        )}
       </div>
 
       {notice && (

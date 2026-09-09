@@ -430,3 +430,20 @@ test("protects panel and store creation with server-side session helpers", async
     "Turnstile must run before the auth runtime resolves D1",
   );
 });
+
+test("painel autenticado começa por uma visão geral orientada", async () => {
+  const panelSource = await readFile(resolve("app/painel/page.tsx"), "utf8");
+  const dashboardSource = await readFile(
+    resolve("app/painel/lojas/[storeId]/page.tsx"),
+    "utf8",
+  );
+  const shellSource = await readFile(resolve("app/painel/panel-shell.tsx"), "utf8");
+
+  assert.match(panelSource, /\/painel\/lojas\/\$\{encodeURIComponent\([^}]+\)\}`/s);
+  assert.doesNotMatch(panelSource, /encodeURIComponent\([^}]+\)\}\/produtos`/s);
+  assert.match(dashboardSource, /Visão geral/);
+  assert.match(dashboardSource, /Deixe sua vitrine pronta/);
+  assert.match(dashboardSource, /Resumo do catálogo/);
+  assert.match(shellSource, /Navegação do painel/);
+  assert.match(shellSource, /Vitrine e configurações/);
+});

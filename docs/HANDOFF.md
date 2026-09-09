@@ -1,8 +1,154 @@
 # Handoff atual
 
-Atualizado em: **24 de agosto de 2026**
+Atualizado em: **9 de setembro de 2026**
 
 Este é o primeiro documento que uma nova sessão deve ler depois do `README`.
+
+## Publicação aprovada — painel e configurações
+
+Em 9 de setembro de 2026, o proprietário aprovou o conjunto visual e funcional
+revisado e solicitou a publicação. O checkpoint reúne o Marco 9 e as
+configurações da loja, preservando o projeto Sites existente e o acesso
+`custom` exclusivo do proprietário, conferido no serviço antes do envio.
+
+O artefato aprovado foi validado com 144 testes, build, lint sem erros (dois
+avisos históricos de imagens na demonstração) e `git diff --check`. Não há
+nova migration, troca de secrets ou mudança de acesso nesta entrega. As contas
+e lojas sintéticas da revisão permanecem apenas no ambiente local.
+
+A adaptação automática para cores claras foi discutida como melhoria futura,
+mas não foi implementada nem integra este checkpoint aprovado. Continua valendo
+a validação de contraste descrita em D-016.
+
+Estado no momento deste checkpoint: fonte preparada para envio e publicação
+privada solicitada; registrar abaixo o resultado confirmado pelo Sites.
+
+## Configurações da loja — concluídas localmente em 9 de setembro
+
+O trabalho local do Marco 9 foi preservado. A seção `Vitrine` e o menu da loja
+agora abrem `/painel/lojas/[storeId]/configuracoes`. A nova tela permite editar
+nome, WhatsApp brasileiro com DDD e cor principal, com uma única ação de salvar,
+estado de envio, confirmação, erros por campo e opção de desfazer o rascunho.
+
+A prévia da identidade reage ao nome e à cor antes de salvar e reutiliza o
+mesmo componente de cabeçalho/capa da vitrine pública. As cores sugeridas são
+legíveis; cores personalizadas precisam manter contraste mínimo de 4,5:1 com o
+fundo claro atual, o que também preserva o texto branco dos botões. Uma cor
+inválida mantém a última cor salva na prévia e é recusada pelo servidor.
+
+`GET` e `PATCH /api/painel/stores/[storeId]/settings` exigem sessão Better Auth e
+membership. O identificador no caminho é somente um seletor: a gravação usa o
+vínculo validado e o revalida na própria query, inclusive se houver revogação
+entre autorização e escrita. O corpo aceita somente `name`, `whatsAppE164` e
+`accentColor`, tem limite de 2 KiB também durante leitura do stream e não pode
+alterar slug, publicação, usuário ou tenant. Mutações exigem Origin permitido;
+todas as respostas do handler são `no-store`. Queries são parametrizadas.
+
+Os campos existentes em `stores` são atualizados no D1; nenhuma migration foi
+necessária. A leitura pública já consome esses dados, inclusive o WhatsApp usado
+no fechamento do pedido. Salvar não publica uma loja em preparação. O link
+público permanece estável após mudar o nome. A normalização compartilhada de
+telefone foi corrigida para aceitar DDD começando por 1, como 11.
+
+Validação desta entrega:
+
+- suíte completa: **144 testes** (49 JS + 95 TS), incluindo oito provas novas
+  para configurações; build e validação do artefato Sites incluídos;
+- isolamento com duas contas e duas lojas no D1 local: leitura e escrita
+  cruzadas negadas nas duas direções, sem alterar dados;
+- payloads inválidos, injeção em corpo/query/cabeçalhos, origem hostil ou ausente,
+  ausência de sessão, falta e revogação de membership cobertos;
+- nova leitura e vitrine pública refletem nome, contato normalizado e cor;
+  edição preserva demais campos e mantém loja não publicada inacessível;
+- revisão no navegador em desktop, 390 × 844 e 320 × 568: edição, prévia,
+  salvamento, recarga, nome longo, desfazer e erro de cor com foco no campo;
+  sem rolagem horizontal nos dois tamanhos de celular; vitrine real também
+  conferida em 320 px com nome longo e acesso à tela de outra loja recusado;
+- lint sem erros, somente os dois avisos históricos de `<img>` na demonstração;
+  `git diff --check` sem erros, com os avisos habituais LF/CRLF do Windows.
+
+O Git Bash precisou ser incluído no PATH da sessão para executar os comandos
+npm existentes no Windows; scripts e dependências foram preservados. Uma conta
+e duas lojas sintéticas exclusivas desta revisão foram criadas apenas no D1
+local, sem envio de e-mail ou WhatsApp. Uma delas foi exposta apenas no servidor
+local durante a conferência da vitrine e voltou a não publicada ao final; a
+loja editável permaneceu em preparação. A prévia permanece
+em `http://localhost:5173/painel` enquanto o servidor local estiver ativo.
+
+Limites: a prévia cobre identidade, sem catálogo interativo, edição de logo ou
+capa. Publicação da loja, organização dos produtos e novos controles de mídia
+continuam fora desta fatia. Nenhuma versão foi publicada, nenhum dado hospedado
+foi alterado e nenhum commit foi feito.
+
+Próxima ação concreta: o proprietário revisar as configurações junto do Marco 9
+na prévia local; depois salvar um checkpoint conjunto. Qualquer publicação
+segue uma etapa própria no projeto Sites privado existente, com a matriz remota
+de autenticação e isolamento ainda pendente.
+
+## Marco 9 — painel orientado concluído localmente
+
+Em **1º de setembro de 2026**, a primeira navegação real do checkpoint privado
+expôs uma conta ainda inexistente no D1 hospedado: a recuperação respondeu de
+forma genérica, como projetado, e não enviou código para uma identidade sem
+cadastro. O fluxo correto de cadastro foi então executado pela própria pessoa
+no navegador. OTP, sessão, criação da primeira loja e entrada no catálogo
+autenticado funcionaram no ambiente hospedado, sem compartilhar senha, código
+ou endereço de e-mail com o Codex.
+
+A revisão da primeira tela real confirmou um problema de produto: `/painel`
+abria diretamente um catálogo vazio, sem visão geral, navegação, estado da
+vitrine ou próximo passo. O Marco 9 altera localmente essa arquitetura:
+
+- a única loja agora abre em `/painel/lojas/[storeId]`, com `Início` próprio;
+- desktop usa navegação lateral e celular usa uma barra inferior compacta;
+- o nome da loja abre um menu com contexto da conta, vitrine, troca de loja
+  quando aplicável e logout;
+- três números reais mostram produtos, publicados e indisponíveis;
+- o checklist curto deriva do catálogo: loja criada, primeiro produto, foto e
+  produto publicado;
+- uma única ação dominante muda conforme o próximo passo e abre diretamente o
+  formulário de produto quando o catálogo está vazio;
+- a vitrine mostra estado, caminho público e cor atual sem fingir que a edição
+  ou a publicação já existem;
+- a página de Produtos foi incorporada à mesma estrutura e deixou de repetir
+  dois botões equivalentes no estado vazio.
+
+A prévia foi conferida no navegador em desktop e em 390 × 844. A ação inicial
+abriu diretamente a gaveta de produto, a navegação móvel permaneceu visível e
+não houve erro no console. Uma conta e loja sintéticas foram adicionadas apenas
+ao D1 local para essa conferência; nenhum dado hospedado foi alterado pelo
+desenvolvimento do painel.
+
+Depois da primeira revisão visual, uma segunda camada local compactou a barra
+lateral, elevou o contraste das divisórias, diferenciou fundo e superfícies,
+deu caráter editorial ao título e acrescentou somente respostas curtas de
+hover, pressão e abertura do menu, com `prefers-reduced-motion`. Razorpay
+Sprint 2026, Awwwards e Recent serviram apenas para identificar princípios de
+fluidez e acabamento; nenhum código, ativo ou identidade foi copiado. Hero e
+novo símbolo da marca continuam como exploração separada e não foram inseridos.
+
+O build Sites passou, inclusive depois da segunda camada visual. O lint terminou sem erros e preservou somente os dois
+avisos históricos de `<img>` na demonstração. A suíte completa passou com
+**136 testes** (49 JS + 87 TS), incluindo resumo do painel e prova estrutural
+da nova entrada autenticada. `git diff --check` passou com apenas os avisos de
+conversão LF/CRLF já conhecidos no Windows.
+
+Decisões registradas: `Feita` passa a ser o nome escolhido; R$ 120 anuais é a
+hipótese inicial de preço, ainda sujeita a validação; o painel orienta por ação
+e checklist discreto; e a vitrine terá personalização controlada com cor,
+identidade e ordenação. Múltiplas imagens por produto exigem um marco de mídia
+separado.
+
+Este Marco 9 ainda **não foi publicado**. A próxima ação concreta é o
+proprietário revisar a prévia local aberta no navegador; depois, salvar o
+checkpoint e publicar somente no projeto Sites privado existente, sem migration
+ou alteração de acesso. Em seguida entram configurações da loja e organização
+da vitrine.
+
+A direção visual para a próxima conversa foi consolidada em
+`docs/DESIGN_DIRECTION.md`. Ela separa painel, landing, símbolo e movimento,
+registra o que aproveitar ou rejeitar das referências e mantém todas as ideias
+como exploração local sujeita à aprovação do proprietário.
 
 ## Prévia pública temporária — 24 a 26 de agosto de 2026
 
@@ -25,6 +171,14 @@ preparado para restaurar o acesso `custom`, preservar somente o proprietário e
 confirmar que `/demonstracao` voltou a responder como indisponível. Como o
 agendamento usa horário civil explícito, o card apresentado pelo Codex precisa
 ser confirmado na interface para ficar ativo.
+
+O fechamento foi efetivado em **28 de agosto de 2026 às 19:36**
+(America/Sao_Paulo). O acesso do projeto Sites existente voltou de `public`
+para `custom`, mantendo exclusivamente o proprietário atual: não há visitantes
+externos, grupos ou editores adicionais. Nenhuma versão nova foi publicada e a
+versão 12 permaneceu ativa. Uma requisição sem autenticação para
+`/demonstracao` recebeu `401`, confirmando que a prévia pública está novamente
+indisponível.
 
 ## Fechamento das Fases 1 e 2 — primeira rodada de 24 de agosto
 

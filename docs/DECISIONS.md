@@ -48,11 +48,12 @@ O painel parece uma ferramenta confiável de operação. A vitrine parece a marc
 da própria cliente. A estrutura da Feita permanece estável, enquanto logo,
 cores, banner e apresentação dos produtos podem variar por negócio.
 
-## D-007 — "Feita" é nome provisório
+## D-007 — "Feita" é o nome escolhido
 
-O nome e a frase "Seu negócio, em ordem" têm boa direção, mas não estão
-definitivamente aprovados. Pesquisa de marca, domínio e registro ficam para uma
-etapa posterior.
+O nome `Feita` foi confirmado pelo proprietário em 1º de setembro de 2026 após
+a primeira rodada de conversa com uma usuária real. A frase "Seu negócio, em
+ordem" continua sendo a assinatura do produto. Pesquisa de marca, domínio e
+registro continuam obrigatórias antes de investimento público na identidade.
 
 ## D-008 — A primeira usuária de pesquisa é real
 
@@ -69,8 +70,12 @@ de uso ou demanda comprovada.
 ## D-010 — Receita precisa sustentar uso contínuo
 
 Evitar promessa de acesso vitalício quando há custos permanentes de
-infraestrutura, armazenamento e suporte. A hipótese inicial é implantação mais
-assinatura mensal ou anual.
+infraestrutura, armazenamento e suporte. A hipótese comercial inicial passa a
+ser implantação assistida quando houver trabalho manual e uma assinatura de
+**R$ 120 por ano**, apresentada como equivalente a R$ 10 por mês, mas cobrada
+anualmente. Esse valor é hipótese de validação, não preço definitivo: suporte,
+armazenamento, limites do plano e disposição real de pagamento ainda precisam
+ser medidos antes da cobrança.
 
 ## D-011 — Better Auth, D1 e R2 na primeira fatia real
 
@@ -118,3 +123,32 @@ dados, sessão e membership.
 Antes de publicar esse fluxo serão obrigatórios remetente e domínio verificados
 no Resend, secrets de produção, validação server-side do Turnstile, prova em
 caixa de e-mail controlada e repetição da matriz IDOR.
+
+## D-014 — O painel orienta sem condução invasiva
+
+O painel autenticado deve começar por uma visão geral da loja, não por uma lista
+vazia de produtos. A primeira entrada mostra uma ação dominante, resumo do
+catálogo, estado da vitrine e um checklist curto derivado dos dados reais.
+
+A navegação permanece lateral no desktop e compacta no celular. Tutoriais com
+balões em sequência não são o padrão: explicações aparecem no contexto e o
+checklist pode desaparecer quando concluído sem retirar o acesso à ajuda.
+
+## D-015 — A vitrine tem personalização controlada
+
+A lojista poderá ajustar cor principal, logo, capa, apresentação e organização
+dos produtos, incluindo ordem e destaques. A Feita não abrirá tipografias,
+layouts arbitrários ou temas incompatíveis entre si na primeira versão.
+
+Essa restrição mantém a vitrine reconhecível, responsiva e operável, sem apagar
+a identidade da cliente. Galeria com várias imagens por produto é parte do
+catálogo comercial e exige evolução própria do modelo de mídia.
+
+
+## D-016 — Configurações salvam identidade sem publicar a loja
+
+Nome, WhatsApp e cor são editados na seção Vitrine e persistidos na loja
+autorizada. O nome não altera o link existente e salvar não muda o estado de
+publicação. A prévia reutiliza a identidade da vitrine pública. A cor livre
+precisa manter contraste mínimo de 4,5:1 com o fundo claro atual; a validação
+ocorre também no servidor e cores sugeridas atendem à mesma regra.

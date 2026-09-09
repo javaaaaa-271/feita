@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { headers } from "next/headers";
 import { forbidden, redirect } from "next/navigation";
 import {
@@ -12,7 +11,7 @@ import {
 import { authRuntimeForRequest } from "@/auth/runtime";
 import { createFeitaAuth } from "@/auth/server";
 import { listCatalogProducts } from "@/catalog/products";
-import { LogoutButton } from "../../../logout-button";
+import { PanelShell } from "../../../panel-shell";
 import { ProductManager } from "../../../product-manager";
 import styles from "../../../panel.module.css";
 
@@ -21,10 +20,13 @@ export const dynamic = "force-dynamic";
 
 export default async function StoreProductsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ storeId: string }>;
+  searchParams: Promise<{ novo?: string }>;
 }) {
   const { storeId } = await params;
+  const { novo } = await searchParams;
   const requestHeaders = await headers();
   const host = requestHeaders.get("host") ?? "localhost:3000";
   const protocol =
@@ -67,39 +69,26 @@ export default async function StoreProductsPage({
   ]);
 
   return (
-    <main className={styles.page}>
-      <div className={styles.catalogShell}>
-        <header className={styles.topbar}>
-          <Link className={styles.brand} href="/painel">
-            <span className={styles.mark} aria-hidden="true">
-              F
-            </span>
-            Feita
-          </Link>
-          <LogoutButton />
-        </header>
-        <div className={styles.catalogHeading}>
-          <div>
-            <p className={styles.eyebrow}>Produtos</p>
-            <h1>{membership.storeName}</h1>
-            <p className={styles.description}>
-              Cadastre, atualize e escolha o que aparece na sua vitrine.
-            </p>
-          </div>
-          <div className={styles.headingLinks}>
-            {memberships.length > 1 && (
-              <Link href="/painel">Trocar de loja</Link>
-            )}
-            <Link href={`/loja/${membership.storeSlug}`} target="_blank">
-              Ver vitrine
-            </Link>
-          </div>
+    <PanelShell
+      active="produtos"
+      email={session.user.email}
+      membership={membership}
+      memberships={memberships}
+    >
+      <div className={styles.catalogHeading}>
+        <div>
+          <p className={styles.eyebrow}>Catálogo</p>
+          <h1>Produtos</h1>
+          <p className={styles.description}>
+            Cadastre, atualize e escolha o que aparece na sua vitrine.
+          </p>
         </div>
-        <ProductManager
-          initialProducts={products}
-          storeId={membership.storeId}
-        />
       </div>
-    </main>
+      <ProductManager
+        initialCreateOpen={novo === "1"}
+        initialProducts={products}
+        storeId={membership.storeId}
+      />
+    </PanelShell>
   );
 }

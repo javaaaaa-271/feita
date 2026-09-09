@@ -15,7 +15,7 @@ export function normalizeBrazilianWhatsApp(value) {
     digits = digits.slice(2);
   }
 
-  if (!/^[2-9]\d{9,10}$/.test(digits)) {
+  if (!/^[1-9]\d{9,10}$/.test(digits)) {
     throw new Error("Informe um WhatsApp brasileiro válido, com DDD.");
   }
 

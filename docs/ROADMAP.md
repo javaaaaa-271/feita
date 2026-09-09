@@ -26,9 +26,12 @@ Objetivo: provar que uma usuária entende o produto sem treinamento.
 - [ ] Lorenzo faz crítica visual completa;
 - [ ] teste sem explicação com a primeira usuária;
 - [ ] registrar onde ela hesita, erra ou procura ajuda;
-- [ ] ajustar painel, cadastro e vitrine;
+- [ ] ajustar painel, cadastro e vitrine — início orientado e navegação do
+  painel e configurações de nome, WhatsApp e cor concluídos localmente;
+  organização de produtos e demais personalizações da vitrine pendentes;
 - [ ] testar celular pequeno, celular comum e desktop;
-- [ ] decidir se "Feita" continua como nome de trabalho.
+- [x] confirmar `Feita` como nome do produto; pesquisa de marca e registro
+  continuam antes do investimento público.
 
 Critério de saída: a usuária cadastra um produto, encontra a vitrine e monta um
 pedido sem ajuda.
@@ -55,8 +58,9 @@ Objetivo: deixar de ser demonstração e virar sistema utilizável.
 - [x] estados vazios, erros e carregamento — fluxos de autenticação;
 - [x] landing pública e cadastro por OTP — concluídos localmente; entrega real
   em caixa controlada e Turnstile server-side provados; checkpoint privado
-  publicado com acesso navegável do proprietário; confirmação remota completa
-  e domínio/remetente próprios pendentes;
+  concluiu remotamente conta, OTP, sessão e primeira loja em 1º de setembro de
+  2026; logout, recuperação, domínio/remetente próprios e matriz remota completa
+  ainda pendentes;
 
 Critério de saída: duas lojas diferentes conseguem usar o sistema sem acessar
 os dados uma da outra, e nada desaparece ao recarregar.

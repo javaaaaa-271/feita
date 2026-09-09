@@ -45,7 +45,7 @@ export default async function ProtectedPanelPage() {
   if (selection.kind === "forbidden") forbidden();
   if (selection.kind === "selected") {
     redirect(
-      `/painel/lojas/${encodeURIComponent(selection.membership.storeId)}/produtos`,
+      `/painel/lojas/${encodeURIComponent(selection.membership.storeId)}`,
     );
   }
 
@@ -87,9 +87,9 @@ export default async function ProtectedPanelPage() {
                   </div>
                   <Link
                     className={styles.storeLink}
-                    href={`/painel/lojas/${encodeURIComponent(membership.storeId)}/produtos`}
+                    href={`/painel/lojas/${encodeURIComponent(membership.storeId)}`}
                   >
-                    Abrir catálogo
+                    Abrir painel
                   </Link>
                 </li>
               ))}

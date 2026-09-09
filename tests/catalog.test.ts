@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
 import { resolveStoreSelection } from "../auth/authorization";
+import { summarizeDashboard } from "../app/painel/dashboard-summary";
 import { createFeitaAuth, type FeitaAuthRuntime } from "../auth/server";
 import {
   handleProductCollectionRequest,
@@ -16,6 +17,10 @@ import {
   ProductValidationError,
 } from "../catalog/products";
 import { findPublicStoreBySlug } from "../db/store-repository";
+import { handleStoreSettingsRequest } from "../store-settings/http";
+import { isReadableStoreColor, parseStoreSettings, StoreSettingsValidationError } from "../store-settings/validation";
+import { saveStoreSettings } from "../store-settings/repository";
+import { requireStoreMembership, StoreMembershipRequiredError } from "../auth/authorization";
 import { openLocalBindings } from "../scripts/local-bindings.mjs";
 
 const wranglerExecutable = resolve("node_modules/wrangler/bin/wrangler.js");
@@ -23,6 +28,46 @@ const baseURL = "http://localhost:3000";
 const authSecret = "catalog-test-auth-secret-with-at-least-32-characters";
 const rateSecret = "catalog-test-rate-secret-with-at-least-32-characters";
 const password = "frase segura do catálogo persistente 2026";
+
+test("painel resume o catálogo e escolhe a próxima ação sem inventar vendas", () => {
+  const empty = summarizeDashboard([]);
+  assert.deepEqual(
+    {
+      completedSteps: empty.completedSteps,
+      nextAction: empty.nextAction,
+      publishedProducts: empty.publishedProducts,
+      totalProducts: empty.totalProducts,
+      unavailableProducts: empty.unavailableProducts,
+    },
+    {
+      completedSteps: 1,
+      nextAction: "create-product",
+      publishedProducts: 0,
+      totalProducts: 0,
+      unavailableProducts: 0,
+    },
+  );
+
+  const withProducts = summarizeDashboard([
+    {
+      available: true,
+      imageUrl: "/foto.webp",
+      published: true,
+      stock: 4,
+    },
+    {
+      available: false,
+      imageUrl: null,
+      published: false,
+      stock: 0,
+    },
+  ]);
+  assert.equal(withProducts.completedSteps, 4);
+  assert.equal(withProducts.nextAction, "review-store");
+  assert.equal(withProducts.publishedProducts, 1);
+  assert.equal(withProducts.totalProducts, 2);
+  assert.equal(withProducts.unavailableProducts, 1);
+});
 
 function migrate(persistPath: string) {
   const result = spawnSync(
@@ -527,8 +572,125 @@ test("Marco 6.1 prova catálogo autenticado e isolamento entre lojas", async (t)
         before,
       );
     });
+
+    const settingsInput = { name: "Ateliê da Ana", whatsAppE164: "+55 (63) 99999-0012", accentColor: "#315575" };
+    const settingsRequest = (storeId: string, cookie: string | undefined, method = "GET", body?: unknown, origin = baseURL) =>
+      handleStoreSettingsRequest({ storeId, runtimeFactory, request: request({
+        path: `/api/painel/stores/${storeId}/settings`, cookie, method, body, origin,
+      }) });
+
+    await t.test("configurações persistem em novas leituras e chegam à vitrine pública", async () => {
+      const beforeB = await database.prepare("SELECT * FROM stores WHERE id = 'store-b'").first();
+      const beforeA = await database.prepare("SELECT * FROM stores WHERE id = 'store-a'").first();
+      const saved = await settingsRequest("store-a", cookieA, "PATCH", settingsInput);
+      assert.equal(saved.status, 200);
+      assert.equal(saved.headers.get("cache-control"), "private, no-store");
+      const fresh = await settingsRequest("store-a", cookieA);
+      const { store } = await fresh.json() as { store: Record<string, unknown> };
+      assert.equal(store.name, settingsInput.name);
+      assert.equal(store.whatsAppE164, "5563999990012");
+      assert.equal(store.accentColor, "#315575");
+      const publicStore = await findPublicStoreBySlug(database, "loja-a");
+      assert.equal(publicStore?.name, settingsInput.name);
+      assert.equal(publicStore?.whatsAppE164, "5563999990012");
+      assert.equal(publicStore?.accentColor, "#315575");
+      assert.deepEqual(await database.prepare("SELECT * FROM stores WHERE id = 'store-b'").first(), beforeB);
+      const afterA = await database.prepare("SELECT * FROM stores WHERE id = 'store-a'").first();
+      for (const key of Object.keys(beforeA!)) {
+        if (!["name", "whatsapp_e164", "accent_color", "updated_at"].includes(key)) assert.deepEqual(afterA![key], beforeA![key]);
+      }
+      assert.deepEqual(Object.keys(store).sort(), ["name", "whatsAppE164", "accentColor", "slug", "published", "description", "location"].sort());
+    });
+
+    await t.test("IDOR nas configurações nega leitura e edição nas duas direções", async () => {
+      const before = await database.prepare("SELECT * FROM stores ORDER BY id").all();
+      for (const [cookie, forbiddenStore] of [[cookieA, "store-b"], [cookieB, "store-a"]]) {
+        for (const method of ["GET", "PATCH"]) {
+          const denied = await settingsRequest(forbiddenStore, cookie, method, method === "PATCH" ? settingsInput : undefined);
+          const missing = await settingsRequest("loja-inexistente", cookie, method, method === "PATCH" ? settingsInput : undefined);
+          assert.equal(denied.status, 403);
+          assert.equal(missing.status, denied.status);
+          assert.deepEqual(await denied.json(), await missing.json());
+        }
+      }
+      assert.deepEqual((await database.prepare("SELECT * FROM stores ORDER BY id").all()).results, before.results);
+    });
+
+    await t.test("configurações recusam sessão ausente, falsa, sem vínculo e origem hostil", async () => {
+      for (const method of ["GET", "PATCH"]) {
+        for (const cookie of [undefined, "better-auth.session_token=invalido", cookieNoStore]) {
+          const response = await settingsRequest("store-a", cookie, method, method === "PATCH" ? settingsInput : undefined);
+          assert.equal(response.status, cookie === cookieNoStore ? 403 : 401);
+        }
+      }
+      for (const origin of ["https://attacker.example", "null"]) {
+        assert.equal((await settingsRequest("store-a", cookieA, "PATCH", settingsInput, origin)).status, 403);
+      }
+      const noOrigin = request({ path: "/api/painel/stores/store-a/settings", cookie: cookieA, method: "PATCH", body: settingsInput });
+      noOrigin.headers.delete("origin");
+      assert.equal((await handleStoreSettingsRequest({ request: noOrigin, storeId: "store-a", runtimeFactory })).status, 403);
+      assert.equal((await settingsRequest("store-a", cookieA, "DELETE")).status, 405);
+    });
+
+    await t.test("configurações rejeitam campos de autorização, publicação e dados inválidos sem gravação parcial", async () => {
+      const before = await database.prepare("SELECT * FROM stores ORDER BY id").all();
+      for (const field of ["storeId", "tenantId", "userId", "store_id", "tenant_id", "published", "slug", "role"]) {
+        assert.equal((await settingsRequest("store-a", cookieA, "PATCH", { ...settingsInput, [field]: "store-b" })).status, 400);
+      }
+      for (const body of [null, [], {}, { ...settingsInput, name: " " }, { ...settingsInput, name: "x".repeat(121) },
+        { ...settingsInput, whatsAppE164: "abc63999990012" }, { ...settingsInput, whatsAppE164: 63999990012 },
+        { ...settingsInput, accentColor: "#ffffff" }, { ...settingsInput, accentColor: "red; background:url(https://example.test)" },
+        { ...settingsInput, name: "x".repeat(3000) }]) {
+        assert.equal((await settingsRequest("store-a", cookieA, "PATCH", body)).status, 400);
+      }
+      const malformed = new Request(`${baseURL}/api/painel/stores/store-a/settings`, { method: "PATCH", headers: headers(cookieA), body: "{" });
+      assert.equal((await handleStoreSettingsRequest({ request: malformed, storeId: "store-a", runtimeFactory })).status, 400);
+      const oversized = request({ path: "/api/painel/stores/store-a/settings", cookie: cookieA, method: "PATCH", body: settingsInput });
+      oversized.headers.set("content-length", "9999999");
+      assert.equal((await handleStoreSettingsRequest({ request: oversized, storeId: "store-a", runtimeFactory })).status, 400);
+      assert.deepEqual((await database.prepare("SELECT * FROM stores ORDER BY id").all()).results, before.results);
+    });
+
+    await t.test("IDs injetados em query e cabeçalhos não trocam a loja autorizada", async () => {
+      const beforeB = await database.prepare("SELECT * FROM stores WHERE id = 'store-b'").first();
+      const incoming = request({ path: "/api/painel/stores/store-a/settings?storeId=store-b&tenant_id=store-b", cookie: cookieA, method: "PATCH",
+        body: { ...settingsInput, name: "Ana's atelier'; UPDATE stores SET name='invadida' --" } });
+      incoming.headers.set("x-store-id", "store-b");
+      incoming.headers.set("x-user-id", userB);
+      assert.equal((await handleStoreSettingsRequest({ request: incoming, storeId: "store-a", runtimeFactory })).status, 200);
+      assert.deepEqual(await database.prepare("SELECT * FROM stores WHERE id = 'store-b'").first(), beforeB);
+      assert.equal(await database.prepare("SELECT name FROM stores WHERE id = 'store-a'").first("name"), "Ana's atelier'; UPDATE stores SET name='invadida' --");
+    });
+
+    await t.test("salvar configurações mantém uma loja em preparação fora da vitrine pública", async () => {
+      await database.prepare("UPDATE stores SET published = 0 WHERE id = 'store-a'").run();
+      assert.equal((await settingsRequest("store-a", cookieA, "PATCH", settingsInput)).status, 200);
+      assert.equal(await findPublicStoreBySlug(database, "loja-a"), null);
+      const { store } = await (await settingsRequest("store-a", cookieA)).json() as { store: { published: boolean } };
+      assert.equal(store.published, false);
+    });
+
+    await t.test("revogar vínculo impede gravar mesmo após a autorização inicial", async () => {
+      const membership = await requireStoreMembership(database, userA, "store-a");
+      await database.prepare("DELETE FROM store_memberships WHERE user_id = ?1").bind(userA).run();
+      const before = await database.prepare("SELECT * FROM stores WHERE id = 'store-a'").first();
+      await assert.rejects(() => saveStoreSettings({ database, membership, userId: userA, input: parseStoreSettings(settingsInput) }), StoreMembershipRequiredError);
+      assert.equal((await settingsRequest("store-a", cookieA, "PATCH", settingsInput)).status, 403);
+      assert.deepEqual(await database.prepare("SELECT * FROM stores WHERE id = 'store-a'").first(), before);
+    });
   } finally {
     await platform.dispose();
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+
+test("configurações normalizam contato e validam contraste das cores", () => {
+  const input = { name: "  Ateliê da Ana  ", whatsAppE164: "(63) 99999-0000", accentColor: "#8A3F2D" };
+  assert.deepEqual(parseStoreSettings(input), { name: "Ateliê da Ana", whatsAppE164: "5563999990000", accentColor: "#8a3f2d" });
+  assert.equal(parseStoreSettings({ ...input, whatsAppE164: "(11) 99999-0000" }).whatsAppE164, "5511999990000");
+  assert.equal(parseStoreSettings({ ...input, whatsAppE164: "+55 (11) 99999-0000" }).whatsAppE164, "5511999990000");
+  for (const color of ["#8a3f2d", "#7e3328", "#365749", "#315575", "#684263", "#363632"]) assert.equal(isReadableStoreColor(color), true);
+  for (const color of ["#ffffff", "#ffff00", "#aaaaaa", "red", "#123"]) assert.equal(isReadableStoreColor(color), false);
+  assert.throws(() => parseStoreSettings({ ...input, name: "Loja\nA" }), StoreSettingsValidationError);
 });
