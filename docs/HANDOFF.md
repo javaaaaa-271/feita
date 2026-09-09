@@ -20,8 +20,29 @@ A adaptação automática para cores claras foi discutida como melhoria futura,
 mas não foi implementada nem integra este checkpoint aprovado. Continua valendo
 a validação de contraste descrita em D-016.
 
-Estado no momento deste checkpoint: fonte preparada para envio e publicação
-privada solicitada; registrar abaixo o resultado confirmado pelo Sites.
+Publicação confirmada em **9 de setembro de 2026 às 07:32 (America/Sao_Paulo)**:
+versão **13**, fonte `e85c5de9460fa837ff6f28ad5320babf1c79fa98`, deployment
+`appgdep_6aa135b3f5c8819193fd2ee9e4d3504d` com status `succeeded`.
+
+URL: https://projeto-vitrine-mvp.javaaaa-237.chatgpt.site
+
+A conferência posterior manteve acesso `custom`, um único proprietário, zero
+visitantes externos e nenhum grupo. Uma requisição anônima a `/demonstracao`
+recebeu `401`. Nenhuma migration nova, alteração de secrets, expansão de acesso
+ou carga de dados locais foi realizada. O serviço confirmou a publicação; a
+revisão funcional com a sessão real do proprietário continua como próxima ação.
+
+**Empacotamento:** o Vinext copiou `.dev.vars` para `dist/server/.dev.vars`.
+Esse arquivo de desenvolvimento foi removido do artefato antes de qualquer
+upload. O pacote final foi inspecionado e não contém arquivos `.dev.vars`,
+`.env`, banco local ou valores dos secrets locais. Nas próximas publicações,
+repetir essa remoção do arquivo gerado e a inspeção antes de salvar uma versão;
+não remover o `.dev.vars` original usado pelo desenvolvimento.
+
+O checkpoint foi enviado ao GitHub oficial e à fonte do Sites. Próxima ação:
+entrar no site hospedado, conferir o início do painel e abrir Vitrine para
+revisar as configurações da loja real. A matriz remota completa com duas lojas
+continua pendente antes de ampliar o piloto para outras pessoas.
 
 ## Configurações da loja — concluídas localmente em 9 de setembro
 
