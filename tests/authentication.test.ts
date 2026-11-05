@@ -21,7 +21,11 @@ import {
   resolveAuthRuntimeSecrets,
   resolveTrustedOrigins,
 } from "../auth/server";
-import { sha256Hex } from "../auth/security";
+import {
+  AUTH_IDENTITY_RATE_LIMIT_RETENTION_MS,
+  purgeExpiredIdentityRateLimits,
+  sha256Hex,
+} from "../auth/security";
 import { openLocalBindings } from "../scripts/local-bindings.mjs";
 
 const wranglerExecutable = resolve("node_modules/wrangler/bin/wrangler.js");
@@ -922,6 +926,26 @@ test("Marco 5 prova autenticação, recuperação e isolamento em D1 limpo", asy
             .first<number>("total"),
         ) > 0,
       );
+    });
+
+    await t.test("limpeza remove contadores após 24 horas, sem apagar os recentes", async () => {
+      await database.prepare("DELETE FROM auth_identity_rate_limits").run();
+      const cleanupNow = Date.now();
+      const expiredAt = cleanupNow - AUTH_IDENTITY_RATE_LIMIT_RETENTION_MS - 1;
+      const atBoundary = cleanupNow - AUTH_IDENTITY_RATE_LIMIT_RETENTION_MS;
+      const recentAt = atBoundary + 1;
+      await database.batch([
+        database.prepare("INSERT INTO auth_identity_rate_limits VALUES (?1, 'signup', 1, ?2, ?2)").bind("expired", expiredAt),
+        database.prepare("INSERT INTO auth_identity_rate_limits VALUES (?1, 'signup', 1, ?2, ?2)").bind("boundary", atBoundary),
+        database.prepare("INSERT INTO auth_identity_rate_limits VALUES (?1, 'signup', 1, ?2, ?2)").bind("recent", recentAt),
+      ]);
+
+      await purgeExpiredIdentityRateLimits(database, cleanupNow);
+
+      const retained = await database
+        .prepare("SELECT key_digest FROM auth_identity_rate_limits ORDER BY key_digest")
+        .all<{ key_digest: string }>();
+      assert.deepEqual(retained.results.map(({ key_digest }) => key_digest), ["recent"]);
     });
 
     await t.test("CSRF externo é recusado e cadastro público exige OTP", async () => {

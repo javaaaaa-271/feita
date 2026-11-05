@@ -1,0 +1,1 @@
+CREATE INDEX `auth_identity_rate_limits_updated_idx` ON `auth_identity_rate_limits` (`updated_at`);

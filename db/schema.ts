@@ -276,5 +276,6 @@ export const authIdentityRateLimits = sqliteTable(
   },
   (table) => [
     index("auth_identity_rate_limits_window_idx").on(table.windowStartedAt),
+    index("auth_identity_rate_limits_updated_idx").on(table.updatedAt),
   ],
 );
