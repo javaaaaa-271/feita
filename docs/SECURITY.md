@@ -121,7 +121,9 @@ barreira de publicação, não uma verificação opcional.
 - limitar tentativas por IP;
 - limitar também por e-mail normalizado ou identidade equivalente;
 - aplicar política específica em login, cadastro, recuperação e redefinição;
-- responder sem indicar qual dos limites foi atingido de forma explorável.
+- responder sem indicar qual dos limites foi atingido de forma explorável;
+- reter contadores por identidade por 24 horas após a última tentativa e
+  remover linhas expiradas a cada hora pelo agendamento do Worker.
 
 ### Sessões e tokens
 

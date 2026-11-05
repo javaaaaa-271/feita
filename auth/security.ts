@@ -1,4 +1,5 @@
 const encoder = new TextEncoder();
+export const AUTH_IDENTITY_RATE_LIMIT_RETENTION_MS = 24 * 60 * 60 * 1_000;
 
 export function normalizeEmail(value: string): string {
   return value.trim().toLocaleLowerCase("en-US");
@@ -90,6 +91,16 @@ export async function enforceIdentityRateLimit(options: {
   if (!row || Number(row.count) > options.max) {
     throw new RateLimitExceededError();
   }
+}
+
+export async function purgeExpiredIdentityRateLimits(
+  database: D1Database,
+  now = Date.now(),
+): Promise<void> {
+  await database
+    .prepare("DELETE FROM auth_identity_rate_limits WHERE updated_at <= ?1")
+    .bind(now - AUTH_IDENTITY_RATE_LIMIT_RETENTION_MS)
+    .run();
 }
 
 function bytesToHex(bytes: Uint8Array): string {

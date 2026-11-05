@@ -37,6 +37,14 @@ test("Wrangler is the single source of the four direct Worker bindings", async (
   assert.equal(config.assets.run_worker_first, true);
 });
 
+test("Worker executa retenção de rate limits a cada hora", async () => {
+  const config = await readJson("wrangler.jsonc");
+  const source = await readFile(path.join(projectRoot, "worker/index.ts"), "utf8");
+
+  assert.deepEqual(config.triggers?.crons, ["17 * * * *"]);
+  assert.match(source, /async scheduled\([^)]*\)[\s\S]*purgeExpiredIdentityRateLimits\(env\.DB\)/);
+});
+
 test("Vite consumes wrangler.jsonc without recreating D1 or R2 bindings", async () => {
   const source = await readFile(path.join(projectRoot, "vite.config.ts"), "utf8");
 

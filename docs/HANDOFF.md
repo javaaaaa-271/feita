@@ -1668,3 +1668,11 @@ Duas usuárias conseguem:
 
 O marco só termina com testes automatizados de headers, autenticação e
 isolamento entre lojas.
+
+## Auditoria corretiva — retenção e convite (branch isolada)
+
+Base: `cb0b474`; branch `fix/auth-rate-limit-retention-invite-body`. Este checkpoint corrige o crescimento da tabela `auth_identity_rate_limits` com expiração de 24 horas após a última tentativa, limpeza horária do Worker e índice em `updated_at`. A rota de aceite de convite limita o corpo JSON a 4 KiB durante a leitura do stream e rejeita UTF-8/JSON inválido, raiz que não seja objeto e payload acima do limite. Migration local `0004` aplicada somente ao D1 local.
+
+Validação: lint ESLint direto passou (0 erros; dois avisos preexistentes de `<img>`); build Vinext direto passou; 101 testes TS e 49 testes JS passaram. O dry-run Wrangler do Worker e das bindings passou. `npm run lint`, `npm run build` e `npm test` foram tentados literalmente, mas os scripts dependem de Bash e o ambiente retornou `Bash/E_ACCESSDENIED`; para não alterar scripts do projeto, foram executadas as ferramentas equivalentes diretamente. Um teste de deployment que também invoca Bash ficou excluído da suíte JS; o dry-run equivalente foi executado manualmente. `git diff --check` passou.
+
+`npm audit` reportou 35 alertas (2 baixos, 16 moderados, 15 altos, 2 críticos) e não houve atualização automática. Os dois críticos estão em dependências de produção diretas Better Auth e Next.js; revisar/excluir aplicabilidade antes de exposição pública. Há alertas altos em dependências de build/transitivas; o audit completo não foi limpo. Não houve acesso a produção, alteração de credenciais ou deploy.

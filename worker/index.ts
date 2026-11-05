@@ -2,6 +2,7 @@
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
 import { guardMarco63BRequest } from "./marco-6-3b-guard";
+import { purgeExpiredIdentityRateLimits } from "@/auth/security";
 
 interface Env {
   ASSETS: Fetcher;
@@ -63,6 +64,10 @@ const SECURITY_HEADERS: Readonly<Record<string, string>> = {
 // const imageConfig: ImageConfig = { dangerouslyAllowSVG: true };
 
 const worker = {
+  async scheduled(_controller: ScheduledController, env: Env): Promise<void> {
+    await purgeExpiredIdentityRateLimits(env.DB);
+  },
+
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const guarded = await guardMarco63BRequest(request, env);
     if (guarded.response) {
