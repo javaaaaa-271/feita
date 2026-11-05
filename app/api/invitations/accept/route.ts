@@ -18,14 +18,6 @@ import {
 export const MAX_INVITATION_BODY_BYTES = 4 * 1024;
 
 export async function POST(request: Request): Promise<Response> {
-  const parsed = await readJsonObjectBody(request);
-  if (!parsed.ok) {
-    return Response.json(
-      { message: parsed.status === 413 ? "Solicitação muito grande." : "Solicitação inválida." },
-      { status: parsed.status },
-    );
-  }
-
   const runtime = await authRuntimeForRequest(request);
   let hmacSecret: string;
   let auth: ReturnType<typeof createFeitaAuth>;
@@ -49,6 +41,14 @@ export async function POST(request: Request): Promise<Response> {
   }
   if (!requestOriginIsTrusted(request, trustedOrigins)) {
     return Response.json({ message: "Solicitação recusada." }, { status: 403 });
+  }
+
+  const parsed = await readJsonObjectBody(request);
+  if (!parsed.ok) {
+    return Response.json(
+      { message: parsed.status === 413 ? "Solicitação muito grande." : "Solicitação inválida." },
+      { status: parsed.status },
+    );
   }
 
   const input = parsed.value;

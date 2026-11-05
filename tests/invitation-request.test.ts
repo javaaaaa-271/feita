@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import {
   MAX_INVITATION_BODY_BYTES,
-  POST,
   readJsonObjectBody,
 } from "../app/api/invitations/accept/route";
 
@@ -99,20 +99,16 @@ test("convite exige JSON UTF-8 válido cujo valor raiz seja objeto", async () =>
   );
 });
 
-test("rota de convite responde 400 ou 413 antes de acessar bindings", async () => {
-  const badJson = await POST(
-    new Request("https://feita.example/api/invitations/accept", {
-      method: "POST",
-      body: "{",
-    }),
+test("rota valida origem confiável antes de ler o corpo", async () => {
+  const source = await readFile(
+    new URL("../app/api/invitations/accept/route.ts", import.meta.url),
+    "utf8",
   );
-  const tooLarge = await POST(
-    new Request("https://feita.example/api/invitations/accept", {
-      method: "POST",
-      body: "x".repeat(MAX_INVITATION_BODY_BYTES + 1),
-    }),
+  const postHandler = source.slice(
+    source.indexOf("export async function POST"),
+    source.indexOf("export async function readJsonObjectBody"),
   );
 
-  assert.equal(badJson.status, 400);
-  assert.equal(tooLarge.status, 413);
+  assert.ok(postHandler.indexOf("requestOriginIsTrusted") < postHandler.indexOf("readJsonObjectBody"));
+  assert.match(source, /MAX_INVITATION_BODY_BYTES\s*=\s*4\s*\*\s*1024/);
 });
